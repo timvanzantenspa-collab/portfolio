@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects. Explore visual art, creative coding, and cultural experiences.">
+    <meta name="theme-color" content="#0101FF">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Tim van Zanten - Creative Portfolio">
+    <meta property="og:description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects. Explore visual art, creative coding, and cultural experiences.">
+    <meta property="og:image" content="https://timvanzanten.com/static/og-image.png">
+    <meta property="og:url" content="https://timvanzanten.com">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tim van Zanten - Creative Portfolio">
+    <meta name="twitter:description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects.">
+    <meta name="author" content="Tim van Zanten">
+    <meta name="keywords" content="portfolio, music, digital culture, creative, art, interactive">
+    <link rel="canonical" href="https://timvanzanten.com">
+    <title>Tim van Zanten - Creative Portfolio</title>
+    <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/Favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/Favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/Favicon/favicon-16x16.png">
+    <link rel="manifest" href="/static/Favicon/site.webmanifest">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: transparent;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hero.scrolling {
+            pointer-events: none;
+        }
+
+        .hero-socials {
+            pointer-events: auto;
+        }
+
+        .hero-content {
+            opacity: 1;
+            transition: opacity 0.9s ease-out;
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .hero.scrolling .hero-content {
+            opacity: 0;
+        }
+
+        #scrollLiggen {
+            position: absolute;
+            top: 130px;
+            left: 160px;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        .hero.scrolling #scrollLiggen {
+            opacity: 1;
+        }
+
+        .hero-title {
+            font-size: clamp(24px, 5vw, 44px);
+            font-weight: 300;
+            line-height: 1.1;
+            letter-spacing: -1px;
+            color: #000;
+        }
+
+        .title-word {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: -13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 6px 8px;
+            border-radius: 0px;
+            line-height: 1;
+            transform: translateY(3px);
+        }
+
+        /* State styles for each word */
+        .title-word.state-1 {
+            background-color: #0101FF;
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+        }
+
+        .title-word.state-2 {
+            background-color: #000000;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .title-word.state-3 {
+            background-color: #000000;
+            color: #0101FF;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+        }
+
+        .title-word.state-4 {
+            background-color: transparent;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        .title-word.state-5 {
+            background-color: #cccccc;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        .title-word.state-6 {
+            background-color: #cccccc;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 42px;
+            margin-top: 12px;
+            justify-content: center;
+            width: 105%;
+        }
+
+        .nav-link {
+            display: inline-block;
+            font-size: clamp(16px, 4vw, 18px);
+            font-weight: 700;
+            color: #0101FF;
+            text-decoration: none;
+            letter-spacing: 0.5px;
+            position: relative;
+            padding-bottom: 4px;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #0101FF;
+            opacity: 0;
+        }
+
+        .nav-link.active::after {
+            animation: blink 2s infinite;
+            opacity: 1;
+        }
+
+        @keyframes blink {
+            0%, 49% {
+                opacity: 1;
+            }
+            50%, 100% {
+                opacity: 0;
+            }
+        }
+
+        .play-link:hover {
+            text-decoration-thickness: 3px;
+        }
+
+        .hero-socials {
+            display: flex;
+            flex-direction: row;
+            gap: 120px;
+            opacity: 1;
+            transition: opacity 1.0s ease-out;
+            justify-content: center;
+            width: 100%;
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 0 40px;
+        }
+
+        .hero.scrolling .hero-socials {
+            opacity: 0;
+        }
+
+        .hero-social-link {
+            font-size: 18px;
+            font-weight: 700;
+            color: #000;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-decoration: none;
+            letter-spacing: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            border-bottom: 2px solid transparent;
+        }
+
+        .hero-social-link:hover {
+            border-bottom: 2px solid #000;
+        }
+
+        .container {
+            position: relative;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 80px 40px 60px 40px;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: 280px 280px;
+            gap: 140px 60px;
+            margin-bottom: 80px;
+            justify-content: center;
+        }
+
+        .image-item {
+            position: relative;
+            overflow: visible;
+            background: transparent;
+            border-radius: 0;
+            animation: fadeIn 0.3s ease-out;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: var(--random-offset-v, 0px);
+            margin-left: var(--random-offset-h, 0px);
+            cursor: pointer;
+        }
+
+        .image-item img {
+            max-width: 280px;
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.4s ease, box-shadow 0.4s ease;
+            filter: brightness(1);
+        }
+
+        .image-item:hover img {
+            transform: scale(1.08) translateY(-8px);
+            filter: brightness(1.05);
+        }
+
+        .image-item:hover img {
+            transform: scale(1.02);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .image-item:nth-child(1) { animation-delay: 0ms; }
+        .image-item:nth-child(2) { animation-delay: 50ms; }
+        .image-item:nth-child(3) { animation-delay: 100ms; }
+        .image-item:nth-child(4) { animation-delay: 150ms; }
+        .image-item:nth-child(5) { animation-delay: 200ms; }
+        .image-item:nth-child(n+6) { animation-delay: 250ms; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 12px;
+            animation: pulse 1.s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -1000px 0;
+            }
+            100% {
+                background-position: 1000px 0;
+            }
+        }
+
+        .modal-content h2 {
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .modal-content p {
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes blink-cursor {
+            0%, 49% {
+                border-right-color: #0101FF;
+                box-shadow: 0 0 8px rgba(1, 1, 255, 0.6);
+            }
+            50%, 100% {
+                border-right-color: rgba(1, 1, 255, 0.3);
+                box-shadow: 0 0 2px rgba(1, 1, 255, 0.2);
+            }
+        }
+
+        /* Search Styles */
+        .search-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2000;
+            backdrop-filter: blur(2px);
+            background-color: rgba(255, 255, 255, 0.85);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .search-overlay.active {
+            display: flex;
+        }
+
+        .search-container {
+            position: relative;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            width: 90%;
+            max-width: 700px;
+        }
+
+        .search-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0101FF;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .search-title .title-word {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: -13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 6px 8px;
+            border-radius: 0px;
+            line-height: 1;
+            transform: translateY(3px);
+            font-size: 28px;
+        }
+
+        .search-title .title-word.state-1 {
+            background-color: #0101FF;
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+        }
+
+        .search-title .title-word.state-2 {
+            background-color: #000000;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .search-title .title-word.state-3 {
+            background-color: #000000;
+            color: #0101FF;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+        }
+
+        .search-title .title-word.state-4 {
+            background-color: transparent;
+            color: #0101FF;
+            font-weight: 700;
+        }
+
+        .search-title .title-word.state-5 {
+            background-color: #cccccc;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        .search-title .title-word.state-6 {
+            background-color: #cccccc;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .search-input {
+            font-size: 32px;
+            font-weight: 400;
+            border: none;
+            background: transparent;
+            color: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            outline: none;
+            letter-spacing: 0.5px;
+            padding: 12px 0;
+            border-bottom: 2px solid #0101FF;
+            width: 100%;
+            text-transform: uppercase;
+            caret-color: #0101FF;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-bottom-color: #000;
+        }
+
+        .search-input::placeholder {
+            color: #aaa;
+        }
+
+        .search-input:focus::placeholder {
+            color: #777;
+        }
+
+        .search-results {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            width: 100%;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .search-results.has-results {
+            display: grid;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom scrollbar styling */
+        .search-results::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .search-results::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .search-results::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+
+        .search-results::-webkit-scrollbar-thumb:hover {
+            background: #ccc;
+        }
+
+        /* Firefox scrollbar */
+        .search-results {
+            scrollbar-color: #ddd transparent;
+            scrollbar-width: thin;
+        }
+
+        .search-result-item {
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .search-result-item:hover {
+            transform: scale(1.05);
+            background: transparent;
+        }
+
+        .search-result-item:focus-within {
+            outline: 2px solid #0101FF;
+            outline-offset: 4px;
+            border-radius: 4px;
+        }
+
+        .search-result-item img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            border-radius: 0;
+            box-shadow: none;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            aspect-ratio: 1;
+        }
+
+        .search-result-item:hover img {
+            box-shadow: none;
+            filter: brightness(0.9);
+        }
+
+        .search-result-title {
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.3);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            max-width: 1100px;
+            width: 90%;
+        }
+
+        .modal-image {
+            flex: 0 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 500px;
+            height: 500px;
+        }
+
+        .modal-image-background {
+            position: absolute;
+            top: -20px;
+            left: -30px;
+            width: 110%;
+            height: 110%;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: blur(18px) brightness(0.35);
+            z-index: 0;
+            opacity: 0.5;
+            animation: backgroundShift 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes backgroundShift {
+            from {
+                opacity: 0;
+                filter: blur(12px) brightness(0.2);
+            }
+            to {
+                opacity: 0.5;
+                filter: blur(18px) brightness(0.35);
+            }
+        }
+
+        .modal-image img {
+            max-width: 500px;
+            max-height: 500px;
+            width: auto;
+            height: auto;
+            border-radius: 4px;
+            object-fit: contain;
+            image-rendering: auto;
+            will-change: transform, opacity;
+            transform: translateZ(0);
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            transition: filter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-image img:hover {
+            filter: contrast(120%) saturate(110%) hue-rotate(10deg) brightness(1.1) drop-shadow(0 0 20px rgba(32, 32, 32, 0.5));
+        }
+
+        .modal-image img.animate {
+            animation: carouselFadeIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes carouselFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.88) rotateY(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+            }
+        }
+
+        .modal-content {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+            flex: 0 0 520px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .modal-text h2 {
+            font-size: 17px;
+            margin-bottom: 12px;
+            color: #0101FF;
+            font-weight: 700;
+        }
+
+        .modal-text h2 .title-word {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: -8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 3px 5px;
+            border-radius: 0px;
+            line-height: 1;
+            transform: translateY(1px);
+            font-size: 17px;
+        }
+
+        .modal-text p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        .modal-text a {
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .modal-text a:hover {
+            color: #0101FF;
+            text-decoration: underline;
+        }
+
+        .modal-text a:focus {
+            outline: 2px solid #0101FF;
+            outline-offset: 2px;
+            border-radius: 2px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 8px;
+            right: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            color: #888;
+            background: transparent;
+            border: none;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 0;
+            z-index: 10;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.2);
+            color: #000;
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .modal-close:focus {
+            outline: 2px solid #0101FF;
+            outline-offset: 2px;
+        }
+
+        .modal-link-button {
+            margin-top: 48px;
+            padding: 6px 12px;
+            background-color: #0101FF;
+            color: #ffffff;
+            border: none;
+            border-radius: 3px;
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-transform: uppercase;
+            align-self: flex-start;
+        }
+
+        .modal-link-button:hover:not(:disabled) {
+            background-color: #0000cc;
+            transform: translateX(2px);
+            box-shadow: 0 2px 6px rgba(1, 1, 255, 0.3);
+        }
+
+        .modal-link-button:focus {
+            outline: 2px solid #0101FF;
+            outline-offset: 2px;
+        }
+
+        .modal-link-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Carousel Controls */
+        .carousel-controls {
+            display: none;
+            gap: 15px;
+            justify-content: space-between;
+            align-items: center;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+            padding: 0 15px;
+        }
+
+        .carousel-controls.active {
+            display: flex;
+        }
+
+        .carousel-nav-btn {
+            background: rgba(1, 1, 255, 0.85);
+            color: white;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+            padding: 0;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .carousel-nav-btn:hover:not(:disabled) {
+            transform: scale(1.15);
+            background: rgba(0, 0, 0, 0.95);
+        }
+
+        .carousel-nav-btn:focus {
+            outline: 2px solid white;
+            outline-offset: 2px;
+        }
+
+        .carousel-nav-btn:disabled {
+            background: rgba(200, 200, 200, 0.5);
+            cursor: not-allowed;
+            transform: scale(1);
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        .carousel-counter {
+            font-size: 10px;
+            color: white;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 4px 12px;
+            border-radius: 12px;
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            pointer-events: auto;
+            z-index: 3;
+            backdrop-filter: blur(10px);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes slideIn {
+
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-wrapper {
+            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-image img {
+            animation: zoomIn 0.5s ease-out;
+        }
+
+        @keyframes zoomIn {
+            from {
+                opacity: 0;
+                transform: scale(0.85);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Accessibility: Skip to content link */
+        .skip-to-content {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: #0101FF;
+            color: white;
+            padding: 8px;
+            text-decoration: none;
+            z-index: 100;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .skip-to-content:focus {
+            top: 0;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 20px;
+            }
+
+            .title-word {
+                font-size: 20px;
+                margin-right: 0.05em;
+                padding: 2px 4px;
+            }
+
+            .hero-title {
+                top: 15px;
+            }
+
+            .hero-social-link {
+                font-size: 22px;
+            }
+
+            .modal-wrapper {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .modal-image {
+                width: 300px;
+                height: 300px;
+            }
+
+            .modal-image img {
+                max-width: 300px;
+                max-height: 300px;
+            }
+
+            .modal-content {
+                flex: 1;
+                width: 100%;
+                padding: 30px;
+            }
+
+            .container {
+                padding: 80px 20px 40px 20px;
+            }
+
+            .image-grid {
+                grid-template-columns: 1fr;
+                gap: 50px;
+            }
+
+            .image-item {
+                margin-top: 0 !important;
+                margin-left: 0 !important;
+            }
+
+            .image-item img {
+                max-width: 220px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #scrollLiggen {
+                top: 20px !important;
+                left: 100px !important;
+                height: 30px !important;
+            }
+
+            .hero {
+                padding: 30px 15px;
+            }
+
+            .hero-content {
+                top: 8px;
+                left: 15px;
+            }
+
+            .hero-title {
+                font-size: 14px;
+                top: 0;
+                left: 15px;
+            }
+
+            .title-word {
+                font-size: 18px;
+                margin-right: 0.05em;
+                padding: 2px 4px;
+            }
+
+            .play-link {
+                font-size: 14px;
+                margin-top: 8px;
+            }
+
+            .hero-social-link {
+                font-size: 16px;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .hero-social-link:first-child {
+                margin-left: 0;
+            }
+
+            .hero-socials {
+                gap: 20px;
+                padding: 0;
+                overflow-x: auto;
+                overflow-y: hidden;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+                bottom: 15px;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                justify-content: flex-start;
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .hero-socials::-webkit-scrollbar {
+                display: none;
+            }
+
+            .container {
+                padding: 20px 15px 40px 15px;
+            }
+
+            .image-grid {
+                gap: 60px;
+            }
+
+            .image-item {
+                margin-top: 0 !important;
+            }
+
+            .image-item img {
+                max-width: 180px;
+            }
+
+            .modal {
+                padding-top: 30px;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .modal-wrapper {
+                flex-direction: column;
+                align-items: center;
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .modal-image {
+                width: 350px;
+                height: 350px;
+                margin-bottom: 20px;
+            }
+
+            .modal-image img {
+                max-width: 350px;
+                max-height: 350px;
+            }
+
+            .modal-content {
+                width: 90%;
+                max-height: 50vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Accessibility: Skip to content link -->
+    <a href="#main-content" class="skip-to-content">Skip to gallery</a>
+
+    <!-- Hero Section -->
+    <div class="hero" id="hero">
+        <div class="hero-content">
+            <h1 class="hero-title" id="heroTitle">
+                <span class="title-word" data-word="0">TIM</span>
+                <span class="title-word" data-word="1">VAN</span>
+                <span class="title-word" data-word="2">ZANTEN</span>
+            </h1>
+            <div class="nav-links">
+                <a href="/" class="nav-link active" id="portfolioLink">PORTFOLIO</a>
+                <a href="/about" class="nav-link" id="aboutLink">ABOUT</a>
+                <a href="javascript:void(0);" class="nav-link" id="searchLink" onclick="openSearch()" style="cursor: pointer;">SEARCH</a>
+            </div>
+        </div>
+        <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen" style="height: 45px;">
+        <div class="hero-socials" id="heroSocials">
+            <a href="http://instagram.com/timzv" class="hero-social-link" target="_blank" title="Instagram">Instagram</a>
+            <a href="https://www.linkedin.com/in/tim-van-zanten-602672182/" class="hero-social-link" target="_blank" title="LinkedIn">LinkedIn</a>
+            <a href="mailto:timvanzanten6@gmail.com" class="hero-social-link" title="Email">Email</a>
+            <a href="https://soundcloud.com/sound-patrol" class="hero-social-link" target="_blank" title="SoundCloud">SoundCloud</a>
+            <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="hero-social-link" target="_blank" title="Spotify">Spotify</a>
+        </div>
+    </div>
+
+    <div class="container" id="main-content">
+        <div class="image-grid" id="imageGrid" role="region" aria-label="Portfolio gallery"></div>
+        <div class="loading" id="loading" style="display: none;">Loading more images...</div>
+    </div>
+
+    <!-- Modal for image details -->
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-wrapper">
+            <div class="modal-image" id="modalImageContainer">
+                <div class="modal-image-background" id="modalImageBackground"></div>
+                <a id="modalImageLink" href="#" target="_blank" style="cursor: pointer; display: block;">
+                    <img id="modalImage" src="" alt="" style="cursor: pointer;">
+                </a>
+                <div class="carousel-controls" id="carouselControls">
+                    <button class="carousel-nav-btn" id="prevBtn" onclick="navigateCarousel(-1)">←</button>
+                    <button class="carousel-nav-btn" id="nextBtn" onclick="navigateCarousel(1)">→</button>
+                    <span class="carousel-counter"><span id="carouselIndex">1</span>/<span id="carouselTotal">1</span></span>
+                </div>
+            </div>
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <div class="modal-text">
+                    <a id="modalTitleLink" href="#" target="_blank" style="text-decoration: none; color: inherit;">
+                        <h2 id="modalTitle" style="cursor: pointer;"></h2>
+                    </a>
+                    <p id="modalMetadata" style="font-size: 12px; margin-top: 2px; margin-bottom: 16px; letter-spacing: 0.3px;"></p>
+                    <p id="modalDescription"></p>
+                </div>
+                <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">Take me to this project ></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Search portfolio">
+        <div class="search-container">
+            <div class="search-title" id="searchTitle">
+                <span class="title-word" data-word="0">SEARCH</span>
+            </div>
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput" 
+                placeholder="Type to search..."
+                aria-label="Search portfolio by title"
+                autofocus
+            >
+            <div class="search-results" id="searchResults"></div>
+        </div>
+    </div>
+
+    <script>
+        let allImages = [];
+        let imageCaptions = {};
+        let currentIndex = 0;
+        const imagesPerLoad = 20;
+        let scrollThrottle = false;
+
+        // Carousel state
+        let carouselImages = [];
+        let carouselCurrentIndex = 0;
+        let carouselPrimaryFilename = null;
+
+        // Title word states
+        const wordStates = [0, 0, 0]; // Track state for each word - start with transparent
+        const totalStates = 7; // 0 (normal) + 6 custom states
+
+        // Setup title word hover effects
+        function setupTitleWords() {
+            const titleWords = document.querySelectorAll('.title-word');
+            const heroTitle = document.getElementById('heroTitle');
+            const originalHTML = heroTitle.innerHTML;
+            
+            titleWords.forEach((word, index) => {
+                word.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Cycle to next state and persist it
+                    wordStates[index] = (wordStates[index] + 1) % totalStates;
+                    updateWordStyle(word, wordStates[index]);
+                });
+
+                // Apply random state on hover and PERSIST it
+                word.addEventListener('mouseenter', () => {
+                    // 0.05% chance easter egg (0.0005 probability)
+                    if (Math.random() < 0.05) {
+                        // Replace all title words with Liggen.png
+                        const img = document.createElement('img');
+                        img.src = '/static/Liggen.png';
+                        img.alt = 'Liggen';
+                        img.style.cssText = 'height: 24px; object-fit: contain; cursor: pointer;';
+                        
+                        // Add hover effect to restore the title
+                        img.addEventListener('mouseenter', () => {
+                            heroTitle.innerHTML = originalHTML;
+                            setupTitleWords(); // Reinitialize event listeners
+                        });
+                        
+                        heroTitle.innerHTML = '';
+                        heroTitle.appendChild(img);
+                        return;
+                    }
+                    
+                    // Pick random state from 0-6 (includes normal state 0)
+                    const randomState = Math.floor(Math.random() * totalStates);
+                    wordStates[index] = randomState;
+                    updateWordStyle(word, wordStates[index]);
+                });
+            });
+        }
+
+        function updateWordStyle(word, state) {
+            // Remove all state classes
+            for (let i = 1; i < totalStates; i++) {
+                word.classList.remove(`state-${i}`);
+            }
+            // Add current state class
+            if (state > 0) {
+                word.classList.add(`state-${state}`);
+            }
+        }
+
+        // Track states for modal title words
+        let modalTitleStates = {};
+
+        function setupModalTitleWords() {
+            const titleElement = document.getElementById('modalTitle');
+            const titleWords = titleElement.querySelectorAll('.title-word');
+            const titleLink = document.getElementById('modalTitleLink');
+            
+            titleWords.forEach((word, index) => {
+                // Initialize state for this word if not exists
+                if (!modalTitleStates[index]) {
+                    modalTitleStates[index] = 0;
+                }
+
+                word.addEventListener('mouseenter', () => {
+                    // Pick random state from 0-6 (includes normal state 0)
+                    const randomState = Math.floor(Math.random() * totalStates);
+                    modalTitleStates[index] = randomState;
+                    updateWordStyle(word, modalTitleStates[index]);
+                });
+
+                // Allow clicks on title to still navigate to URL if link exists
+                word.addEventListener('click', (e) => {
+                    if (titleLink.href && titleLink.href !== 'javascript:void(0);') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        window.open(titleLink.href, titleLink.target);
+                    }
+                });
+            });
+        }
+
+        async function loadImages() {
+            try {
+                const response = await fetch('/api/images');
+                allImages = await response.json();
+                
+                // Load captions
+                const captionsResponse = await fetch('/api/captions');
+                imageCaptions = await captionsResponse.json();
+                
+                displayImages();
+            } catch (error) {
+                console.error('Error loading images:', error);
+            }
+        }
+
+        function displayImages() {
+            const grid = document.getElementById('imageGrid');
+            const endIndex = Math.min(currentIndex + imagesPerLoad, allImages.length);
+            const isMobile = window.innerWidth <= 768;
+
+            for (let i = currentIndex; i < endIndex; i++) {
+                const imageData = allImages[i];
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'image-item';
+
+                // Only apply random offset on desktop (>768px)
+                if (!isMobile) {
+                    // Vertical offset: -100 to 100px
+                    const randomOffsetV = Math.random() * 200 - 100;
+                    itemDiv.style.setProperty('--random-offset-v', `${randomOffsetV}px`);
+                    
+                    // Horizontal offset: -40 to 40px (enough variation without overflow)
+                    const randomOffsetH = Math.random() * 80 - 40;
+                    itemDiv.style.setProperty('--random-offset-h', `${randomOffsetH}px`);
+                } else {
+                    itemDiv.style.setProperty('--random-offset-v', '0px');
+                    itemDiv.style.setProperty('--random-offset-h', '0px');
+                }
+
+                const img = document.createElement('img');
+                img.dataset.src = imageData.url; // Store actual src in data attribute
+                img.alt = imageData.filename;
+                img.style.opacity = '0'; // Start invisible
+
+                itemDiv.appendChild(img);
+                
+                // Add click handler to open modal
+                itemDiv.addEventListener('click', () => openModal(imageData.filename, imageData.url));
+                
+                grid.appendChild(itemDiv);
+
+                // Use Intersection Observer for lazy loading
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target.querySelector('img');
+                            if (img && img.dataset.src && !img.src) {
+                                img.src = img.dataset.src;
+                                img.style.transition = 'opacity 0.4s ease-out';
+                                img.onload = () => img.style.opacity = '1';
+                                observer.unobserve(entry.target);
+                            }
+                        }
+                    });
+                }, { rootMargin: '50px' }); // Start loading 50px before entering viewport
+
+                observer.observe(itemDiv);
+            }
+
+            currentIndex = endIndex;
+
+            // Show loading message if there are more images
+            if (currentIndex < allImages.length) {
+                document.getElementById('loading').style.display = 'block';
+            } else {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        async function openModal(filename, imageUrl) {
+            const modal = document.getElementById('modal');
+            
+            try {
+                // Fetch carousel for this image
+                const carouselResponse = await fetch(`/api/carousel/${filename}`);
+                const carouselData = await carouselResponse.json();
+                
+                // Handle new API format with primary and images
+                carouselImages = carouselData.images || carouselData;
+                carouselPrimaryFilename = carouselData.primary || carouselImages[0].filename;
+                
+                // Find the starting image in the carousel
+                carouselCurrentIndex = carouselImages.findIndex(img => img.filename === filename);
+                
+                // Show/hide carousel controls based on carousel size
+                const carouselControls = document.getElementById('carouselControls');
+                if (carouselImages.length > 1) {
+                    carouselControls.classList.add('active');
+                    updateCarouselDisplay();
+                } else {
+                    carouselControls.classList.remove('active');
+                }
+            } catch (error) {
+                console.error('Error loading carousel:', error);
+                carouselImages = [{filename: filename, url: imageUrl}];
+                carouselPrimaryFilename = filename;
+                carouselCurrentIndex = 0;
+                document.getElementById('carouselControls').classList.remove('active');
+            }
+            
+            displayCarouselImage(carouselCurrentIndex);
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management
+            setTimeout(() => document.querySelector('.modal-close').focus(), 300);
+        }
+
+        function displayCarouselImage(index) {
+            const carouselItem = carouselImages[index];
+            const filename = carouselItem.filename;
+            const imageUrl = carouselItem.url;
+            // Use primary image's caption for all images in carousel
+            const captionFilename = carouselPrimaryFilename || filename;
+            const caption = imageCaptions[captionFilename] || {};
+            
+            const img = document.getElementById('modalImage');
+            
+            // Remove animation class to reset
+            img.classList.remove('animate');
+            
+            // Trigger reflow to ensure animation restarts
+            void img.offsetWidth;
+            
+            // Update image and trigger animation
+            img.src = imageUrl;
+            img.alt = filename;
+            img.classList.add('animate');
+            
+            // Set up next image preview (blurred background)
+            const nextIndex = index + 1;
+            if (nextIndex < carouselImages.length) {
+                const nextImageUrl = carouselImages[nextIndex].url;
+                document.getElementById('modalImageBackground').style.backgroundImage = `url('${nextImageUrl}')`;
+            } else {
+                document.getElementById('modalImageBackground').style.backgroundImage = 'none';
+            }
+            
+            // Set title with word-by-word styling for hover effect
+            const titleElement = document.getElementById('modalTitle');
+            const titleText = caption.title || filename;
+            const words = titleText.split(' ');
+            titleElement.innerHTML = words.map((word, idx) => 
+                `<span class="title-word" data-word="${idx}">${word}</span>`
+            ).join(' ');
+            
+            // Setup hover effect for title words
+            setupModalTitleWords();
+            
+            // Build metadata line: Date • Type • Extra
+            const metaParts = [];
+            if (caption.date) metaParts.push(`<span style="color: #666;">${caption.date}</span>`);
+            if (caption.type) metaParts.push(`<span style="color: #4f4e4e; font-weight: 600;">${caption.type}</span>`);
+            if (caption.extra) metaParts.push(`<span style="color: #666;">${caption.extra}</span>`);
+            
+            const metadataElement = document.getElementById('modalMetadata');
+            metadataElement.innerHTML = metaParts.length > 0 ? metaParts.join(' • ') : '';
+            
+            // Parse markdown links in description: [text](url) -> <a href="url">text</a>
+            const descElement = document.getElementById('modalDescription');
+            const description = caption.description || '';
+            const parsedDescription = description.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+            descElement.innerHTML = parsedDescription;
+            
+            // Set links if available
+            const linkUrl = caption.link || '#';
+            const imageLink = document.getElementById('modalImageLink');
+            const titleLink = document.getElementById('modalTitleLink');
+            const linkButton = document.getElementById('modalLinkButton');
+            
+            if (caption.link) {
+                imageLink.href = linkUrl;
+                imageLink.style.cursor = 'pointer';
+                imageLink.onclick = null;
+                titleLink.href = linkUrl;
+                titleLink.style.cursor = 'pointer';
+                titleLink.onclick = null;
+                linkButton.style.display = 'block';
+                linkButton.disabled = false;
+            } else {
+                imageLink.href = 'javascript:void(0);';
+                imageLink.style.cursor = 'default';
+                imageLink.onclick = function(e) { e.preventDefault(); return false; };
+                titleLink.href = 'javascript:void(0);';
+                titleLink.style.cursor = 'default';
+                titleLink.onclick = function(e) { e.preventDefault(); return false; };
+                linkButton.style.display = 'none';
+                linkButton.disabled = true;
+            }
+            
+            updateCarouselDisplay();
+        }
+
+        function updateCarouselDisplay() {
+            document.getElementById('carouselIndex').textContent = carouselCurrentIndex + 1;
+            document.getElementById('carouselTotal').textContent = carouselImages.length;
+            
+            // Update button disabled states
+            document.getElementById('prevBtn').disabled = carouselCurrentIndex === 0;
+            document.getElementById('nextBtn').disabled = carouselCurrentIndex === carouselImages.length - 1;
+        }
+
+        function navigateCarousel(direction) {
+            const newIndex = carouselCurrentIndex + direction;
+            if (newIndex >= 0 && newIndex < carouselImages.length) {
+                carouselCurrentIndex = newIndex;
+                displayCarouselImage(carouselCurrentIndex);
+            }
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Focus management
+            setTimeout(() => document.querySelector('.modal-close').focus(), 300);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            // Reset modal title states when closing
+            modalTitleStates = {};
+        }
+
+        function openModalLink() {
+            const captionFilename = carouselPrimaryFilename || carouselImages[carouselCurrentIndex].filename;
+            const caption = imageCaptions[captionFilename] || {};
+            const linkUrl = caption.link;
+            
+            if (linkUrl) {
+                window.open(linkUrl, '_blank');
+            }
+        }
+
+        // Close modal on background click
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById('modal');
+            const wrapper = document.querySelector('.modal-wrapper');
+            modal.addEventListener('click', (e) => {
+                // Close if clicking on modal background (outside the wrapper)
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+        });
+
+        // Close modal on Escape key and handle arrow keys
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            // Arrow key navigation in carousel
+            const modal = document.getElementById('modal');
+            if (modal.classList.contains('active') && carouselImages.length > 1) {
+                if (e.key === 'ArrowLeft') {
+                    navigateCarousel(-1);
+                } else if (e.key === 'ArrowRight') {
+                    navigateCarousel(1);
+                }
+            }
+        });
+
+        // Infinite scroll with throttling
+        function handleScroll() {
+            if (scrollThrottle) return;
+            
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const documentHeight = document.documentElement.scrollHeight;
+
+            // Load more images when user is near the bottom
+            if (scrollPosition >= documentHeight - 500 && currentIndex < allImages.length) {
+                scrollThrottle = true;
+                displayImages();
+                setTimeout(() => { scrollThrottle = false; }, 200);
+            }
+
+            // Scroll fade effect for hero
+            const hero = document.getElementById('hero');
+            hero.classList.add('scrolling');
+            
+            // Clear the timeout if it exists
+            if (window.scrollFadeTimeout) {
+                clearTimeout(window.scrollFadeTimeout);
+            }
+            
+            // Set a new timeout to remove scrolling class when scroll stops
+            window.scrollFadeTimeout = setTimeout(() => {
+                hero.classList.remove('scrolling');
+            }, 150);
+        }
+
+        // Search Functionality
+        function openSearch() {
+            const searchOverlay = document.getElementById('searchOverlay');
+            const searchInput = document.getElementById('searchInput');
+            searchOverlay.classList.add('active');
+            searchInput.focus();
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSearch() {
+            const searchOverlay = document.getElementById('searchOverlay');
+            searchOverlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchResults').innerHTML = '';
+        }
+
+        function performSearch(query) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!query.trim()) {
+                resultsContainer.innerHTML = '';
+                resultsContainer.classList.remove('has-results');
+                return;
+            }
+
+            const lowerQuery = query.toLowerCase();
+            const filteredImages = allImages.filter(img => {
+                const caption = imageCaptions[img.filename] || {};
+                const title = (caption.title || img.filename).toLowerCase();
+                return title.includes(lowerQuery);
+            });
+
+            // Render results
+            resultsContainer.innerHTML = filteredImages.map(img => {
+                const caption = imageCaptions[img.filename] || {};
+                const title = caption.title || img.filename;
+                return `
+                    <div class="search-result-item" onclick="handleSearchResultClick('${img.filename}', '${img.url}')">
+                        <img src="${img.url}" alt="${title}" loading="lazy">
+                        <div class="search-result-title">${title}</div>
+                    </div>
+                `;
+            }).join('');
+
+            // Show or hide results based on whether there are any
+            if (filteredImages.length > 0) {
+                resultsContainer.classList.add('has-results');
+            } else {
+                resultsContainer.classList.remove('has-results');
+            }
+        }
+
+        function handleSearchResultClick(filename, url) {
+            closeSearch();
+            openModal(filename, url);
+        }
+
+        // Event listeners for search
+        document.addEventListener('keydown', (e) => {
+            const searchOverlay = document.getElementById('searchOverlay');
+            const searchInput = document.getElementById('searchInput');
+
+            // Open search with 'f' or 'ctrl+f'
+            if ((e.key === 'f' || e.key === 'F') && (e.ctrlKey || e.metaKey)) {
+                e.preventDefault();
+                openSearch();
+            } else if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                e.preventDefault();
+                openSearch();
+            }
+
+            // Close search with Escape
+            if (e.key === 'Escape' && searchOverlay.classList.contains('active')) {
+                closeSearch();
+            }
+        });
+
+        // Add input event listener for real-time search
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                performSearch(e.target.value);
+            });
+
+            // Close search when clicking outside
+            const searchOverlay = document.getElementById('searchOverlay');
+            const searchContainer = document.querySelector('.search-container');
+            searchOverlay.addEventListener('click', (e) => {
+                if (e.target === searchOverlay) {
+                    closeSearch();
+                }
+            });
+        });
+
+        // Update active nav link based on current route
+        function updateActiveNavLink() {
+            const currentPath = window.location.pathname;
+            const portfolioLink = document.getElementById('portfolioLink');
+            const aboutLink = document.getElementById('aboutLink');
+            
+            // Remove active class from all nav links
+            portfolioLink.classList.remove('active');
+            aboutLink.classList.remove('active');
+            
+            // Add active class to the current page
+            if (currentPath === '/about') {
+                aboutLink.classList.add('active');
+            } else {
+                // Default to portfolio for home page
+                portfolioLink.classList.add('active');
+            }
+        }
+
+        // Setup search title words with hover states
+        let searchTitleStates = [0];
+
+        function setupSearchTitleWords() {
+            const searchTitle = document.getElementById('searchTitle');
+            const titleWords = searchTitle.querySelectorAll('.title-word');
+            
+            titleWords.forEach((word, index) => {
+                word.addEventListener('mouseenter', () => {
+                    // Pick random state from 0-6
+                    const randomState = Math.floor(Math.random() * totalStates);
+                    searchTitleStates[index] = randomState;
+                    updateWordStyle(word, randomState);
+                });
+
+                word.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    searchTitleStates[index] = (searchTitleStates[index] + 1) % totalStates;
+                    updateWordStyle(word, searchTitleStates[index]);
+                });
+            });
+        }
+
+        // Initialize
+        setupTitleWords();
+        setupSearchTitleWords();
+        loadImages();
+        updateActiveNavLink();
+        window.addEventListener('scroll', handleScroll);
+    </script>
+</body>
+</html>

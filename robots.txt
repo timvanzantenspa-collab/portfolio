@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /static/.cache/
+
+Sitemap: https://timvanzanten.com/sitemap.xml
