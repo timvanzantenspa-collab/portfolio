@@ -1,4 +1,4 @@
-#Runs from timvanzantenspam@gmail.compile
+#Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
 from flask import Flask, render_template, jsonify
 from PIL import Image
 import os
