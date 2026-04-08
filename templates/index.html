@@ -286,6 +286,32 @@
             transform: scale(1.02);
         }
 
+        /* Image Tooltip */
+        .image-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 50;
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .image-item:hover .image-tooltip {
+            opacity: 1;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -1014,7 +1040,7 @@
 
         @media (max-width: 480px) {
             #scrollLiggen {
-                top: 20% !important;
+                top: 10% !important;
                 left: 50% !important;
                 transform: translate(-50%, -50%) !important;
                 height: 30px !important;
@@ -1363,6 +1389,15 @@
 
                 itemDiv.appendChild(img);
                 
+                // Create tooltip with title and date
+                const tooltip = document.createElement('div');
+                tooltip.className = 'image-tooltip';
+                const caption = imageCaptions[imageData.filename] || {};
+                const title = caption.title || imageData.filename;
+                const date = caption.date ? ` • ${caption.date}` : '';
+                tooltip.textContent = title + date;
+                itemDiv.appendChild(tooltip);
+                
                 // Add click handler to open modal
                 itemDiv.addEventListener('click', () => openModal(imageData.filename, imageData.url));
                 
@@ -1425,6 +1460,14 @@
                 carouselPrimaryFilename = filename;
                 carouselCurrentIndex = 0;
                 document.getElementById('carouselControls').classList.remove('active');
+            }
+            
+            // Preload next image in carousel for smooth transitions
+            if (carouselImages.length > 1) {
+                const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
+                const nextImageUrl = carouselImages[nextIndex].url;
+                const preloadImg = new Image();
+                preloadImg.src = nextImageUrl; // Start preloading
             }
             
             displayCarouselImage(carouselCurrentIndex);
@@ -1540,6 +1583,14 @@
             if (newIndex >= 0 && newIndex < carouselImages.length) {
                 carouselCurrentIndex = newIndex;
                 displayCarouselImage(carouselCurrentIndex);
+                
+                // Preload next image after direction change
+                if (carouselImages.length > 1) {
+                    const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
+                    const nextImageUrl = carouselImages[nextIndex].url;
+                    const preloadImg = new Image();
+                    preloadImg.src = nextImageUrl;
+                }
             }
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
