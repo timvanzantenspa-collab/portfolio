@@ -336,6 +336,11 @@ def get_carousel(filename):
     
     return jsonify({'primary': primary_image, 'images': carousel_data})
 
+@app.errorhandler(404)
+def not_found(error):
+    """Redirect 404 errors to home page"""
+    return render_template('index.html')
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5005))
