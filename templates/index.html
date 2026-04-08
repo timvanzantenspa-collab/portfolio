@@ -952,6 +952,13 @@
 
             .modal {
                 overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .modal::-webkit-scrollbar {
+                display: none;
             }
 
             .modal-wrapper {
@@ -1093,7 +1100,13 @@
             .modal {
                 padding-top: 30px;
                 overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
                 -webkit-overflow-scrolling: touch;
+            }
+
+            .modal::-webkit-scrollbar {
+                display: none;
             }
 
             .modal-wrapper {
