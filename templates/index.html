@@ -1040,7 +1040,7 @@
 
         @media (max-width: 480px) {
             #scrollLiggen {
-                top: 10% !important;
+                top: 14% !important;
                 left: 50% !important;
                 transform: translate(-50%, -50%) !important;
                 height: 30px !important;
@@ -1573,25 +1573,26 @@
             document.getElementById('carouselIndex').textContent = carouselCurrentIndex + 1;
             document.getElementById('carouselTotal').textContent = carouselImages.length;
             
-            // Update button disabled states
-            document.getElementById('prevBtn').disabled = carouselCurrentIndex === 0;
-            document.getElementById('nextBtn').disabled = carouselCurrentIndex === carouselImages.length - 1;
+            // Keep buttons always enabled for looping carousel
+            document.getElementById('prevBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = false;
         }
 
         function navigateCarousel(direction) {
-            const newIndex = carouselCurrentIndex + direction;
-            if (newIndex >= 0 && newIndex < carouselImages.length) {
-                carouselCurrentIndex = newIndex;
-                displayCarouselImage(carouselCurrentIndex);
-                
-                // Preload next image after direction change
-                if (carouselImages.length > 1) {
-                    const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
-                    const nextImageUrl = carouselImages[nextIndex].url;
-                    const preloadImg = new Image();
-                    preloadImg.src = nextImageUrl;
-                }
+            if (carouselImages.length <= 1) return;
+            
+            // Looping carousel - wrap around with modulo
+            carouselCurrentIndex = (carouselCurrentIndex + direction + carouselImages.length) % carouselImages.length;
+            displayCarouselImage(carouselCurrentIndex);
+            
+            // Preload next image after direction change
+            if (carouselImages.length > 1) {
+                const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
+                const nextImageUrl = carouselImages[nextIndex].url;
+                const preloadImg = new Image();
+                preloadImg.src = nextImageUrl;
             }
+            
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
