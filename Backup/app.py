@@ -1,3 +1,4 @@
+#Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
 from flask import Flask, render_template, jsonify
 from PIL import Image
 import os
@@ -269,6 +270,20 @@ def downscale_image(filename):
 def index():
     return render_template('index.html')
 
+@app.route('/about')
+def about():
+    return render_template('about.html')
+
+@app.route('/robots.txt')
+def robots():
+    with open(Path(__file__).parent / 'robots.txt', 'r') as f:
+        return f.read(), 200, {'Content-Type': 'text/plain'}
+
+@app.route('/sitemap.xml')
+def sitemap():
+    with open(Path(__file__).parent / 'sitemap.xml', 'r') as f:
+        return f.read(), 200, {'Content-Type': 'application/xml'}
+
 @app.route('/api/images')
 def get_images():
     """API endpoint to get all images"""
@@ -322,4 +337,6 @@ def get_carousel(filename):
     return jsonify({'primary': primary_image, 'images': carousel_data})
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5005, debug=True)
+    import os
+    port = int(os.environ.get('PORT', 5005))
+    app.run(host='0.0.0.0', port=port, debug=False)

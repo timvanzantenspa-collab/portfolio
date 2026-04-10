@@ -3,15 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tim van Zanten's creative portfolio featuring music, art, and interactive projects">
+    <meta name="description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects. Explore visual art, creative coding, and cultural experiences.">
     <meta name="theme-color" content="#0101FF">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Tim van Zanten - Creative Portfolio">
-    <meta property="og:description" content="Explore music production, creative coding, and collaborative art projects">
+    <meta property="og:description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects. Explore visual art, creative coding, and cultural experiences.">
+    <meta property="og:image" content="https://timvanzanten.com/static/og-image.png">
+    <meta property="og:url" content="https://timvanzanten.com">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Tim van Zanten - Portfolio">
+    <meta name="twitter:title" content="Tim van Zanten - Creative Portfolio">
+    <meta name="twitter:description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects.">
+    <meta name="author" content="Tim van Zanten">
+    <meta name="keywords" content="portfolio, music, digital culture, creative, art, interactive">
     <link rel="canonical" href="https://timvanzanten.com">
-    <title>Tim van Zanten - Creative Portfolio | Music, Art & Code</title>
+    <title>Tim van Zanten - Creative Portfolio</title>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
     <link rel="apple-touch-icon" href="/static/Favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/Favicon/favicon-32x32.png">
@@ -73,7 +78,7 @@
         #scrollLiggen {
             position: absolute;
             top: 130px;
-            left: 70px;
+            left: 160px;
             opacity: 0;
             transition: opacity 0.3s ease-out;
             pointer-events: none;
@@ -85,7 +90,7 @@
         }
 
         .hero-title {
-            font-size: clamp(24px, 5vw, 48px);
+            font-size: clamp(24px, 5vw, 44px);
             font-weight: 300;
             line-height: 1.1;
             letter-spacing: -1px;
@@ -148,20 +153,26 @@
             font-weight: 700;
         }
 
-        .play-link {
+        .nav-links {
+            display: flex;
+            gap: 42px;
+            margin-top: 12px;
+            justify-content: center;
+            width: 105%;
+        }
+
+        .nav-link {
             display: inline-block;
-            font-size: clamp(16px, 4vw, 24px);
+            font-size: clamp(16px, 4vw, 18px);
             font-weight: 700;
             color: #0101FF;
             text-decoration: none;
-            margin-top: 12px;
             letter-spacing: 0.5px;
             position: relative;
             padding-bottom: 4px;
-            align-self: flex-start;
         }
 
-        .play-link::after {
+        .nav-link::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -169,7 +180,12 @@
             width: 100%;
             height: 2px;
             background-color: #0101FF;
+            opacity: 0;
+        }
+
+        .nav-link.active::after {
             animation: blink 2s infinite;
+            opacity: 1;
         }
 
         @keyframes blink {
@@ -188,7 +204,7 @@
         .hero-socials {
             display: flex;
             flex-direction: row;
-            gap: 80px;
+            gap: 120px;
             opacity: 1;
             transition: opacity 1.0s ease-out;
             justify-content: center;
@@ -205,7 +221,7 @@
         }
 
         .hero-social-link {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 700;
             color: #000;
             background: none;
@@ -353,10 +369,11 @@
             width: 100%;
             height: 100%;
             z-index: 2000;
-            backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(2px);
+            background-color: rgba(255, 255, 255, 0.85);
             align-items: center;
             justify-content: center;
+            animation: fadeIn 0.3s ease-out;
         }
 
         .search-overlay.active {
@@ -369,62 +386,113 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 32px;
+            width: 90%;
+            max-width: 700px;
         }
 
         .search-title {
-            font-size: 36px;
-            font-weight: 300;
+            font-size: 28px;
+            font-weight: 700;
             color: #0101FF;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            margin: 0;
+        }
+
+        .search-title .title-word {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: -13px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 6px 8px;
+            border-radius: 0px;
+            line-height: 1;
+            transform: translateY(3px);
+            font-size: 28px;
+        }
+
+        .search-title .title-word.state-1 {
+            background-color: #0101FF;
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+        }
+
+        .search-title .title-word.state-2 {
+            background-color: #000000;
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .search-title .title-word.state-3 {
+            background-color: #000000;
+            color: #0101FF;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 6px;
+        }
+
+        .search-title .title-word.state-4 {
+            background-color: transparent;
+            color: #0101FF;
+            font-weight: 700;
+        }
+
+        .search-title .title-word.state-5 {
+            background-color: #cccccc;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        .search-title .title-word.state-6 {
+            background-color: #cccccc;
+            color: #ffffff;
+            font-weight: 700;
         }
 
         .search-input {
-            font-size: 48px;
-            font-weight: 700;
+            font-size: 32px;
+            font-weight: 400;
             border: none;
             background: transparent;
-            color: #0101FF;
+            color: #000;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
             outline: none;
-            letter-spacing: 3px;
-            padding: 10px 0;
-            border: none;
-            border-right: 6px solid #0101FF;
-            animation: blink-cursor 1s infinite;
-            min-width: 500px;
+            letter-spacing: 0.5px;
+            padding: 12px 0;
+            border-bottom: 2px solid #0101FF;
+            width: 100%;
             text-transform: uppercase;
             caret-color: #0101FF;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
         }
 
         .search-input:focus {
-            border-right-color: #0000cc;
+            border-bottom-color: #000;
         }
 
         .search-input::placeholder {
-            color: transparent;
+            color: #aaa;
         }
 
         .search-input:focus::placeholder {
-            color: transparent;
+            color: #777;
         }
 
         .search-results {
             display: none;
             grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            max-width: 900px;
+            gap: 24px;
             width: 100%;
-            max-height: 500px;
+            max-height: 60vh;
             overflow-y: auto;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 8px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: slideUp 0.3s ease-out;
+            padding: 0;
         }
 
         .search-results.has-results {
@@ -444,7 +512,7 @@
 
         /* Custom scrollbar styling */
         .search-results::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
 
         .search-results::-webkit-scrollbar-track {
@@ -452,17 +520,17 @@
         }
 
         .search-results::-webkit-scrollbar-thumb {
-            background: #cccccc;
-            border-radius: 4px;
+            background: #ddd;
+            border-radius: 3px;
         }
 
         .search-results::-webkit-scrollbar-thumb:hover {
-            background: #999999;
+            background: #ccc;
         }
 
         /* Firefox scrollbar */
         .search-results {
-            scrollbar-color: #cccccc transparent;
+            scrollbar-color: #ddd transparent;
             scrollbar-width: thin;
         }
 
@@ -470,14 +538,14 @@
             cursor: pointer;
             text-align: center;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            padding: 10px;
-            border-radius: 4px;
+            padding: 0;
+            border-radius: 0;
             background: transparent;
         }
 
         .search-result-item:hover {
-            transform: scale(1.08);
-            background: rgba(1, 1, 255, 0.05);
+            transform: scale(1.05);
+            background: transparent;
         }
 
         .search-result-item:focus-within {
@@ -488,24 +556,26 @@
 
         .search-result-item img {
             width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            height: auto;
+            object-fit: contain;
+            border-radius: 0;
+            box-shadow: none;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            aspect-ratio: 1;
         }
 
         .search-result-item:hover img {
-            box-shadow: 0 8px 24px rgba(1, 1, 255, 0.4);
+            box-shadow: none;
+            filter: brightness(0.9);
         }
 
         .search-result-title {
-            font-size: 13px;
-            color: #333;
-            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
             font-weight: 500;
-            letter-spacing: 0.5px;
-            line-height: 1.3;
+            letter-spacing: 0.3px;
+            line-height: 1.4;
             word-break: break-word;
         }
 
@@ -921,12 +991,19 @@
         }
 
         @media (max-width: 480px) {
+            #scrollLiggen {
+                top: 20px !important;
+                left: 100px !important;
+                height: 30px !important;
+            }
+
             .hero {
                 padding: 30px 15px;
             }
 
             .hero-content {
                 top: 8px;
+                left: 15px;
             }
 
             .hero-title {
@@ -1036,7 +1113,11 @@
                 <span class="title-word" data-word="1">VAN</span>
                 <span class="title-word" data-word="2">ZANTEN</span>
             </h1>
-            <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="play-link" target="_blank" title="Play on Spotify">PORTFOLIO</a>
+            <div class="nav-links">
+                <a href="/" class="nav-link active" id="portfolioLink">PORTFOLIO</a>
+                <a href="/about" class="nav-link" id="aboutLink">ABOUT</a>
+                <a href="javascript:void(0);" class="nav-link" id="searchLink" onclick="openSearch()" style="cursor: pointer;">SEARCH</a>
+            </div>
         </div>
         <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen" style="height: 45px;">
         <div class="hero-socials" id="heroSocials">
@@ -1049,12 +1130,12 @@
     </div>
 
     <div class="container" id="main-content">
-        <div class="image-grid" id="imageGrid"></div>
+        <div class="image-grid" id="imageGrid" role="region" aria-label="Portfolio gallery"></div>
         <div class="loading" id="loading" style="display: none;">Loading more images...</div>
     </div>
 
     <!-- Modal for image details -->
-    <div class="modal" id="modal">
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div class="modal-wrapper">
             <div class="modal-image" id="modalImageContainer">
                 <div class="modal-image-background" id="modalImageBackground"></div>
@@ -1082,14 +1163,17 @@
     </div>
 
     <!-- Search Overlay -->
-    <div class="search-overlay" id="searchOverlay">
+    <div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Search portfolio">
         <div class="search-container">
-            <div class="search-title">SEARCH TITLES</div>
+            <div class="search-title" id="searchTitle">
+                <span class="title-word" data-word="0">SEARCH</span>
+            </div>
             <input 
                 type="text" 
                 class="search-input" 
                 id="searchInput" 
-                placeholder=""
+                placeholder="Type to search..."
+                aria-label="Search portfolio by title"
                 autofocus
             >
             <div class="search-results" id="searchResults"></div>
@@ -1593,9 +1677,53 @@
             });
         });
 
+        // Update active nav link based on current route
+        function updateActiveNavLink() {
+            const currentPath = window.location.pathname;
+            const portfolioLink = document.getElementById('portfolioLink');
+            const aboutLink = document.getElementById('aboutLink');
+            
+            // Remove active class from all nav links
+            portfolioLink.classList.remove('active');
+            aboutLink.classList.remove('active');
+            
+            // Add active class to the current page
+            if (currentPath === '/about') {
+                aboutLink.classList.add('active');
+            } else {
+                // Default to portfolio for home page
+                portfolioLink.classList.add('active');
+            }
+        }
+
+        // Setup search title words with hover states
+        let searchTitleStates = [0];
+
+        function setupSearchTitleWords() {
+            const searchTitle = document.getElementById('searchTitle');
+            const titleWords = searchTitle.querySelectorAll('.title-word');
+            
+            titleWords.forEach((word, index) => {
+                word.addEventListener('mouseenter', () => {
+                    // Pick random state from 0-6
+                    const randomState = Math.floor(Math.random() * totalStates);
+                    searchTitleStates[index] = randomState;
+                    updateWordStyle(word, randomState);
+                });
+
+                word.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    searchTitleStates[index] = (searchTitleStates[index] + 1) % totalStates;
+                    updateWordStyle(word, searchTitleStates[index]);
+                });
+            });
+        }
+
         // Initialize
         setupTitleWords();
+        setupSearchTitleWords();
         loadImages();
+        updateActiveNavLink();
         window.addEventListener('scroll', handleScroll);
     </script>
 </body>

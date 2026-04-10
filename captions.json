@@ -182,4 +182,16 @@
         "type": "Photography",
         "extra": "For Bitbird Records",
         "description": ""
-}}
+    
+    },
+
+    "Makrail name.gif": {
+        "title": "Makrail",
+        "date": "April 2026",
+        "type": "Interactive Travel Guide",
+        "extra": "Passion Project",
+        "description": "",
+         "link": "https://makrail.com"
+
+    }
+}
