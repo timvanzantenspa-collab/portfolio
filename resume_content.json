@@ -1,0 +1,275 @@
+{
+  "content_version": "easy-v1",
+  "legacy_filename": "Resume_Tim_van_Zanten_2026.pdf",
+  "filenames": {
+    "en": "Resume_Tim_van_Zanten_2026_EN.pdf",
+    "nl": "Resume_Tim_van_Zanten_2026_NL.pdf"
+  },
+  
+  "festivals": {
+    "NFF": "https://www.filmfestival.nl/",
+    "IDFA": "https://www.idfa.nl/",
+    "IFFR": "https://www.iffr.com/",
+    "SPRING": "https://www.springfestival.be/",
+    "ITGWO": "https://itgwo.org/",
+    "Gent Jazz": "https://www.gentjazz.com/",
+    "Boomtown Gent": "https://www.boomtown.be/",
+    "Inscience": "https://www.inscience.be/",
+    "Paradiso": "https://www.paradiso.nl/",
+    "Brainwash": "https://brainwash.be/",
+    "IMPAKT": "https://www.impakt.nl/",
+    "Nederlands Film Festival": "https://www.filmfestival.nl/"
+  },
+
+  "common": {
+    "name": "Tim van Zanten",
+    "phone": "+31 6 50426640",
+    "email": "contact@timvanzanten.nl",
+    "website": "timvanzanten.nl",
+    "linkedin": "linkedin.com/in/timzv",
+    "location": {
+      "en": "Utrecht, Netherlands",
+      "nl": "Utrecht, Nederland"
+    },
+    "education": [
+      {
+        "degree": { "en": "MA New Media & Digital Culture", "nl": "MA New Media & Digital Culture" },
+        "institution": { "en": "Universiteit Utrecht, 2023-2024", "nl": "Universiteit Utrecht, 2023-2024" }
+      },
+      {
+        "degree": { "en": "Pre-Master Media Studies", "nl": "Pre-Master Media Studies" },
+        "institution": { "en": "Universiteit Utrecht, 2022-2023", "nl": "Universiteit Utrecht, 2022-2023" }
+      },
+      {
+        "degree": { "en": "Pre-Master Filosofie", "nl": "Pre-Master Filosofie" },
+        "institution": { "en": "Radboud Universiteit Nijmegen, 2021-2022", "nl": "Radboud Universiteit Nijmegen, 2021-2022" }
+      },
+      {
+        "degree": { "en": "Minor Music & Technology", "nl": "Minor Music & Technology" },
+        "institution": { "en": "HKU", "nl": "HKU" }
+      },
+      {
+        "degree": { "en": "BA Communication & Multimedia Design", "nl": "BA Communication & Multimedia Design" },
+        "institution": { "en": "Hogeschool Utrecht, 2017-2021", "nl": "Hogeschool Utrecht, 2017-2021" }
+      }
+    ]
+  },
+
+  "labels": {
+    "en": {
+      "experience": "Relevant Experience",
+      "skills": "Skills",
+      "education": "Education",
+      "projects": "Selected Projects",
+      "culture": "Cultural Experience"
+    },
+    "nl": {
+      "experience": "Relevante Ervaring",
+      "skills": "Vaardigheden",
+      "education": "Opleidingen",
+      "projects": "Geselecteerde Projecten",
+      "culture": "Culturele Ervaring"
+    }
+  },
+
+  "brand": {
+    "en": "Communication / Project Coordination / Digital Literacy / Audience Engagement",
+    "nl": "Communicatie / Projectcoordinatie / Digitale Geletterdheid / Publieksbetrokkenheid"
+  },
+
+  "profile": {
+    "en": "Thoughtful communication and cultural production professional connecting digital literacy, public engagement, audience research and event coordination. Bridges festival logistics and audience insight, juggling operations, content, research and education. Specialty: keeping cultural events running clearly and building meaningful connections with audiences.",
+    "nl": "Doordachte communicatie- en cultuurprofessional die digitale geletterdheid, publieksbetrokkenheid, publieksonderzoek en eventcoordinatie verbindt. Bouwt bruggen tussen festival-chaos en audience insight, en jongleert logistiek, content, onderzoek en educatie. Specialiteit: culturele events helder houden en betekenisvolle verbindingen tot stand brengen met publiek."
+  },
+
+  "about": {
+    "en": {
+      "paragraphs": [
+        "I'm Tim van Zanten, a cultural producer and researcher working at the intersection of music, digital culture, and public space. My work moves between organizing events, developing concepts, and exploring how technology shapes the way we experience culture.",
+        "With a background in New Media & Digital Culture, I'm particularly interested in how platforms, data, and algorithms influence taste, mood, and behavior. This translates into projects that are both analytical and hands-on, from building tools and dashboards to curating experiences and collaborations. I've worked on everything from album releases to creative coding experiments, always searching for new ways to express ideas visually and sonically.",
+        "Alongside my own practices, I work on projects that bring people together, whether that's through live events, educational programs, or new formats that connect culture, technology, and everyday life. For example, I've worked at Into The Great Wide Open (ITGWO), Nederlands Film Festival (NFF), Kaboom Animation Festival, InScience Film Festival and Brainwash Festival, among others.",
+        "If you'd like to chat about a project, explore collaboration opportunities, or just discuss creative ideas, feel free to reach out via email."
+      ]
+    },
+    "nl": {
+      "paragraphs": [
+        "Ik ben Tim van Zanten, een cultuurproducent en onderzoeker die werkt op het kruispunt van muziek, digitale cultuur en publieke ruimte. Mijn werk beweegt zich tussen het organiseren van evenementen, het ontwikkelen van concepten en het onderzoeken hoe technologie de manier waarop we cultuur ervaren, vormt.",
+        "Met een achtergrond in New Media & Digital Culture ben ik vooral geïnteresseerd in hoe platforms, data en algoritmes smaak, stemming en gedrag beïnvloeden. Dit vertaalt zich in projecten die zowel analytisch als praktisch zijn, van het bouwen van tools en dashboards tot het cureren van ervaringen en samenwerkingen. Ik heb aan alles gewerkt, van albumuitgaven tot creatieve coderingexperimenten, altijd op zoek naar nieuwe manieren om ideeën visueel en sonisch uit te drukken.",
+        "Naast mijn eigen praktijken werk ik aan projecten die mensen samenbrengen, of dat nu door live-evenementen, educatieve programma's of nieuwe formaten die cultuur, technologie en alledaags leven verbinden. Bijvoorbeeld heb ik gewerkt bij Into The Great Wide Open (ITGWO), Nederlands Film Festival (NFF), Kaboom Animation Festival, InScience Film Festival en Brainwash Festival, en nog veel meer.",
+        "Als je wilt chatten over een project, samenwerkingsmogelijkheden wilt verkennen of gewoon creatieve ideeën wilt bespreken, neem dan gerust contact op via e-mail."
+      ]
+    }
+  },
+
+  "skills": [
+    {
+      "label": { "en": "Communication", "nl": "Communicatie" },
+      "text": {
+        "en": "Project coordination / Copywriting / Content strategy / Public communication / Community engagement / Digital literacy",
+        "nl": "Projectcoordinatie / Copywriting / Contentstrategie / Publiekscommunicatie / Community engagement / Digitale geletterdheid"
+      }
+    },
+    {
+      "label": { "en": "Production", "nl": "Productie" },
+      "text": {
+        "en": "Event coordination / Festival production / Volunteer coordination / Stagehand",
+        "nl": "Eventcoordinatie / Festivalproductie / Vrijwilligerscoordinatie / Stagehand"
+      }
+    },
+    {
+      "label": { "en": "Research & Digital", "nl": "Onderzoek & Digitaal" },
+      "text": {
+        "en": "Audience research / Data analysis / AI literacy / Media literacy / Digital culture / Trend research",
+        "nl": "Publieksonderzoek / Data-analyse / AI-geletterdheid / Mediawijsheid / Digitale cultuur / Trendonderzoek"
+      }
+    }
+  ],
+
+  "experience": [
+    {
+      "role": { "en": "Freelance Production & Event Coordination", "nl": "Freelance Productie & Eventcoordinatie" },
+      "period": { "en": "2023-present", "nl": "2023-heden" },
+      "context": { "en": "Cultural festivals, exhibitions and public programmes", "nl": "Culturele festivals, tentoonstellingen en publieksprogramma's" },
+      "bullets": {
+        "en": [
+          { "text": "Coordinate volunteers, event operations, production support and audience-facing communication for e.a. ", "festivals": ["NFF", "IDFA", "IFFR", "SPRING", "ITGWO", "Inscience", "Paradiso", "Brainwash"], "suffix": "..." },
+          "Help teams keep cultural events running clearly and calmly through logistics, briefings, visitor flow and on-site communication in 1000+ attendee contexts."
+        ],
+        "nl": [
+          { "text": "Coordineer vrijwilligers, eventoperaties, productieondersteuning en publieksgerichte communicatie voor o.a. ", "festivals": ["NFF", "IDFA", "IFFR", "SPRING", "ITGWO", "Inscience", "Paradiso", "Brainwash"], "suffix": "..." },
+          "Help teams culturele evenementen helder en rustig te laten verlopen via logistiek, briefings, bezoekersstroom en communicatie op locatie in contexten met 1000+ bezoekers."
+        ]
+      }
+    },
+    {
+      "role": { "en": "Freelance Digital Literacy Educator & Workshop Facilitator", "nl": "Freelance Docent Digitale Geletterdheid" },
+      "period": { "en": "2024-present", "nl": "2024-heden" },
+      "context": { "en": "AI literacy, media literacy and educational workshops for high school students", "nl": "AI-geletterdheid, mediawijsheid en educatieve workshops voor middelbare scholieren" },
+      "bullets": {
+        "en": [
+          "Design and facilitate workshops on AI, algorithms, privacy and digital culture for high school students across the country.",
+          "Translate complex digital topics into accessible classroom formats with exercises, discussion prompts and practical media literacy examples."
+        ],
+        "nl": [
+          "Ontwerp en faciliteer workshops over AI, algoritmes, privacy en digitale cultuur voor middelbare scholieren door het hele land.",
+          "Vertaal complexe digitale thema's naar toegankelijke lesvormen met oefeningen, gespreksvragen en praktische voorbeelden rond mediawijsheid."
+        ]
+      }
+    },
+    {
+      "role": { "en": "Muziekclub Democrazy - Communication & Audience Research", "nl": "Muziekclub Democrazy - Communicatie & Publieksonderzoek" },
+      "period": { "en": "2023-2024", "nl": "2023-2024" },
+      "context": { "en": "Communication, audience research and data analysis", "nl": "Communicatie, publieksonderzoek en data-analyse" },
+      "url": "https://www.democrazy.be/",
+      "bullets": {
+        "en": [
+          "Analyzed 15 years of ticketing and audience data, including 10,000+ records, to identify attendance patterns and audience behaviour.",
+          "Turned research findings into practical recommendations for programming, communication strategy and audience development."
+        ],
+        "nl": [
+          "Analyseerde 15 jaar ticketing- en publieksdata, waaronder 10.000+ records, om patronen in bezoekersgedrag en bezoek te vinden.",
+          "Vertaalde onderzoeksinzichten naar praktische aanbevelingen voor programmering, communicatiestrategie en publieksontwikkeling."
+        ]
+      }
+    },
+    {
+      "role": { "en": "Frisse Gedachtes - PR & Social Content", "nl": "Frisse Gedachtes" },
+      "period": { "en": "2021-2023", "nl": "2021-2023" },
+      "context": { "en": "PR, concept development and social content", "nl": "PR, conceptontwikkeling en social content" },
+      "url": "https://frisse-gedachtes.nl/",
+      "bullets": {
+        "en": [
+          "Developed content, campaigns and community communication for a student mental-health platform.",
+          "Supported social media planning, public messaging and audience growth across campaign and platform communication."
+        ],
+        "nl": [
+          "Ontwikkelde content, campagnes en communitycommunicatie voor een platform rond toegankelijk mentaal welzijn onder studenten.",
+          "Ondersteunde socialmediaplanning, publieke communicatie en publieksgroei binnen campagne- en platformcommunicatie."
+        ]
+      }
+    },
+    {
+      "role": { "en": "De Speld - Concept Development & Branded Content", "nl": "De Speld" },
+      "period": { "en": "2019-2021", "nl": "2019-2021" },
+      "context": { "en": "Concept development, branded content and graduation research", "nl": "Conceptontwikkeling, branded content en afstudeeronderzoek" },
+      "url": "https://despeld.nl/",
+      "bullets": {
+        "en": [
+          "Developed branded content concepts and partner formats while balancing commercial goals with editorial tone and audience trust.",
+          "Researched alternative approaches to commercial content within satire and translated findings into creative concept work."
+        ],
+        "nl": [
+          "Ontwikkelde branded content-concepten en partnerformats waarbij commerciele doelen, redactionele toon en publieksvertrouwen samenkwamen.",
+          "Onderzocht alternatieve vormen van commerciele content binnen satire en vertaalde inzichten naar creatief conceptwerk."
+        ]
+      }
+    }
+  ],
+
+  "projects": [
+    {
+      "label": { "en": "MA Thesis", "nl": "MA-scriptie" },
+      "text": {
+        "en": "Research on algorithmic mood curation and the concept of vibes in digital music platforms.",
+        "nl": "Onderzoek naar algorithmic mood curation en het concept vibes op digitale muziekplatforms."
+      },
+      "url": "https://studenttheses.uu.nl/handle/20.500.12932/46458"
+    },
+    {
+      "label": { "en": "Digital Literacy Workshops", "nl": "Workshops Digitale Geletterdheid" },
+      "text": {
+        "en": "Interactive workshops on AI, algorithms, privacy and digital culture for secondary school students.",
+        "nl": "Interactieve workshops over AI, algoritmes, privacy en digitale cultuur voor middelbare scholieren."
+      },
+      "url": "https://timvanzanten.nl/about"
+    },
+    {
+      "label": { "en": "Paper Crane Collective", "nl": "Paper Crane Collective" },
+      "text": {
+        "en": "Co-organised music collective events and releases in Los Angeles.",
+        "nl": "Mede-georganiseerde events en releases voor een muziekcollectief in Los Angeles."
+      },
+      "url": "https://papercranecollective.bandcamp.com/"
+    }
+  ],
+
+  "culture": {
+    "en": ["NFF", "IDFA", "IFFR", "SPRING", "ITGWO", "Gent Jazz", "Boomtown Gent", "Inscience", "Paradiso", "Brainwash", "IMPAKT"],
+    "nl": ["NFF", "IDFA", "IFFR", "SPRING", "ITGWO", "Gent Jazz", "Boomtown Gent", "Inscience", "Paradiso", "Brainwash", "IMPAKT"]
+  },
+
+  "footer": {
+    "en": "Thoughtful cultural communication / digital literacy / public engagement",
+    "nl": "Doordachte culturele communicatie / digitale geletterdheid / publieksbetrokkenheid"
+  },
+
+  "config": {
+    "layout": {
+      "margin_left": 42,
+      "margin_right": 38,
+      "margin_top": 32,
+      "margin_bottom": 34,
+      "col_gap": 28,
+      "left_col_width": 318,
+      "header_height": 94,
+      "sidebar_section_gap": 6,
+      "link_icon_size": 9
+    },
+    "typography": {
+      "name_size": 28,
+      "section_size": 9.4,
+      "body_size": 7.85,
+      "small_size": 7.05,
+      "micro_size": 6.8
+    },
+    "colors": {
+      "primary": [0.004, 0.004, 1.0],
+      "black": [0, 0, 0],
+      "grey_dark": [0.18, 0.18, 0.18],
+      "grey": [0.42, 0.42, 0.42],
+      "grey_mid": [0.58, 0.58, 0.58],
+      "grey_light": [0.86, 0.86, 0.86],
+      "grey_faint": [0.965, 0.965, 0.965]
+    }
+  }
+}

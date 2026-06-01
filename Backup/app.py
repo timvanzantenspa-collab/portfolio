@@ -284,6 +284,11 @@ def sitemap():
     with open(Path(__file__).parent / 'sitemap.xml', 'r') as f:
         return f.read(), 200, {'Content-Type': 'application/xml'}
 
+@app.route('/ping')
+def ping():
+    """Keep-alive endpoint for Render uptime monitoring"""
+    return jsonify({'status': 'ok', 'message': 'Server is alive'}), 200
+
 @app.route('/api/images')
 def get_images():
     """API endpoint to get all images"""
@@ -335,6 +340,11 @@ def get_carousel(filename):
             carousel_data.append({'filename': img, 'url': url})
     
     return jsonify({'primary': primary_image, 'images': carousel_data})
+
+@app.errorhandler(404)
+def not_found(error):
+    """Redirect 404 errors to home page"""
+    return render_template('index.html')
 
 if __name__ == '__main__':
     import os

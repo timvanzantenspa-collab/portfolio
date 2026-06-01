@@ -149,7 +149,7 @@
 
     },
 
-    "Gifje logo.webp": {
+    "Gifje_logo.webp": {
         "title": "MARK",
         "date": "2021",
         "type": "BA Graduation Project",
@@ -178,8 +178,20 @@
 
     "birdpack3.webp": {
         "title": "Birdpack",
-        "date": "2024",
-        "type": "Creative Coding",
-        "extra": "Generative",
-        "description": "A flock of birds that fly around and react to each other. \n\nMade with [canvas](https://canvasjs.com/) and javascript."
-}}
+        "date": "2017",
+        "type": "Photography",
+        "extra": "For Bitbird Records",
+        "description": ""
+    
+    },
+
+    "Makrail.gif": {
+        "title": "Makrail",
+        "date": "April 2026",
+        "type": "Interactive Travel Guide",
+        "extra": "Passion Project",
+        "description": "",
+         "link": "https://makrail.com"
+
+    }
+}

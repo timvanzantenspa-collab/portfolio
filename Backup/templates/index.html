@@ -286,6 +286,32 @@
             transform: scale(1.02);
         }
 
+        /* Image Tooltip */
+        .image-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%) translateY(-8px);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 50;
+            max-width: 200px;
+            white-space: normal;
+            text-align: center;
+        }
+
+        .image-item:hover .image-tooltip {
+            opacity: 1;
+        }
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -306,10 +332,48 @@
 
         .loading {
             text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 12px;
-            animation: pulse 1.s ease-in-out infinite;
+            padding: 60px 40px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #f0f0f0;
+            border-top: 3px solid #0101FF;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            letter-spacing: 0.5px;
+            animation: fadeInOut 2s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% {
+                opacity: 0.6;
+            }
+            50% {
+                opacity: 1;
+            }
         }
 
         @keyframes pulse {
@@ -950,25 +1014,47 @@
                 font-size: 22px;
             }
 
+            .modal {
+                overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .modal::-webkit-scrollbar {
+                display: none;
+            }
+
             .modal-wrapper {
                 flex-direction: column;
-                align-items: center;
+                align-items: stretch;
+                width: 100%;
+                max-width: 100%;
+                height: auto;
+                margin: auto;
             }
 
             .modal-image {
-                width: 300px;
-                height: 300px;
+                width: 100%;
+                height: 350px;
+                flex-shrink: 0;
             }
 
             .modal-image img {
-                max-width: 300px;
-                max-height: 300px;
+                max-width: 100%;
+                max-height: 350px;
             }
 
             .modal-content {
                 flex: 1;
                 width: 100%;
                 padding: 30px;
+            }
+
+            .carousel-nav-btn {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 18px !important;
             }
 
             .container {
@@ -992,9 +1078,16 @@
 
         @media (max-width: 480px) {
             #scrollLiggen {
-                top: 20px !important;
-                left: 100px !important;
+                top: 14% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
                 height: 30px !important;
+            }
+
+            .carousel-nav-btn {
+                width: 44px !important;
+                height: 44px !important;
+                font-size: 20px !important;
             }
 
             .hero {
@@ -1071,7 +1164,13 @@
             .modal {
                 padding-top: 30px;
                 overflow-y: auto;
+                scrollbar-width: none;
+                -ms-overflow-style: none;
                 -webkit-overflow-scrolling: touch;
+            }
+
+            .modal::-webkit-scrollbar {
+                display: none;
             }
 
             .modal-wrapper {
@@ -1131,7 +1230,10 @@
 
     <div class="container" id="main-content">
         <div class="image-grid" id="imageGrid" role="region" aria-label="Portfolio gallery"></div>
-        <div class="loading" id="loading" style="display: none;">Loading more images...</div>
+        <div class="loading" id="loading" style="display: none;">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">Loading!<span class="loading-dots">.</span></div>
+        </div>
     </div>
 
     <!-- Modal for image details -->
@@ -1284,6 +1386,10 @@
 
         async function loadImages() {
             try {
+                // Show loading spinner while fetching
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.style.display = 'flex';
+                
                 const response = await fetch('/api/images');
                 allImages = await response.json();
                 
@@ -1291,9 +1397,15 @@
                 const captionsResponse = await fetch('/api/captions');
                 imageCaptions = await captionsResponse.json();
                 
+                // Hide loading spinner once data is loaded
+                loadingDiv.style.display = 'none';
+                
                 displayImages();
             } catch (error) {
                 console.error('Error loading images:', error);
+                // Hide loading spinner on error too
+                const loadingDiv = document.getElementById('loading');
+                loadingDiv.style.display = 'none';
             }
         }
 
@@ -1327,6 +1439,15 @@
                 img.style.opacity = '0'; // Start invisible
 
                 itemDiv.appendChild(img);
+                
+                // Create tooltip with title and date
+                const tooltip = document.createElement('div');
+                tooltip.className = 'image-tooltip';
+                const caption = imageCaptions[imageData.filename] || {};
+                const title = caption.title || imageData.filename;
+                const date = caption.date ? ` • ${caption.date}` : '';
+                tooltip.textContent = title + date;
+                itemDiv.appendChild(tooltip);
                 
                 // Add click handler to open modal
                 itemDiv.addEventListener('click', () => openModal(imageData.filename, imageData.url));
@@ -1392,6 +1513,14 @@
                 document.getElementById('carouselControls').classList.remove('active');
             }
             
+            // Preload next image in carousel for smooth transitions
+            if (carouselImages.length > 1) {
+                const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
+                const nextImageUrl = carouselImages[nextIndex].url;
+                const preloadImg = new Image();
+                preloadImg.src = nextImageUrl; // Start preloading
+            }
+            
             displayCarouselImage(carouselCurrentIndex);
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
@@ -1416,18 +1545,24 @@
             // Trigger reflow to ensure animation restarts
             void img.offsetWidth;
             
-            // Update image and trigger animation
+            // Update image and trigger animation with error handling
             img.src = imageUrl;
             img.alt = filename;
             img.classList.add('animate');
             
-            // Set up next image preview (blurred background)
-            const nextIndex = index + 1;
-            if (nextIndex < carouselImages.length) {
-                const nextImageUrl = carouselImages[nextIndex].url;
-                document.getElementById('modalImageBackground').style.backgroundImage = `url('${nextImageUrl}')`;
-            } else {
-                document.getElementById('modalImageBackground').style.backgroundImage = 'none';
+            img.onerror = function() {
+                img.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E';
+            };
+            
+            // Set up next image preview (blurred background) - safely check nextIndex
+            if (carouselImages && carouselImages.length > 0) {
+                const nextIndex = index + 1;
+                if (nextIndex < carouselImages.length) {
+                    const nextImageUrl = carouselImages[nextIndex].url;
+                    document.getElementById('modalImageBackground').style.backgroundImage = `url('${nextImageUrl}')`;
+                } else {
+                    document.getElementById('modalImageBackground').style.backgroundImage = 'none';
+                }
             }
             
             // Set title with word-by-word styling for hover effect
@@ -1489,17 +1624,26 @@
             document.getElementById('carouselIndex').textContent = carouselCurrentIndex + 1;
             document.getElementById('carouselTotal').textContent = carouselImages.length;
             
-            // Update button disabled states
-            document.getElementById('prevBtn').disabled = carouselCurrentIndex === 0;
-            document.getElementById('nextBtn').disabled = carouselCurrentIndex === carouselImages.length - 1;
+            // Keep buttons always enabled for looping carousel
+            document.getElementById('prevBtn').disabled = false;
+            document.getElementById('nextBtn').disabled = false;
         }
 
         function navigateCarousel(direction) {
-            const newIndex = carouselCurrentIndex + direction;
-            if (newIndex >= 0 && newIndex < carouselImages.length) {
-                carouselCurrentIndex = newIndex;
-                displayCarouselImage(carouselCurrentIndex);
+            if (carouselImages.length <= 1) return;
+            
+            // Looping carousel - wrap around with modulo
+            carouselCurrentIndex = (carouselCurrentIndex + direction + carouselImages.length) % carouselImages.length;
+            displayCarouselImage(carouselCurrentIndex);
+            
+            // Preload next image after direction change
+            if (carouselImages.length > 1) {
+                const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
+                const nextImageUrl = carouselImages[nextIndex].url;
+                const preloadImg = new Image();
+                preloadImg.src = nextImageUrl;
             }
+            
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
             
@@ -1525,16 +1669,45 @@
             }
         }
 
+        // Swipe gesture support for carousel on mobile
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        function handleSwipe() {
+            const modal = document.getElementById('modal');
+            if (!modal.classList.contains('active') || carouselImages.length <= 1) return;
+
+            if (touchEndX < touchStartX - 50) {
+                // Swiped left - next image
+                navigateCarousel(1);
+            } else if (touchEndX > touchStartX + 50) {
+                // Swiped right - previous image
+                navigateCarousel(-1);
+            }
+        }
+
         // Close modal on background click
         document.addEventListener('DOMContentLoaded', () => {
             const modal = document.getElementById('modal');
             const wrapper = document.querySelector('.modal-wrapper');
+            const modalImage = document.getElementById('modalImage');
+            
             modal.addEventListener('click', (e) => {
                 // Close if clicking on modal background (outside the wrapper)
                 if (e.target === modal) {
                     closeModal();
                 }
             });
+
+            // Add touch listeners for swipe detection
+            modalImage.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            }, false);
+
+            modalImage.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, false);
         });
 
         // Close modal on Escape key and handle arrow keys
@@ -1621,7 +1794,7 @@
                 const title = caption.title || img.filename;
                 return `
                     <div class="search-result-item" onclick="handleSearchResultClick('${img.filename}', '${img.url}')">
-                        <img src="${img.url}" alt="${title}" loading="lazy">
+<img src="${img.url}" alt="${title}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23eee%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22%3E?%3C/text%3E%3C/svg%3E'">
                         <div class="search-result-title">${title}</div>
                     </div>
                 `;

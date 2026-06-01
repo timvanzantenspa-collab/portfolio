@@ -5,6 +5,7 @@ import os
 import shutil
 from pathlib import Path
 import json
+from generate_jsonld import generate_all_schemas, load_resume_content, get_schema_script_tags, get_about_page_script_tags
 
 # Increase PIL image size limit for large files (safe since processing own files)
 Image.MAX_IMAGE_PIXELS = None
@@ -16,6 +17,18 @@ CAPTIONS_FILE = Path(__file__).parent / 'captions.json'
 IMAGE_ORDER_FILE = Path(__file__).parent / 'image_order.json'
 CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 CACHE_FOLDER.mkdir(exist_ok=True)
+
+# Load JSON-LD schemas on startup
+try:
+    resume_content = load_resume_content()
+    jsonld_schemas = generate_all_schemas(resume_content)
+    homepage_scripts = get_schema_script_tags(jsonld_schemas)
+    about_page_scripts = get_about_page_script_tags(jsonld_schemas)
+except Exception as e:
+    print(f"Warning: Could not load JSON-LD schemas: {e}")
+    homepage_scripts = ""
+    about_page_scripts = ""
+
 
 # Maximum image width for downscaled versions
 MAX_WIDTH = 500
@@ -268,11 +281,11 @@ def downscale_image(filename):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', jsonld_scripts=homepage_scripts)
 
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    return render_template('about.html', jsonld_scripts=about_page_scripts)
 
 @app.route('/robots.txt')
 def robots():

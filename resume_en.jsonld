@@ -1,0 +1,158 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Tim van Zanten",
+  "url": "https://timvanzanten.nl",
+  "email": "contact@timvanzanten.nl",
+  "telephone": "+31 6 50426640",
+  "jobTitle": "Communication / Project Coordination / Digital Literacy / Audience Engagement",
+  "description": "Thoughtful communication and cultural production professional connecting digital literacy, public engagement, audience research and event coordination. Bridges festival logistics and audience insight, juggling operations, content, research and education. Specialty: keeping cultural events running clearly and building meaningful connections with audiences.",
+  "address": {
+    "@type": "PostalAddress",
+    "addressLocality": "Utrecht, Netherlands"
+  },
+  "sameAs": [
+    "https://linkedin.com/in/timzv",
+    "https://timvanzanten.nl"
+  ],
+  "workExperience": [
+    {
+      "@type": "EmployeeRole",
+      "roleName": "Freelance Production & Event Coordination",
+      "startDate": "2023",
+      "endDate": "present",
+      "description": "Cultural festivals, exhibitions and public programmes"
+    },
+    {
+      "@type": "EmployeeRole",
+      "roleName": "Freelance Digital Literacy Educator & Workshop Facilitator",
+      "startDate": "2024",
+      "endDate": "present",
+      "description": "AI literacy, media literacy and educational workshops for high school students"
+    },
+    {
+      "@type": "EmployeeRole",
+      "roleName": "Muziekclub Democrazy - Communication & Audience Research",
+      "startDate": "2023",
+      "endDate": "2024",
+      "description": "Communication, audience research and data analysis"
+    },
+    {
+      "@type": "EmployeeRole",
+      "roleName": "Frisse Gedachtes - PR & Social Content",
+      "startDate": "2021",
+      "endDate": "2023",
+      "description": "PR, concept development and social content"
+    },
+    {
+      "@type": "EmployeeRole",
+      "roleName": "De Speld - Concept Development & Branded Content",
+      "startDate": "2019",
+      "endDate": "2021",
+      "description": "Concept development, branded content and graduation research"
+    }
+  ],
+  "educationExperience": [
+    {
+      "@type": "EducationalOccupationalCredential",
+      "name": "MA New Media & Digital Culture",
+      "educationalLevel": "HigherEducation",
+      "credentialCategory": "Diploma",
+      "awardingBody": {
+        "@type": "Organization",
+        "name": "Universiteit Utrecht, 2023-2024"
+      }
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      "name": "Pre-Master Media Studies",
+      "educationalLevel": "HigherEducation",
+      "credentialCategory": "Diploma",
+      "awardingBody": {
+        "@type": "Organization",
+        "name": "Universiteit Utrecht, 2022-2023"
+      }
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      "name": "Pre-Master Filosofie",
+      "educationalLevel": "HigherEducation",
+      "credentialCategory": "Diploma",
+      "awardingBody": {
+        "@type": "Organization",
+        "name": "Radboud Universiteit Nijmegen, 2021-2022"
+      }
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      "name": "Minor Music & Technology",
+      "educationalLevel": "HigherEducation",
+      "credentialCategory": "Diploma",
+      "awardingBody": {
+        "@type": "Organization",
+        "name": "HKU"
+      }
+    },
+    {
+      "@type": "EducationalOccupationalCredential",
+      "name": "BA Communication & Multimedia Design",
+      "educationalLevel": "HigherEducation",
+      "credentialCategory": "Diploma",
+      "awardingBody": {
+        "@type": "Organization",
+        "name": "Hogeschool Utrecht, 2017-2021"
+      }
+    }
+  ],
+  "skills": [
+    {
+      "@type": "Thing",
+      "name": "Communication",
+      "description": "Project coordination / Copywriting / Content strategy / Public communication / Community engagement / Digital literacy"
+    },
+    {
+      "@type": "Thing",
+      "name": "Production",
+      "description": "Event coordination / Festival production / Volunteer coordination / Stagehand"
+    },
+    {
+      "@type": "Thing",
+      "name": "Research & Digital",
+      "description": "Audience research / Data analysis / AI literacy / Media literacy / Digital culture / Trend research"
+    }
+  ],
+  "projects": [
+    {
+      "@type": "CreativeWork",
+      "name": "MA Thesis",
+      "description": "Research on algorithmic mood curation and the concept of vibes in digital music platforms.",
+      "url": "https://studenttheses.uu.nl/handle/20.500.12932/46458"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Digital Literacy Workshops",
+      "description": "Interactive workshops on AI, algorithms, privacy and digital culture for secondary school students.",
+      "url": "https://timvanzanten.nl/about"
+    },
+    {
+      "@type": "CreativeWork",
+      "name": "Paper Crane Collective",
+      "description": "Co-organised music collective events and releases in Los Angeles.",
+      "url": "https://papercranecollective.bandcamp.com/"
+    }
+  ],
+  "knowsAbout": [
+    "NFF",
+    "IDFA",
+    "IFFR",
+    "SPRING",
+    "ITGWO",
+    "Gent Jazz",
+    "Boomtown Gent",
+    "Inscience",
+    "Paradiso",
+    "Brainwash",
+    "IMPAKT"
+  ],
+  "dateModified": "2026-05-29T12:11:12.718627"
+}
