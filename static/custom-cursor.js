@@ -20,12 +20,11 @@
     let velocityY = 0;
     let isOverInteractive = false;
     
-    // Interactive element selectors
+    // Interactive element selectors - only actual clickable/interactive elements
     const interactiveSelectors = [
         'a', 'button', 'input', 'textarea', 'select',
-        '[role="button"]', '.cursor-interactive', '.title-word',
-        '.hero-social-link', '.modal-close', '.nav-link',
-        'img', '[onclick]'
+        '[role="button"]', '.title-word', '.hero-social-link',
+        '.modal-close', '.nav-link'
     ];
     
     function isOverInteractiveElement() {
