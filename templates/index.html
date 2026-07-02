@@ -1229,23 +1229,23 @@
             background: var(--cursor-blue);
             border-radius: 50%;
             will-change: transform;
-            box-shadow: 0 0 8px rgba(1, 1, 255, 0.3);
+            box-shadow: 0 0 10px rgba(1, 1, 255, 0.4);
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
 
-        /* Interactive state - dynamic color based on background */
+        /* Interactive state - changes to black or white based on background contrast */
         .cursor-container.cursor-interactive-state .cursor-dot {
-            background: var(--contrast-color, var(--cursor-black));
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 14px rgba(0, 0, 0, 0.5);
         }
 
         .cursor-container[data-interactive="#ffffff"] .cursor-dot {
             background: #ffffff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(0, 0, 0, 0.3);
         }
 
         .cursor-container[data-interactive="#000000"] .cursor-dot {
             background: #000000;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
         }
     </style>
     <!-- JSON-LD Structured Data for SEO and Search Engine Indexing -->

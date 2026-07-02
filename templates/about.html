@@ -654,23 +654,23 @@
             background: var(--cursor-blue);
             border-radius: 50%;
             will-change: transform;
-            box-shadow: 0 0 8px rgba(1, 1, 255, 0.3);
+            box-shadow: 0 0 10px rgba(1, 1, 255, 0.4);
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
 
-        /* Interactive state - dynamic color based on background */
+        /* Interactive state - changes to black or white based on background contrast */
         .cursor-container.cursor-interactive-state .cursor-dot {
-            background: var(--contrast-color, var(--cursor-black));
-            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 14px rgba(0, 0, 0, 0.5);
         }
 
         .cursor-container[data-interactive="#ffffff"] .cursor-dot {
             background: #ffffff;
-            box-shadow: 0 0 8px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(0, 0, 0, 0.3);
         }
 
         .cursor-container[data-interactive="#000000"] .cursor-dot {
             background: #000000;
-            box-shadow: 0 0 8px rgba(255, 255, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
         }
     </style>
     <!-- JSON-LD Structured Data for SEO and Search Engine Indexing -->
@@ -718,7 +718,7 @@
                 I work in cultural production and education. I organize festivals and public programs, teach high school students about AI and digital culture, and do audience research. The goal is always the same: making things clearer, more inclusive, and more beautiful.
             </p>
             <p>
-                I've worked at <a href="https://www.intothegreatwideopen.nl/">Into The Great Wide Open (ITGWO)</a>, <a href="https://www.nederlandsfilmfestival.nl/">Nederlands Film Festival (NFF)</a>, <a href="https://www.kaboomfestival.nl/nl/">Kaboom Animation Festival</a>, <a href="https://www.insciencefestival.nl/">InScience Film Festival</a>, <a href="https://www.brainwashfestival.nl/">Brainwash Festival</a>, and others. If you have a project or idea you want to discuss, send me an email at <a href="mailto:timvanzanten6@gmail.com">timvanzanten6@gmail.com</a>.
+                I've worked at <a href="https://www.intothegreatwideopen.nl/">Into The Great Wide Open (ITGWO)</a>, <a href="https://www.nederlandsfilmfestival.nl/">Nederlands Film Festival (NFF)</a>, <a href="https://www.kaboomfestival.nl/nl/">Kaboom Animation Festival</a>, <a href="https://www.insciencefestival.nl/">InScience Film Festival</a>, <a href="https://www.brainwashfestival.nl/">Brainwash Festival</a>, and others. If you have a project or idea you want to discuss, <a href="mailto:timvanzanten6@gmail.com">send me an email</a>.
             </p>
         </div>
     </div>
