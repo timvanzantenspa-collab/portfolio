@@ -49,6 +49,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
             overflow-x: hidden;
             scroll-behavior: smooth;
+            cursor: none;
         }
 
         /* Hero Section */
@@ -623,11 +624,53 @@
                 font-size: 14px;
             }
         }
+
+        /* Custom Stretching Cursor Styles */
+        :root {
+            --cursor-blue: #0101FF;
+            --cursor-black: #000000;
+            --cursor-white: #ffffff;
+            --transition-fast: 0.2s;
+            --transition-easing-out: cubic-bezier(0.11, 0.46, 0.36, 1);
+        }
+
+        .cursor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 12px;
+            height: 12px;
+            pointer-events: none;
+            z-index: 9999;
+            will-change: transform;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .cursor-dot {
+            width: 100%;
+            height: 100%;
+            background: var(--cursor-blue);
+            border-radius: 50%;
+            transition: transform var(--transition-fast) var(--transition-easing-out);
+            will-change: transform;
+        }
+
+        /* Interactive state - black with white center */
+        .cursor-container.cursor-interactive-state .cursor-dot {
+            background: var(--cursor-black);
+            box-shadow: inset 0 0 0 2px var(--cursor-white);
+        }
     </style>
     <!-- JSON-LD Structured Data for SEO and Search Engine Indexing -->
     {{ jsonld_scripts | safe }}
 </head>
 <body>
+    <!-- Custom Stretching Cursor -->
+    <div class="cursor-container">
+        <div class="cursor-dot"></div>
+    </div>
+
     <!-- Accessibility: Skip to content link -->
     <a href="#aboutTitle" class="skip-to-content">Skip to about content</a>
     <!-- Hero Section -->
@@ -664,7 +707,7 @@
                 I work in cultural production and education. I organize festivals and public programs, teach high school students about AI and digital culture, and do audience research. The goal is always the same: making things clearer, more inclusive, and more beautiful.
             </p>
             <p>
-                I've worked at <a href="https://itgwo.org/">Into The Great Wide Open (ITGWO)</a>, <a href="https://www.filmfestival.nl/">Nederlands Film Festival (NFF)</a>, <a href="https://www.kaboomfestival.nl/nl/">Kaboom Animation Festival</a>, <a href="https://www.insciencefestival.nl/">InScience Film Festival</a>, <a href="https://brainwash.be/">Brainwash Festival</a>, and others. If you have a project or idea you want to discuss, send me an email at <a href="mailto:contact@timvanzanten.nl">contact@timvanzanten.nl</a>.
+                I've worked at <a href="https://www.intothegreatwideopen.nl/">Into The Great Wide Open (ITGWO)</a>, <a href="https://www.nederlandsfilmfestival.nl/">Nederlands Film Festival (NFF)</a>, <a href="https://www.kaboomfestival.nl/nl/">Kaboom Animation Festival</a>, <a href="https://www.insciencefestival.nl/">InScience Film Festival</a>, <a href="https://www.brainwashfestival.nl/">Brainwash Festival</a>, and others. If you have a project or idea you want to discuss, send me an email at <a href="mailto:timvanzanten6@gmail.com">timvanzanten6@gmail.com</a>.
             </p>
         </div>
     </div>
@@ -874,5 +917,7 @@
         
         window.addEventListener('scroll', handleScroll);
     </script>
+    <!-- Custom Stretching Cursor Script -->
+    <script src="/static/custom-cursor.js"></script>
 </body>
 </html>
