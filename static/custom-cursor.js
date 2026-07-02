@@ -92,6 +92,8 @@
                 cursorContainer.setAttribute('data-interactive', contrastColor);
                 cursorContainer.classList.add('cursor-interactive-state');
             } else {
+                // Remove interactive state AND remove the data-interactive attribute
+                cursorContainer.removeAttribute('data-interactive');
                 cursorContainer.classList.remove('cursor-interactive-state');
             }
         }
