@@ -19,6 +19,11 @@
     let velocityX = 0;
     let velocityY = 0;
     let isOverInteractive = false;
+    let cursorVisible = false;
+    
+    // Hide the cursor until actual mouse movement occurs
+    cursorContainer.style.opacity = '0';
+    cursorContainer.style.transform = 'translate3d(-9999px, -9999px, 0)';
     
     // Interactive element selectors - only actual clickable/interactive elements
     const interactiveSelectors = [
@@ -112,6 +117,12 @@
         mouseX = e.clientX;
         mouseY = e.clientY;
         
+        // Show cursor on first real movement
+        if (!cursorVisible) {
+            cursorVisible = true;
+            cursorContainer.style.opacity = '1';
+        }
+
         // Move cursor container with proper centering (24px size)
         cursorContainer.style.transform = `translate3d(${mouseX - 12}px, ${mouseY - 12}px, 0)`;
     });
@@ -121,7 +132,9 @@
     });
     
     document.addEventListener('mouseenter', () => {
-        cursorContainer.style.opacity = '1';
+        if (cursorVisible) {
+            cursorContainer.style.opacity = '1';
+        }
     });
     
     // Start animation loop
