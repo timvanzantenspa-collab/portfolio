@@ -20,6 +20,7 @@
     let velocityY = 0;
     let isOverInteractive = false;
     let cursorVisible = false;
+    let isPointerPressed = false;
     
     // Hide the cursor until actual mouse movement occurs
     cursorContainer.style.opacity = '0';
@@ -103,8 +104,11 @@
             }
         }
         
-        // Apply transform
-        cursorDot.style.transform = `rotate(${angle}deg) scale(${stretch}, ${squeeze})`;
+        // Apply transform with a focused shrink state for hover / click
+        const focusScale = isOverInteractive || isPointerPressed ? 0.5 : 1;
+        const scaleX = stretch * focusScale;
+        const scaleY = squeeze * focusScale;
+        cursorDot.style.transform = `rotate(${angle}deg) scale(${scaleX}, ${scaleY})`;
         
         // Update last position
         lastX = mouseX;
@@ -125,6 +129,14 @@
 
         // Move cursor container with proper centering (24px size)
         cursorContainer.style.transform = `translate3d(${mouseX - 12}px, ${mouseY - 12}px, 0)`;
+    });
+
+    document.addEventListener('mousedown', () => {
+        isPointerPressed = true;
+    });
+
+    document.addEventListener('mouseup', () => {
+        isPointerPressed = false;
     });
     
     document.addEventListener('mouseleave', () => {
