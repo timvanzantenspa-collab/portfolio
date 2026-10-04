@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="About Tim van Zanten - Creative producer and researcher working at the intersection of music, digital culture, and public space.">
+    <meta name="description" content="Tim van Zanten is a creative producer and researcher working in music, digital culture, and public space.">
     <meta name="theme-color" content="#0101FF">
     <meta property="og:type" content="website">
     <meta property="og:title" content="About Tim van Zanten">
-    <meta property="og:description" content="About Tim van Zanten - Creative producer and researcher working at the intersection of music, digital culture, and public space.">
-    <meta property="og:image" content="https://timvanzanten.com/static/og-image.png">
+    <meta property="og:site_name" content="Tim van Zanten">
+    <meta property="og:description" content="Tim van Zanten is a creative producer and researcher working in music, digital culture, and public space.">
+    <meta property="og:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
+    <meta property="og:image:alt" content="Blue Liggen mark on a transparent background">
     <meta property="og:url" content="https://timvanzanten.com/about">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="About Tim van Zanten">
-    <meta name="twitter:description" content="About Tim van Zanten - Creative producer and researcher.">
+    <meta name="twitter:description" content="Tim van Zanten is a creative producer and researcher working in music, digital culture, and public space.">
+    <meta name="twitter:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
     <meta name="author" content="Tim van Zanten">
     <link rel="canonical" href="https://timvanzanten.com/about">
     <title>About | Tim van Zanten - Creative Portfolio</title>
@@ -42,6 +45,28 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        :root {
+            scrollbar-color: #0101FF transparent;
+            scrollbar-width: thin;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #0101FF;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0000cc;
         }
 
         body {
@@ -494,16 +519,16 @@
         }
 
         .search-results::-webkit-scrollbar-thumb {
-            background: #ddd;
+            background: #0101FF;
             border-radius: 3px;
         }
 
         .search-results::-webkit-scrollbar-thumb:hover {
-            background: #ccc;
+            background: #0000cc;
         }
 
         .search-results {
-            scrollbar-color: #ddd transparent;
+            scrollbar-color: #0101FF transparent;
             scrollbar-width: thin;
         }
 
@@ -655,7 +680,7 @@
             border-radius: 50%;
             will-change: transform;
             box-shadow: 0 0 10px rgba(1, 1, 255, 0.4);
-            transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background 0.15s ease, box-shadow 0.15s ease;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
 
         /* Interactive state - only changes color when on clickable element */
@@ -671,6 +696,35 @@
         .cursor-container[data-interactive="#000000"] .cursor-dot {
             background: #000000 !important;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+        }
+
+        @media (hover: none), (pointer: coarse) {
+            * {
+                cursor: revert !important;
+            }
+
+            .cursor-container {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            * {
+                cursor: revert !important;
+            }
+
+            .cursor-container {
+                display: none;
+            }
         }
     </style>
     <!-- JSON-LD Structured Data for SEO and Search Engine Indexing -->

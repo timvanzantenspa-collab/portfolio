@@ -3,18 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects. Explore visual art, creative coding, and cultural experiences.">
+    <meta name="description" content="Selected projects by Tim van Zanten, a creative producer and researcher working in music, digital culture, and public space.">
     <meta name="theme-color" content="#0101FF">
     <meta property="og:type" content="website">
     <meta property="og:title" content="Tim van Zanten - Creative Portfolio">
-    <meta property="og:description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects. Explore visual art, creative coding, and cultural experiences.">
-    <meta property="og:image" content="https://timvanzanten.com/static/og-image.png">
+    <meta property="og:site_name" content="Tim van Zanten">
+    <meta property="og:description" content="Selected projects by Tim van Zanten, a creative producer and researcher working in music, digital culture, and public space.">
+    <meta property="og:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
+    <meta property="og:image:alt" content="Blue Liggen mark on a transparent background">
     <meta property="og:url" content="https://timvanzanten.com">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Tim van Zanten - Creative Portfolio">
-    <meta name="twitter:description" content="Tim van Zanten - Creative portfolio featuring music, digital culture, and interactive projects.">
+    <meta name="twitter:description" content="Selected projects by Tim van Zanten, a creative producer and researcher working in music, digital culture, and public space.">
+    <meta name="twitter:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
     <meta name="author" content="Tim van Zanten">
-    <meta name="keywords" content="portfolio, music, digital culture, creative, art, interactive">
     <link rel="canonical" href="https://timvanzanten.com">
     <title>Tim van Zanten - Creative Portfolio</title>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
@@ -28,6 +30,28 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        :root {
+            scrollbar-color: #0101FF transparent;
+            scrollbar-width: thin;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #0101FF;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0000cc;
         }
 
         body {
@@ -269,6 +293,8 @@
         }
 
         .image-item img {
+            position: relative;
+            z-index: 1;
             max-width: 280px;
             width: 100%;
             height: auto;
@@ -278,12 +304,102 @@
         }
 
         .image-item:hover img {
-            transform: scale(1.08) translateY(-8px);
+            transform: scale(1.02);
             filter: brightness(1.05);
         }
 
-        .image-item:hover img {
-            transform: scale(1.02);
+        .image-item.is-record-art {
+            perspective: 900px;
+            transform-style: preserve-3d;
+        }
+
+        .vinyl-disc {
+            position: absolute;
+            z-index: 0;
+            top: 50%;
+            left: 50%;
+            width: 88%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, transparent 0 29.5%, rgba(255, 255, 255, 0.13) 29.8% 30%, rgba(0, 0, 0, 0.6) 30.3% 30.8%, transparent 31.2%),
+                repeating-radial-gradient(circle, rgba(255, 255, 255, 0.13) 0 0.55px, rgba(0, 0, 0, 0.45) 1px 1.45px, rgba(255, 255, 255, 0.035) 1.8px 2.15px),
+                radial-gradient(circle at 34% 27%, #303030 0, #171717 38%, #090909 78%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), inset 0 0 0 5px rgba(0, 0, 0, 0.35), 0 20px 34px rgba(0, 0, 0, 0.28);
+            opacity: 0;
+            transform: translate3d(7%, -50%, 0) rotate(-12deg) rotateX(var(--record-tilt-x, 0deg)) rotateY(var(--record-tilt-y, 0deg));
+            transform-style: preserve-3d;
+            transition: opacity 0.18s ease, transform 0.36s cubic-bezier(0.2, 0.7, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .vinyl-disc::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background:
+                conic-gradient(from 205deg, transparent 0deg, rgba(255, 255, 255, 0.2) 42deg, transparent 92deg, rgba(255, 255, 255, 0.06) 180deg, transparent 245deg),
+                radial-gradient(ellipse at 28% 18%, rgba(255, 255, 255, 0.2), transparent 48%);
+            opacity: 0.55;
+        }
+
+        .vinyl-disc::after {
+            content: '';
+            position: absolute;
+            inset: 1.5%;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 50%;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.65);
+            pointer-events: none;
+        }
+
+        .vinyl-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 30%;
+            aspect-ratio: 1;
+            overflow: hidden;
+            border: 3px solid rgba(10, 10, 10, 0.85);
+            border-radius: 50%;
+            background-color: #0101FF;
+            background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 48%, rgba(0, 0, 0, 0.14)), var(--vinyl-label-image);
+            background-position: center;
+            background-size: 100% 100%, cover;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3), 0 3px 10px rgba(0, 0, 0, 0.5);
+            transform: translate3d(-50%, -50%, 4px);
+        }
+
+        .vinyl-label::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 7px;
+            aspect-ratio: 1;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            background: #090909;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.3);
+            transform: translate(-50%, -50%);
+        }
+
+        .image-item.is-record-art:hover .vinyl-disc,
+        .image-item.is-record-art:focus-visible .vinyl-disc {
+            opacity: 1;
+            transform: translate3d(40%, -50%, 0) rotate(16deg) rotateX(var(--record-tilt-x, 0deg)) rotateY(var(--record-tilt-y, 0deg));
+        }
+
+        .image-item.is-record-art:hover img,
+        .image-item.is-record-art:focus-visible img {
+            transform: translateX(-7%) rotate(-2deg) scale(0.98);
+            filter: brightness(1.04);
+        }
+
+        .image-item:focus-visible {
+            outline: 2px solid #0101FF;
+            outline-offset: 8px;
         }
 
         /* Image Tooltip */
@@ -584,17 +700,17 @@
         }
 
         .search-results::-webkit-scrollbar-thumb {
-            background: #ddd;
+            background: #0101FF;
             border-radius: 3px;
         }
 
         .search-results::-webkit-scrollbar-thumb:hover {
-            background: #ccc;
+            background: #0000cc;
         }
 
         /* Firefox scrollbar */
         .search-results {
-            scrollbar-color: #ddd transparent;
+            scrollbar-color: #0101FF transparent;
             scrollbar-width: thin;
         }
 
@@ -652,8 +768,9 @@
             width: 100%;
             height: 100%;
             z-index: 1000;
-            backdrop-filter: blur(8px);
-            background-color: rgba(0, 0, 0, 0.3);
+            padding: 24px;
+            overflow-y: auto;
+            background-color: rgba(0, 0, 0, 0.84);
             align-items: center;
             justify-content: center;
         }
@@ -664,95 +781,86 @@
 
         .modal-wrapper {
             display: flex;
-            gap: 10px;
-            align-items: center;
+            gap: 0;
+            align-items: stretch;
             justify-content: center;
-            max-width: 1100px;
-            width: 90%;
+            width: min(1200px, 100%);
+            height: min(760px, calc(100vh - 48px));
+            height: min(760px, calc(100dvh - 48px));
+            max-width: 1200px;
+            overflow: hidden;
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
         }
 
         .modal-image {
-            flex: 0 0 auto;
+            flex: 1 1 auto;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            width: 500px;
-            height: 500px;
+            width: auto;
+            height: 100%;
+            min-width: 0;
+            overflow: hidden;
+            background: #111111;
         }
 
         .modal-image-background {
             position: absolute;
-            top: -20px;
-            left: -30px;
-            width: 110%;
-            height: 110%;
-            background-size: contain;
+            inset: 0;
+            background-color: #111111;
+            background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
-            filter: blur(18px) brightness(0.35);
+            filter: blur(24px) brightness(0.48);
+            transform: scale(1.1);
             z-index: 0;
-            opacity: 0.5;
-            animation: backgroundShift 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        @keyframes backgroundShift {
-            from {
-                opacity: 0;
-                filter: blur(12px) brightness(0.2);
-            }
-            to {
-                opacity: 0.5;
-                filter: blur(18px) brightness(0.35);
-            }
+            opacity: 0.9;
+            transition: opacity 0.2s ease;
         }
 
         .modal-image img {
-            max-width: 500px;
-            max-height: 500px;
+            max-width: calc(100% - 64px);
+            max-height: calc(100% - 64px);
             width: auto;
             height: auto;
-            border-radius: 4px;
+            border-radius: 2px;
             object-fit: contain;
             image-rendering: auto;
-            will-change: transform, opacity;
-            transform: translateZ(0);
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
             position: relative;
             z-index: 1;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            transition: filter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .modal-image img:hover {
-            filter: contrast(120%) saturate(110%) hue-rotate(10deg) brightness(1.1) drop-shadow(0 0 20px rgba(32, 32, 32, 0.5));
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.28);
+            transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+            transform-style: preserve-3d;
+            transition: transform 180ms ease-out;
         }
 
         .modal-image img.animate {
-            animation: carouselFadeIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: carouselFadeIn 0.24s ease-out;
         }
 
         @keyframes carouselFadeIn {
             from {
                 opacity: 0;
-                transform: scale(0.88) rotateY(-10deg);
             }
             to {
                 opacity: 1;
-                transform: scale(1) rotateY(0deg);
             }
         }
 
         .modal-content {
-            background: white;
-            padding: 40px;
-            border-radius: 8px;
-            animation: slideIn 0.3s ease-out;
+            background: #ffffff;
+            padding: 48px 32px 32px;
+            border-left: 3px solid #0101FF;
+            animation: slideIn 0.24s ease-out;
             position: relative;
-            flex: 0 0 520px;
+            flex: 0 0 340px;
+            min-width: 0;
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
         }
 
         .modal-text {
@@ -762,9 +870,10 @@
         }
 
         .modal-text h2 {
-            font-size: 17px;
-            margin-bottom: 12px;
-            color: #0101FF;
+            font-size: 22px;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            color: #111111;
             font-weight: 700;
         }
 
@@ -779,14 +888,21 @@
             border-radius: 0px;
             line-height: 1;
             transform: translateY(1px);
-            font-size: 17px;
+            font-size: 22px;
         }
 
         .modal-text p {
-            font-size: 14px;
-            line-height: 1.6;
+            font-size: 15px;
+            line-height: 1.65;
             color: #333;
             white-space: pre-wrap;
+        }
+
+        .modal-metadata {
+            margin: 0 0 20px;
+            color: #666666;
+            font-size: 12px;
+            line-height: 1.5;
         }
 
         .modal-text a {
@@ -810,28 +926,27 @@
 
         .modal-close {
             position: absolute;
-            top: 8px;
+            top: 12px;
             right: 12px;
-            font-size: 16px;
+            font-size: 24px;
             cursor: pointer;
-            color: #888;
+            color: #333333;
             background: transparent;
             border: none;
-            width: 24px;
-            height: 24px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: color 0.15s ease, background-color 0.15s ease;
             padding: 0;
             z-index: 10;
-            border-radius: 4px;
+            border-radius: 2px;
         }
 
         .modal-close:hover {
-            transform: scale(1.2);
-            color: #000;
-            background-color: rgba(0, 0, 0, 0.05);
+            color: #0101FF;
+            background-color: rgba(1, 1, 255, 0.08);
         }
 
         .modal-close:focus {
@@ -840,25 +955,22 @@
         }
 
         .modal-link-button {
-            margin-top: 48px;
-            padding: 6px 12px;
+            margin-top: 32px;
+            padding: 12px 16px;
+            min-height: 44px;
             background-color: #0101FF;
             color: #ffffff;
             border: none;
-            border-radius: 3px;
-            font-size: 8px;
+            border-radius: 2px;
+            font-size: 13px;
             font-weight: 600;
-            letter-spacing: 0.3px;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            text-transform: uppercase;
+            transition: background-color 0.15s ease;
             align-self: flex-start;
         }
 
         .modal-link-button:hover:not(:disabled) {
             background-color: #0000cc;
-            transform: translateX(2px);
-            box-shadow: 0 2px 6px rgba(1, 1, 255, 0.3);
         }
 
         .modal-link-button:focus {
@@ -891,28 +1003,26 @@
         }
 
         .carousel-nav-btn {
-            background: rgba(1, 1, 255, 0.85);
+            background: rgba(1, 1, 255, 0.92);
             color: white;
             border: none;
-            width: 24px;
-            height: 24px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 20px;
             font-weight: bold;
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: background-color 0.15s ease;
             display: flex;
             align-items: center;
             justify-content: center;
             pointer-events: auto;
-            backdrop-filter: blur(8px);
             padding: 0;
             margin: 0;
             flex-shrink: 0;
         }
 
         .carousel-nav-btn:hover:not(:disabled) {
-            transform: scale(1.15);
             background: rgba(0, 0, 0, 0.95);
         }
 
@@ -930,20 +1040,18 @@
         }
 
         .carousel-counter {
-            font-size: 10px;
+            font-size: 12px;
             color: white;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 4px 12px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.72);
+            padding: 6px 12px;
+            border-radius: 2px;
             position: absolute;
-            bottom: 30px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             pointer-events: auto;
             z-index: 3;
-            backdrop-filter: blur(10px);
             font-weight: 700;
-            letter-spacing: 0.5px;
         }
 
         @keyframes slideIn {
@@ -959,11 +1067,11 @@
         }
 
         .modal-wrapper {
-            animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            animation: slideIn 0.24s ease-out;
         }
 
         .modal-image img {
-            animation: zoomIn 0.5s ease-out;
+            animation: zoomIn 0.24s ease-out;
         }
 
         @keyframes zoomIn {
@@ -1015,6 +1123,8 @@
             }
 
             .modal {
+                align-items: flex-start;
+                padding: 16px;
                 overflow-y: auto;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
@@ -1031,30 +1141,34 @@
                 width: 100%;
                 max-width: 100%;
                 height: auto;
-                margin: auto;
+                max-height: calc(100vh - 32px);
+                max-height: calc(100dvh - 32px);
+                margin: 0 auto;
+                overflow-y: auto;
             }
 
             .modal-image {
                 width: 100%;
-                height: 350px;
+                height: min(58vh, 460px);
+                min-height: 240px;
                 flex-shrink: 0;
             }
 
             .modal-image img {
-                max-width: 100%;
-                max-height: 350px;
+                max-width: calc(100% - 48px);
+                max-height: calc(100% - 48px);
             }
 
             .modal-content {
-                flex: 1;
+                flex: 0 0 auto;
                 width: 100%;
-                padding: 30px;
+                padding: 44px 24px 24px;
+                overflow: visible;
             }
 
             .carousel-nav-btn {
-                width: 40px !important;
-                height: 40px !important;
-                font-size: 18px !important;
+                width: 44px;
+                height: 44px;
             }
 
             .container {
@@ -1162,7 +1276,6 @@
             }
 
             .modal {
-                padding-top: 30px;
                 overflow-y: auto;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
@@ -1181,21 +1294,22 @@
             }
 
             .modal-image {
-                width: 350px;
-                height: 350px;
-                margin-bottom: 20px;
+                width: 100%;
+                height: min(52vh, 340px);
+                min-height: 220px;
+                margin-bottom: 0;
             }
 
             .modal-image img {
-                max-width: 350px;
-                max-height: 350px;
+                max-width: calc(100% - 40px);
+                max-height: calc(100% - 40px);
             }
 
             .modal-content {
-                width: 90%;
-                max-height: 50vh;
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
+                width: 100%;
+                max-height: none;
+                padding: 44px 20px 24px;
+                overflow: visible;
             }
         }
 
@@ -1230,7 +1344,7 @@
             border-radius: 50%;
             will-change: transform;
             box-shadow: 0 0 10px rgba(1, 1, 255, 0.4);
-            transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1), background 0.15s ease, box-shadow 0.15s ease;
+            transition: background 0.15s ease, box-shadow 0.15s ease;
         }
 
         /* Interactive state - only changes color when on clickable element */
@@ -1246,6 +1360,35 @@
         .cursor-container[data-interactive="#000000"] .cursor-dot {
             background: #000000 !important;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+        }
+
+        @media (hover: none), (pointer: coarse) {
+            * {
+                cursor: revert !important;
+            }
+
+            .cursor-container {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            * {
+                cursor: revert !important;
+            }
+
+            .cursor-container {
+                display: none;
+            }
         }
     </style>
     <!-- JSON-LD Structured Data for SEO and Search Engine Indexing -->
@@ -1297,25 +1440,25 @@
         <div class="modal-wrapper">
             <div class="modal-image" id="modalImageContainer">
                 <div class="modal-image-background" id="modalImageBackground"></div>
-                <a id="modalImageLink" href="#" target="_blank" style="cursor: pointer; display: block;">
+                <a id="modalImageLink" href="#" target="_blank" rel="noopener noreferrer" style="cursor: pointer; display: block;">
                     <img id="modalImage" src="" alt="" style="cursor: pointer;">
                 </a>
                 <div class="carousel-controls" id="carouselControls">
-                    <button class="carousel-nav-btn" id="prevBtn" onclick="navigateCarousel(-1)">←</button>
-                    <button class="carousel-nav-btn" id="nextBtn" onclick="navigateCarousel(1)">→</button>
+                    <button class="carousel-nav-btn" id="prevBtn" onclick="navigateCarousel(-1)" aria-label="Previous image">←</button>
+                    <button class="carousel-nav-btn" id="nextBtn" onclick="navigateCarousel(1)" aria-label="Next image">→</button>
                     <span class="carousel-counter"><span id="carouselIndex">1</span>/<span id="carouselTotal">1</span></span>
                 </div>
             </div>
             <div class="modal-content">
-                <button class="modal-close" onclick="closeModal()">&times;</button>
+                <button class="modal-close" onclick="closeModal()" aria-label="Close project preview">&times;</button>
                 <div class="modal-text">
-                    <a id="modalTitleLink" href="#" target="_blank" style="text-decoration: none; color: inherit;">
+                    <a id="modalTitleLink" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
                         <h2 id="modalTitle" style="cursor: pointer;"></h2>
                     </a>
-                    <p id="modalMetadata" style="font-size: 12px; margin-top: 2px; margin-bottom: 16px; letter-spacing: 0.3px;"></p>
+                    <p id="modalMetadata" class="modal-metadata"></p>
                     <p id="modalDescription"></p>
                 </div>
-                <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">Take me to this project ></button>
+                <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">View project</button>
             </div>
         </div>
     </div>
@@ -1455,7 +1598,6 @@
                 
                 // Hide loading spinner once data is loaded
                 loadingDiv.style.display = 'none';
-                
                 displayImages();
             } catch (error) {
                 console.error('Error loading images:', error);
@@ -1474,6 +1616,16 @@
                 const imageData = allImages[i];
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'image-item';
+                const caption = imageCaptions[imageData.filename] || {};
+                const projectTitle = caption.title || imageData.filename;
+                if (['album', 'ep', 'single'].includes((caption.type || '').trim().toLowerCase())) {
+                    itemDiv.classList.add('is-record-art');
+                    itemDiv.addEventListener('pointermove', tiltVinylArtwork);
+                    itemDiv.addEventListener('pointerleave', resetVinylArtworkTilt);
+                }
+                itemDiv.tabIndex = 0;
+                itemDiv.setAttribute('role', 'button');
+                itemDiv.setAttribute('aria-label', `Open ${projectTitle}`);
 
                 // Only apply random offset on desktop (>768px)
                 if (!isMobile) {
@@ -1494,19 +1646,35 @@
                 img.alt = imageData.filename;
                 img.style.opacity = '0'; // Start invisible
 
+                if (itemDiv.classList.contains('is-record-art')) {
+                    const vinylDisc = document.createElement('span');
+                    vinylDisc.className = 'vinyl-disc';
+                    vinylDisc.setAttribute('aria-hidden', 'true');
+                    vinylDisc.style.setProperty('--vinyl-label-image', `url("${imageData.url}")`);
+                    const vinylLabel = document.createElement('span');
+                    vinylLabel.className = 'vinyl-label';
+                    vinylDisc.appendChild(vinylLabel);
+                    itemDiv.appendChild(vinylDisc);
+                }
+
                 itemDiv.appendChild(img);
                 
                 // Create tooltip with title and date
                 const tooltip = document.createElement('div');
                 tooltip.className = 'image-tooltip';
-                const caption = imageCaptions[imageData.filename] || {};
-                const title = caption.title || imageData.filename;
+                const title = projectTitle;
                 const date = caption.date ? ` • ${caption.date}` : '';
                 tooltip.textContent = title + date;
                 itemDiv.appendChild(tooltip);
                 
                 // Add click handler to open modal
                 itemDiv.addEventListener('click', () => openModal(imageData.filename, imageData.url));
+                itemDiv.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openModal(imageData.filename, imageData.url);
+                    }
+                });
                 
                 grid.appendChild(itemDiv);
 
@@ -1537,6 +1705,49 @@
                 document.getElementById('loading').style.display = 'none';
             }
         }
+
+        function tiltVinylArtwork(event) {
+            if (event.pointerType !== 'mouse') return;
+
+            const artwork = event.currentTarget;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                resetVinylArtworkTilt({ currentTarget: artwork });
+                return;
+            }
+
+            const bounds = artwork.getBoundingClientRect();
+            const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
+            const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
+            artwork.style.setProperty('--record-tilt-x', `${-vertical * 8}deg`);
+            artwork.style.setProperty('--record-tilt-y', `${horizontal * 8}deg`);
+        }
+
+        function resetVinylArtworkTilt(event) {
+            event.currentTarget.style.setProperty('--record-tilt-x', '0deg');
+            event.currentTarget.style.setProperty('--record-tilt-y', '0deg');
+        }
+
+        function resetModalImageTilt() {
+            const image = document.getElementById('modalImage');
+            image.style.setProperty('--tilt-x', '0deg');
+            image.style.setProperty('--tilt-y', '0deg');
+        }
+
+        function tiltModalImage(event) {
+            if (event.pointerType !== 'mouse' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            const container = document.getElementById('modalImageContainer');
+            const bounds = container.getBoundingClientRect();
+            const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
+            const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
+            const image = document.getElementById('modalImage');
+            image.style.setProperty('--tilt-x', `${-vertical * 6}deg`);
+            image.style.setProperty('--tilt-y', `${horizontal * 6}deg`);
+        }
+
+        const modalImageContainer = document.getElementById('modalImageContainer');
+        modalImageContainer.addEventListener('pointermove', tiltModalImage);
+        modalImageContainer.addEventListener('pointerleave', resetModalImageTilt);
 
         async function openModal(filename, imageUrl) {
             const modal = document.getElementById('modal');
@@ -1594,6 +1805,7 @@
             const caption = imageCaptions[captionFilename] || {};
             
             const img = document.getElementById('modalImage');
+            resetModalImageTilt();
             
             // Remove animation class to reset
             img.classList.remove('animate');
@@ -1610,16 +1822,7 @@
                 img.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E';
             };
             
-            // Set up next image preview (blurred background) - safely check nextIndex
-            if (carouselImages && carouselImages.length > 0) {
-                const nextIndex = index + 1;
-                if (nextIndex < carouselImages.length) {
-                    const nextImageUrl = carouselImages[nextIndex].url;
-                    document.getElementById('modalImageBackground').style.backgroundImage = `url('${nextImageUrl}')`;
-                } else {
-                    document.getElementById('modalImageBackground').style.backgroundImage = 'none';
-                }
-            }
+            document.getElementById('modalImageBackground').style.backgroundImage = `url('${imageUrl}')`;
             
             // Set title with word-by-word styling for hover effect
             const titleElement = document.getElementById('modalTitle');

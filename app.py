@@ -7,9 +7,6 @@ from pathlib import Path
 import json
 from generate_jsonld import generate_all_schemas, load_resume_content, get_schema_script_tags, get_about_page_script_tags
 
-# Increase PIL image size limit for large files (safe since processing own files)
-Image.MAX_IMAGE_PIXELS = None
-
 app = Flask(__name__)
 STATIC_FOLDER = Path(__file__).parent / 'static'
 CACHE_FOLDER = Path(__file__).parent / 'static' / '.cache'
@@ -53,6 +50,19 @@ def load_carousels():
         except:
             return {}
     return {}
+
+def get_static_path(filename):
+    """Resolve a filename only when it stays inside the static directory."""
+    if not isinstance(filename, str) or Path(filename).name != filename:
+        return None
+
+    static_root = STATIC_FOLDER.resolve()
+    candidate = (static_root / filename).resolve()
+    try:
+        candidate.relative_to(static_root)
+    except ValueError:
+        return None
+    return candidate
 
 def parse_date(date_str):
     """Parse date string and return sortable tuple (year, month).
@@ -115,7 +125,8 @@ def get_image_files():
     # Filter to only files that actually exist in static folder
     existing_files = []
     for filename in captions.keys():
-        if (STATIC_FOLDER / filename).exists():
+        image_path = get_static_path(filename)
+        if image_path is not None and image_path.is_file():
             existing_files.append(filename)
     
     # Sort images by date (newest first)
@@ -152,14 +163,16 @@ def get_image_files():
 
 def downscale_image(filename):
     """Return WebP image URL. If file is already WebP in static, serve it directly."""
-    original_path = STATIC_FOLDER / filename
+    original_path = get_static_path(filename)
+    if original_path is None:
+        return ''
     
     # If the WebP file exists in static folder, serve it directly
     if filename.lower().endswith('.webp') and original_path.exists():
         return f'/static/{filename}'
     
     # Create cache filename with .webp extension
-    cache_filename = filename.rsplit('.', 1)[0] + '.webp'
+    cache_filename = f'{Path(filename).stem}.webp'
     cache_path = CACHE_FOLDER / cache_filename
     
     # If cached WebP version exists, return it
@@ -287,6 +300,14 @@ def index():
 def about():
     return render_template('about.html', jsonld_scripts=about_page_scripts)
 
+@app.after_request
+def add_security_headers(response):
+    response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+    response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+    response.headers.setdefault('X-Frame-Options', 'DENY')
+    response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    return response
+
 @app.route('/robots.txt')
 def robots():
     with open(Path(__file__).parent / 'robots.txt', 'r') as f:
@@ -330,7 +351,8 @@ def get_carousel(filename):
     
     if not carousel_id:
         # If image has no carousel, return just that image with its URL
-        if (STATIC_FOLDER / filename).exists():
+        image_path = get_static_path(filename)
+        if image_path is not None and image_path.is_file():
             url = downscale_image(filename)
             return jsonify({'primary': filename, 'images': [{'filename': filename, 'url': url}]})
         return jsonify({'primary': filename, 'images': []})
@@ -348,7 +370,8 @@ def get_carousel(filename):
     # Only include images that actually exist in the static folder
     carousel_data = []
     for img in carousel_images:
-        if (STATIC_FOLDER / img).exists():
+        image_path = get_static_path(img)
+        if image_path is not None and image_path.is_file():
             url = downscale_image(img)
             carousel_data.append({'filename': img, 'url': url})
     
@@ -356,8 +379,8 @@ def get_carousel(filename):
 
 @app.errorhandler(404)
 def not_found(error):
-    """Redirect 404 errors to home page"""
-    return render_template('index.html')
+    """Render the homepage as a fallback while preserving the 404 status."""
+    return render_template('index.html', jsonld_scripts=homepage_scripts), 404
 
 if __name__ == '__main__':
     import os

@@ -71,13 +71,13 @@ def generate_breadcrumb_schema():
                 "@type": "ListItem",
                 "position": 1,
                 "name": "Home",
-                "item": "https://timvanzanten.nl"
+                "item": "https://timvanzanten.com"
             },
             {
                 "@type": "ListItem",
                 "position": 2,
                 "name": "About",
-                "item": "https://timvanzanten.nl/about"
+                "item": "https://timvanzanten.com/about"
             }
         ]
     }
@@ -111,7 +111,11 @@ def generate_experience_schema(content):
                 "@type": "JobTitle",
                 "title": exp['role']['en']
             },
-            "description": " ".join(exp['bullets']['en']),
+            "description": " ".join(
+                bullet if isinstance(bullet, str) else bullet.get('text', '')
+                for bullet in exp['bullets']['en']
+                if isinstance(bullet, str) or isinstance(bullet, dict)
+            ),
             "startDate": start_date,
             "jobTitle": exp['role']['en'],
             "areaServed": exp['context']['en']
@@ -133,18 +137,19 @@ def generate_education_schema(content):
     educations = []
     
     for edu in content['common']['education']:
+        institution = edu['institution']['en']
         education = {
             "@context": "https://schema.org",
             "@type": "EducationEvent",
-            "name": edu[0],
+            "name": edu['degree']['en'],
             "organizer": {
                 "@type": "EducationalOrganization",
-                "name": edu[1].split(',')[0]  # Extract university name
+                "name": institution.split(',')[0]
             }
         }
         
         # Extract year from education entry
-        year_str = edu[1].split(',')[-1].strip()
+        year_str = institution.split(',')[-1].strip()
         if year_str and year_str[0].isdigit():
             education["startDate"] = year_str.split('-')[0].strip()
             if '-' in year_str:
@@ -204,7 +209,7 @@ def generate_organization_schema(content):
         "@type": "Organization",
         "name": common['name'],
         "url": f"https://{common['website']}",
-        "logo": f"https://{common['website']}/static/Favicon/og-image.png",
+        "logo": f"https://{common['website']}/static/Favicon/android-chrome-512x512.png",
         "description": content['brand']['en'],
         "sameAs": [
             f"https://{common['linkedin']}",
@@ -238,7 +243,7 @@ def generate_about_page_schema(content):
                 "name": common['name'],
                 "url": f"https://{common['website']}/about",
                 "description": content['profile']['en'],
-                "image": f"https://{common['website']}/static/Favicon/og-image.png",
+                "image": f"https://{common['website']}/static/Favicon/android-chrome-512x512.png",
                 "sameAs": [
                     f"https://{common['linkedin']}",
                     f"https://{common['website']}"
