@@ -839,6 +839,14 @@
             background: #111111;
         }
 
+        .modal-image > a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+        }
+
         .modal-image-background {
             position: absolute;
             inset: 0;
@@ -1155,7 +1163,7 @@
             }
 
             .modal {
-                align-items: flex-start;
+                align-items: center;
                 padding: 16px;
                 overflow-y: auto;
                 scrollbar-width: none;
@@ -1494,7 +1502,7 @@
         <div class="modal-wrapper">
             <div class="modal-image" id="modalImageContainer">
                 <div class="modal-image-background" id="modalImageBackground"></div>
-                <a id="modalImageLink" href="#" target="_blank" rel="noopener noreferrer" style="cursor: pointer; display: block;">
+                <a id="modalImageLink" href="#" target="_blank" rel="noopener noreferrer" style="cursor: pointer;">
                     <img id="modalImage" src="" alt="" style="cursor: pointer;">
                 </a>
                 <div class="carousel-controls" id="carouselControls">
