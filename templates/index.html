@@ -309,8 +309,10 @@
         }
 
         .image-item.is-record-art {
+            align-self: start;
+            isolation: isolate;
             perspective: 900px;
-            transform-style: preserve-3d;
+            transform-style: flat;
         }
 
         .vinyl-disc {
@@ -321,19 +323,32 @@
             width: 88%;
             aspect-ratio: 1;
             border-radius: 50%;
-            background:
-                radial-gradient(circle, transparent 0 29.5%, rgba(255, 255, 255, 0.13) 29.8% 30%, rgba(0, 0, 0, 0.6) 30.3% 30.8%, transparent 31.2%),
-                repeating-radial-gradient(circle, rgba(255, 255, 255, 0.13) 0 0.55px, rgba(0, 0, 0, 0.45) 1px 1.45px, rgba(255, 255, 255, 0.035) 1.8px 2.15px),
-                radial-gradient(circle at 34% 27%, #303030 0, #171717 38%, #090909 78%);
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), inset 0 0 0 5px rgba(0, 0, 0, 0.35), 0 20px 34px rgba(0, 0, 0, 0.28);
+            box-shadow: 0 20px 34px rgba(0, 0, 0, 0.28);
             opacity: 0;
-            transform: translate3d(7%, -50%, 0) rotate(-12deg) rotateX(var(--record-tilt-x, 0deg)) rotateY(var(--record-tilt-y, 0deg));
+            transform: translate3d(7%, -50%, 0);
             transform-style: preserve-3d;
             transition: opacity 0.18s ease, transform 0.36s cubic-bezier(0.2, 0.7, 0.2, 1);
             pointer-events: none;
         }
 
-        .vinyl-disc::before {
+        .vinyl-face {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, transparent 0 29.5%, rgba(255, 255, 255, 0.13) 29.8% 30%, rgba(0, 0, 0, 0.6) 30.3% 30.8%, transparent 31.2%),
+                repeating-radial-gradient(circle, rgba(255, 255, 255, 0.13) 0 0.55px, rgba(0, 0, 0, 0.45) 1px 1.45px, rgba(255, 255, 255, 0.035) 1.8px 2.15px),
+                radial-gradient(circle at 34% 27%, #303030 0, #171717 38%, #090909 78%);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22), inset 0 0 0 5px rgba(0, 0, 0, 0.35);
+            animation: vinyl-spin 2.4s linear infinite;
+            animation-play-state: paused;
+            transform-style: preserve-3d;
+            transform: rotate(-12deg) rotateX(var(--record-tilt-x, 0deg)) rotateY(var(--record-tilt-y, 0deg));
+            transform-origin: center;
+            transition: transform 0.36s cubic-bezier(0.2, 0.7, 0.2, 1);
+        }
+
+        .vinyl-face::before {
             content: '';
             position: absolute;
             inset: 0;
@@ -344,7 +359,7 @@
             opacity: 0.55;
         }
 
-        .vinyl-disc::after {
+        .vinyl-face::after {
             content: '';
             position: absolute;
             inset: 1.5%;
@@ -388,7 +403,24 @@
         .image-item.is-record-art:hover .vinyl-disc,
         .image-item.is-record-art:focus-visible .vinyl-disc {
             opacity: 1;
-            transform: translate3d(40%, -50%, 0) rotate(16deg) rotateX(var(--record-tilt-x, 0deg)) rotateY(var(--record-tilt-y, 0deg));
+            transform: translate3d(25%, -50%, 0);
+        }
+
+        .image-item.is-record-art:hover .vinyl-face,
+        .image-item.is-record-art:focus-visible .vinyl-face {
+            animation-play-state: running;
+            transform: rotate(16deg) rotateX(var(--record-tilt-x, 0deg)) rotateY(var(--record-tilt-y, 0deg));
+        }
+
+        .image-item.is-record-art:hover,
+        .image-item.is-record-art:focus-visible {
+            z-index: 2;
+        }
+
+        @keyframes vinyl-spin {
+            to {
+                rotate: 1turn;
+            }
         }
 
         .image-item.is-record-art:hover img,
@@ -1185,6 +1217,11 @@
                 margin-left: 0 !important;
             }
 
+            .image-item.is-record-art {
+                width: min(100%, 220px);
+                justify-self: center;
+            }
+
             .image-item img {
                 max-width: 220px;
             }
@@ -1265,6 +1302,19 @@
 
             .image-grid {
                 gap: 60px;
+            }
+
+            .image-item.is-record-art {
+                width: min(100%, 180px);
+            }
+
+            .image-item.is-record-art .vinyl-disc {
+                width: 82%;
+            }
+
+            .image-item.is-record-art:hover .vinyl-disc,
+            .image-item.is-record-art:focus-visible .vinyl-disc {
+                transform: translate3d(min(25%, calc(50vw - 152px)), -50%, 0);
             }
 
             .image-item {
@@ -1388,6 +1438,10 @@
 
             .cursor-container {
                 display: none;
+            }
+
+            .vinyl-face {
+                animation: none !important;
             }
         }
     </style>
@@ -1651,9 +1705,12 @@
                     vinylDisc.className = 'vinyl-disc';
                     vinylDisc.setAttribute('aria-hidden', 'true');
                     vinylDisc.style.setProperty('--vinyl-label-image', `url("${imageData.url}")`);
+                    const vinylFace = document.createElement('span');
+                    vinylFace.className = 'vinyl-face';
                     const vinylLabel = document.createElement('span');
                     vinylLabel.className = 'vinyl-label';
-                    vinylDisc.appendChild(vinylLabel);
+                    vinylFace.appendChild(vinylLabel);
+                    vinylDisc.appendChild(vinylFace);
                     itemDiv.appendChild(vinylDisc);
                 }
 
