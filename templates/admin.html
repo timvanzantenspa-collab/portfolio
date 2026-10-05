@@ -51,6 +51,16 @@
         .field label { color: #454b46; font-size: 11px; font-weight: 700; }
         .field input, .field select, .field textarea { width: 100%; min-height: 41px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font-size: 13px; }
         .field textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
+        .markdown-toolbar { display: flex; gap: 4px; padding: 5px; border: 1px solid var(--line); border-bottom: 0; background: #f7f7f7; }
+        .markdown-toolbar button { min-width: 32px; height: 30px; padding: 0 8px; border: 1px solid transparent; background: transparent; color: var(--ink); font-size: 12px; }
+        .markdown-toolbar button:hover, .markdown-toolbar button:focus-visible { border-color: var(--line); background: #fff; outline: none; }
+        .description-field textarea { margin-top: -7px; }
+        .preview-label { margin: 12px 0 6px; color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .description-preview { min-height: 44px; padding: 12px; border: 1px solid var(--line); color: var(--ink); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
+        .description-preview > :first-child { margin-top: 0; }
+        .description-preview > :last-child { margin-bottom: 0; }
+        .description-preview a { color: var(--blue); }
+        .description-preview pre, .description-preview code { white-space: pre-wrap; }
         .field input:focus, .field select:focus, .field textarea:focus, .search:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
         .cover-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; }
         .upload-label { display: inline-flex; min-height: 41px; align-items: center; justify-content: center; padding: 0 13px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
@@ -130,7 +140,17 @@
                         <div class="field"><label for="type">Type</label><input id="type" name="type" maxlength="100" placeholder="e.g. Album, Exhibition"></div>
                         <div class="field"><label for="extra">Credit or category</label><input id="extra" name="extra" maxlength="160"></div>
                         <div class="field"><label for="link">Project link</label><input id="link" name="link" type="url" maxlength="2048" placeholder="https://"></div>
-                        <div class="field full"><label for="description">Description</label><textarea id="description" name="description" maxlength="12000" placeholder="A short description of the work"></textarea></div>
+                        <div class="field full description-field">
+                            <label for="description">Description</label>
+                            <div class="markdown-toolbar" role="toolbar" aria-label="Description formatting">
+                                <button id="descriptionBold" type="button" aria-label="Bold" title="Bold"><strong>B</strong></button>
+                                <button id="descriptionItalic" type="button" aria-label="Italic" title="Italic"><em>I</em></button>
+                                <button id="descriptionLink" type="button" aria-label="Insert link" title="Insert link">Link</button>
+                            </div>
+                            <textarea id="description" name="description" maxlength="12000" placeholder="Write the project description"></textarea>
+                            <div class="preview-label">Preview</div>
+                            <div class="description-preview" id="descriptionPreview" aria-live="polite">Nothing to preview yet.</div>
+                        </div>
                     </div>
                 </section>
                 <section class="section">
@@ -171,6 +191,8 @@
         let gitPushConfigured = true;
         let hasUnsavedChanges = false;
         let isSaving = false;
+        let descriptionPreviewTimer;
+        let descriptionPreviewRequest = 0;
 
         function imageUrl(filename) {
             return `/static/${encodeURIComponent(filename)}`;
@@ -217,6 +239,60 @@
             if (event.target.id === 'imageSearch' || event.target.id === 'galleryUploads' || isSaving) return;
             hasUnsavedChanges = true;
             setEditorStatus('Unsaved changes. Save and push to publish.');
+        }
+
+        function updateDescriptionPreview() {
+            window.clearTimeout(descriptionPreviewTimer);
+            const description = document.getElementById('description').value;
+            const preview = document.getElementById('descriptionPreview');
+            if (!description.trim()) {
+                preview.textContent = 'Nothing to preview yet.';
+                return;
+            }
+            const requestId = ++descriptionPreviewRequest;
+            preview.textContent = 'Updating preview...';
+            descriptionPreviewTimer = window.setTimeout(async () => {
+                try {
+                    const response = await fetch('/admin/api/description-preview', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                        body: JSON.stringify({ description }),
+                    });
+                    const result = await response.json();
+                    if (requestId !== descriptionPreviewRequest) return;
+                    if (!response.ok) throw new Error(result.error || 'Preview unavailable.');
+                    preview.innerHTML = result.html;
+                    preview.querySelectorAll('a').forEach(link => {
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                    });
+                } catch (error) {
+                    if (requestId === descriptionPreviewRequest) preview.textContent = error.message;
+                }
+            }, 200);
+        }
+
+        function wrapDescriptionSelection(prefix, suffix, placeholder) {
+            const field = document.getElementById('description');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const selected = field.value.slice(start, end) || placeholder;
+            field.setRangeText(`${prefix}${selected}${suffix}`, start, end, 'select');
+            field.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+            field.focus();
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function insertDescriptionLink() {
+            const field = document.getElementById('description');
+            const start = field.selectionStart;
+            const end = field.selectionEnd;
+            const label = field.value.slice(start, end) || 'link text';
+            field.setRangeText(`[${label}](https://)`, start, end, 'select');
+            const urlStart = start + label.length + 3;
+            field.setSelectionRange(urlStart, urlStart + 'https://'.length);
+            field.focus();
+            field.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
         function renderProjectList(filter = '') {
@@ -321,6 +397,7 @@
             document.getElementById('type').value = project.type;
             document.getElementById('extra').value = project.extra;
             document.getElementById('description').value = project.description;
+            updateDescriptionPreview();
             document.getElementById('link').value = project.link;
             document.getElementById('pageTitle').textContent = project.title || 'Project details';
             document.getElementById('deleteButton').hidden = false;
@@ -337,6 +414,7 @@
         function newProject(confirmDiscard = false) {
             if (confirmDiscard && hasUnsavedChanges && !window.confirm('Discard your unsaved changes and start a new project?')) return;
             form.reset();
+            updateDescriptionPreview();
             hasUnsavedChanges = false;
             document.getElementById('projectId').value = '';
             document.getElementById('pageTitle').textContent = 'New project';
@@ -443,6 +521,10 @@
 
         document.getElementById('newProject').addEventListener('click', () => newProject(true));
         document.getElementById('searchProjects').addEventListener('input', event => renderProjectList(event.target.value));
+        document.getElementById('description').addEventListener('input', updateDescriptionPreview);
+        document.getElementById('descriptionBold').addEventListener('click', () => wrapDescriptionSelection('**', '**', 'bold text'));
+        document.getElementById('descriptionItalic').addEventListener('click', () => wrapDescriptionSelection('*', '*', 'italic text'));
+        document.getElementById('descriptionLink').addEventListener('click', insertDescriptionLink);
         form.addEventListener('input', markUnsavedChanges);
         form.addEventListener('change', markUnsavedChanges);
         window.addEventListener('beforeunload', event => {

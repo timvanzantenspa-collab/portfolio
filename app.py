@@ -2,6 +2,8 @@
 #Passw in render: ADMIN_PASSWORD
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from PIL import Image, ImageOps
+import markdown
+import nh3
 from datetime import timedelta
 import os
 import shutil
@@ -41,6 +43,13 @@ ADMIN_LOGIN_LOCK = threading.Lock()
 ADMIN_LOGIN_FAILURES = {}
 ADMIN_LOGIN_FAILURE_LIMIT = 5
 ADMIN_LOGIN_FAILURE_WINDOW = 15 * 60
+DESCRIPTION_MARKDOWN_EXTENSIONS = ['extra', 'nl2br', 'sane_lists']
+DESCRIPTION_ALLOWED_TAGS = {
+    'a', 'blockquote', 'br', 'code', 'del', 'em', 'h1', 'h2', 'h3', 'h4',
+    'h5', 'h6', 'hr', 'li', 'ol', 'p', 'pre', 'strong', 'sub', 'sup', 'table',
+    'tbody', 'td', 'th', 'thead', 'tr', 'ul',
+}
+DESCRIPTION_ALLOWED_ATTRIBUTES = {'a': {'href', 'title'}}
 
 class GitPushUnavailable(RuntimeError):
     pass
@@ -80,6 +89,22 @@ def load_carousels():
         except:
             return {}
     return {}
+
+def render_markdown_description(description):
+    if not isinstance(description, str) or not description:
+        return ''
+    rendered = markdown.markdown(
+        description,
+        extensions=DESCRIPTION_MARKDOWN_EXTENSIONS,
+        output_format='html5',
+    )
+    return nh3.clean(
+        rendered,
+        tags=DESCRIPTION_ALLOWED_TAGS,
+        attributes=DESCRIPTION_ALLOWED_ATTRIBUTES,
+        url_schemes={'http', 'https', 'mailto'},
+        link_rel='noopener noreferrer',
+    )
 
 def get_static_path(filename):
     """Resolve a filename only when it stays inside the static directory."""
@@ -750,6 +775,17 @@ def admin_projects():
 
     return jsonify({**result, 'project': filename})
 
+@app.route('/admin/api/description-preview', methods=['POST'])
+@admin_required
+def admin_description_preview():
+    if not valid_admin_csrf():
+        return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+    data = request.get_json(silent=True) or {}
+    description = data.get('description', '')
+    if not isinstance(description, str) or len(description) > 12000:
+        return jsonify({'error': 'Description must be text no longer than 12,000 characters.'}), 400
+    return jsonify({'html': render_markdown_description(description)})
+
 @app.route('/admin/api/projects/<path:filename>', methods=['DELETE'])
 @admin_required
 def admin_delete_project(filename):
@@ -829,7 +865,11 @@ def get_images():
 @app.route('/api/captions')
 def get_captions():
     """API endpoint to get image captions"""
-    return jsonify(load_captions())
+    captions = load_captions()
+    for caption in captions.values():
+        if isinstance(caption, dict):
+            caption['description_html'] = render_markdown_description(caption.get('description', ''))
+    return jsonify(captions)
 
 @app.route('/api/carousel/<filename>')
 def get_carousel(filename):

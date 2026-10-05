@@ -1,4 +1,6 @@
 Flask==3.0.0
+Markdown==3.11
+nh3==0.3.7
 Pillow==11.0.0
 Werkzeug==3.0.1
 gunicorn==21.2.0

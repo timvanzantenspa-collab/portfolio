@@ -550,6 +550,18 @@
             animation: slideInLeft 0.6s ease-out;
         }
 
+        .modal-description {
+            animation: slideInLeft 0.6s ease-out;
+            line-height: 1.55;
+        }
+
+        .modal-description > :first-child { margin-top: 0; }
+        .modal-description > :last-child { margin-bottom: 0; }
+        .modal-description a { color: #0101FF; text-decoration: underline; }
+        .modal-description ul, .modal-description ol { padding-left: 24px; }
+        .modal-description blockquote { margin-left: 0; padding-left: 14px; border-left: 2px solid #0101FF; }
+        .modal-description pre, .modal-description code { white-space: pre-wrap; }
+
         @keyframes slideInLeft {
             from {
                 opacity: 0;
@@ -1518,7 +1530,7 @@
                         <h2 id="modalTitle" style="cursor: pointer;"></h2>
                     </a>
                     <p id="modalMetadata" class="modal-metadata"></p>
-                    <p id="modalDescription"></p>
+                    <div id="modalDescription" class="modal-description"></div>
                 </div>
                 <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">View project</button>
             </div>
@@ -1909,11 +1921,17 @@
             const metadataElement = document.getElementById('modalMetadata');
             metadataElement.innerHTML = metaParts.length > 0 ? metaParts.join(' • ') : '';
             
-            // Parse markdown links in description: [text](url) -> <a href="url">text</a>
             const descElement = document.getElementById('modalDescription');
             const description = caption.description || '';
-            const parsedDescription = description.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-            descElement.innerHTML = parsedDescription;
+            if (typeof caption.description_html === 'string') {
+                descElement.innerHTML = caption.description_html;
+                descElement.querySelectorAll('a').forEach(link => {
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                });
+            } else {
+                descElement.textContent = description;
+            }
             
             // Set links if available
             const linkUrl = caption.link || '#';
