@@ -1,6 +1,6 @@
 #Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
 #Passw in render: ADMIN_PASSWORD
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session, send_from_directory
 from PIL import Image, ImageOps
 import markdown
 import nh3
@@ -575,6 +575,18 @@ def git_push_is_configured():
         os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
     )
 
+def git_push_failure_message(result):
+    output = f'{result.stderr or ""}\n{result.stdout or ""}'.lower()
+    if 'not a git repository' in output:
+        return 'Render did not provide a Git checkout to push from. Redeploy from the connected GitHub repository.'
+    if 'authentication failed' in output or 'invalid username or password' in output or 'http 401' in output:
+        return 'GitHub rejected GITHUB_TOKEN. Replace it with a valid token that has access to this repository.'
+    if 'http 403' in output or 'write access to repository not granted' in output or 'permission to' in output:
+        return 'GitHub denied the push. Grant this token Contents: Read and write access to this repository and allow pushes to the configured branch.'
+    if 'repository not found' in output:
+        return 'GitHub could not find this repository for the configured token. Check the token repository access.'
+    return 'GitHub push verification failed. Check token repository access and branch protection in GitHub.'
+
 def ensure_git_push_ready():
     if not git_push_is_configured():
         raise GitPushUnavailable('Git publishing is not configured. Add GITHUB_TOKEN in Render; no changes were saved.')
@@ -584,7 +596,7 @@ def ensure_git_push_ready():
         env=git_push_environment(),
     )
     if push_result.returncode != 0:
-        raise GitPushUnavailable('GitHub push access could not be verified; no changes were saved.')
+        raise GitPushUnavailable(git_push_failure_message(push_result))
 
 def commit_and_push_portfolio(uploaded_assets=None, title=''):
     if git_run(['rev-parse', '--is-inside-work-tree']).returncode != 0:
@@ -823,6 +835,19 @@ def admin_description_preview():
         return jsonify({'error': 'Description must be text no longer than 12,000 characters.'}), 400
     return jsonify({'html': render_markdown_description(description)})
 
+@app.route('/admin/api/git-status', methods=['POST'])
+@admin_required
+def admin_git_status():
+    if not valid_admin_csrf():
+        return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+    try:
+        ensure_git_push_ready()
+    except GitPushUnavailable as error:
+        return jsonify({'ready': False, 'error': str(error)}), 503
+    except subprocess.TimeoutExpired:
+        return jsonify({'ready': False, 'error': 'GitHub did not respond in time. Try again shortly.'}), 503
+    return jsonify({'ready': True, 'message': 'GitHub publishing is ready.'})
+
 @app.route('/admin/api/projects/<path:filename>', methods=['DELETE'])
 @admin_required
 def admin_delete_project(filename):
@@ -883,6 +908,10 @@ def sitemap():
 def ping():
     """Keep-alive endpoint for Render uptime monitoring"""
     return jsonify({'status': 'ok', 'message': 'Server is alive'}), 200
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(STATIC_FOLDER / 'Favicon', 'favicon.ico', max_age=86400)
 
 @app.route('/api/images')
 def get_images():
