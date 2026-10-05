@@ -146,7 +146,8 @@
         "date": "2024",
         "type": "Synthesizer",
         "extra": "end-project HKU Music & Technology",
-        "description": "I built a synthesizer/controller from scratch for my end-project at HKU Music & Technology. Both the code, hardware and body are built by me. \n\nIn case you want to build something similar: \nIt runs from a [Teensy](https://www.tinytronics.nl/shop/nl/teensy/main-boards/teensy-4.1) microcontroller. Some helpful resources: [this](https://www.reddit.com/r/arduino/comments/98bpnz/midi_controller_wiring_help/), [this](https://adam-meyer.com/arduino/CD74HC4067), [this](https://github.com/praashie/flatmate), [this](https://www.reddit.com/r/FL_Studio/comments/i8hwpq/guide_on_how_to_do_midiscripting/?solution=0548fb2849cc6e400548fb2849cc6e40&js_challenge=1&token=bbbe4bf1c9a2b5160829c4be34da58615578b469aa67d38e5e9b1895c5e0b1ae) and [this one](https://hackaday.com/2019/01/27/open-source-fader-bank-modulates-our-hearts/) helped me a lot. \n\nDesign inspired by the incredible work of [Love Hultén](https://www.lovehulten.com/). \n\n"
+        "description": "For my graduation project at HKU Music & Technology, I built a synthesiser and MIDI controller completely from scratch. I designed and built the body, electronics and software myself, turning a collection of knobs, faders and buttons into a working instrument.\r\n\r\nThe controller runs on a Teensy 4.1 microcontroller and communicates with a computer over MIDI. I wrote the code to handle the controls and built the electronics around the controller, including multiplexers to read the different inputs.\r\n\r\nThe design is inspired by the work of [Love Hultén](https://www.lovehulten.com/), particularly his approach to combining functional electronics with carefully made physical objects.",
+        "link": ""
     },
     "birdpack3.webp": {
         "title": "Birdpack",
