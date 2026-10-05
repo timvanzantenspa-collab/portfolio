@@ -16,6 +16,8 @@
         .brand-mark { display: grid; width: 24px; height: 24px; place-items: center; background: var(--blue); color: #fff; font: 700 12px var(--sans); }
         .top-actions { display: flex; align-items: center; gap: 20px; }
         .top-actions a, .logout { color: var(--muted); text-decoration: none; font-size: 12px; }
+        .top-actions .tool-link { padding: 9px 12px; background: var(--blue); color: #fff; font-weight: 700; }
+        .top-actions .tool-link:hover { background: #0000cc; }
         .logout { padding: 8px 0; border: 0; background: none; }
         .layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); max-width: 1440px; min-height: calc(100vh - 64px); margin: 0 auto; }
         .sidebar { min-width: 0; padding: 24px 18px; border-right: 1px solid var(--line); }
@@ -138,6 +140,7 @@
             h1 { font-size: 30px; }
         }
         @media (max-width: 480px) {
+            .top-actions .portfolio-link { display: none; }
             .fields { grid-template-columns: 1fr; }
             .field.full { grid-column: auto; }
             .cover-tools { grid-template-columns: 1fr; }
@@ -159,7 +162,8 @@
     <header class="topbar">
         <a class="brand" href="/" target="_blank" rel="noreferrer"><span class="brand-mark">T</span><span>Tim van Zanten</span></a>
         <div class="top-actions">
-            <a href="/" target="_blank" rel="noreferrer">View portfolio</a>
+            <a class="portfolio-link" href="/" target="_blank" rel="noreferrer">View portfolio</a>
+            <a class="tool-link" href="{{ url_for('gif_maker') }}">GIF maker</a>
             <form method="post" action="{{ url_for('admin_logout') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <button class="logout" type="submit">Sign out</button>
