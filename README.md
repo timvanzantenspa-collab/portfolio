@@ -70,7 +70,7 @@ Edit `captions.json` to add titles and descriptions to your images:
 
 ### Manage Projects
 
-Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. The editor can use images already in `static/`, upload a new cover, or add up to eight gallery images to a project at a time. Saving updates `captions.json` and `carousels.json`, commits the data and uploaded assets, and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
+Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. The editor can use images already in `static/`, upload a new cover, or add up to eight gallery images to a project at a time. Uploaded JPG, PNG, GIF, and WebP files are converted to optimized WebP images in `static/` before `captions.json` and `carousels.json` are updated; animated images remain animated. Saving commits the data and WebP assets and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
 
 Configure these environment variables on the server (for Render, use the service's Environment page):
 

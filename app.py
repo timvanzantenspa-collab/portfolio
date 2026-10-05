@@ -1,6 +1,7 @@
 #Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
+#Passw in render: ADMIN_PASSWORD
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
-from PIL import Image
+from PIL import Image, ImageOps
 import os
 import shutil
 from pathlib import Path
@@ -341,6 +342,54 @@ def valid_admin_csrf():
     expected = session.get('admin_csrf', '')
     return bool(supplied and expected and hmac.compare_digest(supplied, expected))
 
+def prepare_admin_webp(upload_filename, upload_bytes, occupied_filenames):
+    safe_name = secure_filename(upload_filename)
+    if not safe_name or Path(safe_name).suffix.lower() not in ADMIN_IMAGE_EXTENSIONS:
+        raise ValueError('Use a JPG, PNG, GIF, or WebP image.')
+
+    image_stem = Path(safe_name).stem.strip('._- ') or 'project-image'
+    occupied = {name.casefold() for name in occupied_filenames}
+    output_filename = f'{image_stem}.webp'
+    suffix = 2
+    while output_filename.casefold() in occupied:
+        output_filename = f'{image_stem}-{suffix}.webp'
+        suffix += 1
+
+    try:
+        with Image.open(BytesIO(upload_bytes)) as image:
+            image.verify()
+        with Image.open(BytesIO(upload_bytes)) as source:
+            if source.width * source.height > 20_000_000:
+                raise ValueError('Images must be no larger than 20 megapixels.')
+
+            frame_count = getattr(source, 'n_frames', 1)
+            frame_step = max(1, (frame_count + 159) // 160)
+            frames = []
+            durations = []
+            for frame_index in range(0, frame_count, frame_step):
+                source.seek(frame_index)
+                frame = ImageOps.exif_transpose(source.copy())
+                has_alpha = 'A' in frame.getbands() or 'transparency' in frame.info
+                frame = frame.convert('RGBA' if has_alpha else 'RGB')
+                frame.thumbnail((MAX_WIDTH, MAX_WIDTH), Image.Resampling.LANCZOS)
+                frames.append(frame)
+                durations.append(max(20, int(source.info.get('duration', 100)) * frame_step))
+
+            webp_bytes = BytesIO()
+            save_options = {'format': 'WEBP', 'quality': QUALITY, 'method': 6}
+            if len(frames) > 1:
+                save_options.update(
+                    save_all=True,
+                    append_images=frames[1:],
+                    duration=durations,
+                    loop=source.info.get('loop', 0),
+                )
+            frames[0].save(webp_bytes, **save_options)
+    except (OSError, Image.DecompressionBombError) as error:
+        raise ValueError('That file is not a supported, readable image.') from error
+
+    return output_filename, webp_bytes.getvalue()
+
 def admin_image_files():
     return sorted(
         path.name for path in STATIC_FOLDER.iterdir()
@@ -551,20 +600,19 @@ def admin_projects():
                 extension = Path(safe_name).suffix.lower()
                 if not safe_name or extension not in ADMIN_IMAGE_EXTENSIONS:
                     return jsonify({'error': 'Use JPG, PNG, GIF, or WebP images.'}), 400
-                if safe_name in assets or safe_name in upload_names:
-                    return jsonify({'error': f'An image named "{safe_name}" already exists. Rename the file and try again.'}), 409
                 upload_bytes = image_file.stream.read(16 * 1024 * 1024 + 1)
                 if len(upload_bytes) > 16 * 1024 * 1024:
                     return jsonify({'error': 'Each image must be 16 MB or smaller.'}), 413
                 try:
-                    with Image.open(BytesIO(upload_bytes)) as image:
-                        image.verify()
-                except Exception:
-                    return jsonify({'error': f'"{safe_name}" is not a readable image.'}), 400
-                upload_names.add(safe_name)
-                prepared_uploads.append((safe_name, upload_bytes))
+                    webp_name, webp_bytes = prepare_admin_webp(
+                        safe_name, upload_bytes, assets | upload_names,
+                    )
+                except ValueError as error:
+                    return jsonify({'error': str(error)}), 400
+                upload_names.add(webp_name)
+                prepared_uploads.append((webp_name, webp_bytes))
                 if image_file is upload:
-                    cover_filename = safe_name
+                    cover_filename = webp_name
 
             if cover_filename:
                 filename = cover_filename
