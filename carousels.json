@@ -10,10 +10,6 @@
     "birdpack11.webp": "Birdpack",
     "birdpack12.webp": "Birdpack",
     "birdpack13.webp": "Birdpack",
-    "TMATNBpic.webp": "The Morning After The Night Before",
-    "TMATNBvinyl.webp": "The Morning After The Night Before",
-    "In perpetuum kleiner.webp": "The Morning After The Night Before",
-    "video 3.webp": "The Morning After The Night Before",
     "Summerland1.webp": "SoundPatrol, Summerland Festival",
     "Summerland 2.webp": "SoundPatrol, Summerland Festival",
     "Luisterns gif.webp": "Luister'NS",
@@ -78,5 +74,9 @@
     "even nost full.webp": "Even Nostalgia Isnt What It Used To be.webp",
     "DEMO2.webp": "DEMO2.webp",
     "DEMO1.webp": "DEMO2.webp",
-    "boomtown2024.webp": "DEMO2.webp"
+    "boomtown2024.webp": "DEMO2.webp",
+    "TMATNBpic.webp": "TMATNBpic.webp",
+    "TMATNBvinyl.webp": "TMATNBpic.webp",
+    "In perpetuum kleiner.webp": "TMATNBpic.webp",
+    "video 3.webp": "TMATNBpic.webp"
 }
