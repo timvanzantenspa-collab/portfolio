@@ -795,14 +795,17 @@ def git_push_environment():
         })
     return push_env
 
+def is_render_environment():
+    return bool(os.environ.get('RENDER') or os.environ.get('RENDER_SERVICE_ID'))
+
 def git_push_is_configured():
-    return not os.environ.get('RENDER') or bool(
+    return not is_render_environment() or bool(
         os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
     )
 
 def github_api_publishing_enabled():
     return bool(
-        os.environ.get('RENDER')
+        is_render_environment()
         or os.environ.get('GITHUB_TOKEN')
         or os.environ.get('GIT_PUSH_TOKEN')
     )
@@ -906,7 +909,7 @@ def commit_portfolio_to_github(file_updates, title):
 def git_push_failure_message(result):
     raw_output = f'{result.stderr or ""}\n{result.stdout or ""}'
     output = raw_output.lower()
-    if 'not a git repository' in output:
+    if 'not a git repository' in output or 'does not appear to be a git repository' in output:
         return 'Render did not provide a Git checkout to push from. Redeploy from the connected GitHub repository.'
     if 'authentication failed' in output or 'invalid username or password' in output or 'http 401' in output:
         return 'GitHub rejected GITHUB_TOKEN. Replace it with a valid token that has access to this repository.'
