@@ -64,12 +64,15 @@
         .description-preview a { color: var(--blue); }
         .description-preview pre, .description-preview code { white-space: pre-wrap; }
         .field input:focus, .field select:focus, .field textarea:focus, .search:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
-        .cover-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; }
-        .upload-label { display: inline-flex; min-height: 41px; align-items: center; justify-content: center; padding: 0 13px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
-        .upload-label:hover { border-color: var(--ink); }
+        .cover-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, .8fr); align-items: end; gap: 12px; }
+        .upload-label { display: flex; min-height: 76px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 12px; border: 1px dashed #aeb2bb; background: #fff; color: var(--ink); text-align: center; cursor: pointer; }
+        .upload-label:hover, .upload-label.dragging { border-color: var(--blue); background: #f4f5ff; }
+        .upload-label:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+        .upload-label strong { font-size: 12px; }
+        .upload-label span { color: var(--muted); font-size: 11px; font-weight: 400; }
         .upload-label input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
         .upload-name { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; }
-        .gallery-upload-tools { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .gallery-upload-tools { display: grid; gap: 8px; margin-bottom: 12px; }
         .gallery-upload-tools .upload-name { min-height: auto; }
         .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; max-height: 250px; overflow: auto; padding: 2px; }
         .asset-option { position: relative; min-width: 0; }
@@ -103,7 +106,7 @@
             .fields { grid-template-columns: 1fr; }
             .field.full { grid-column: auto; }
             .cover-tools { grid-template-columns: 1fr; }
-            .upload-label { justify-self: start; }
+            .upload-label { width: 100%; }
             .form-actions { flex-wrap: wrap; }
             .delete-button { margin-left: auto; }
             .asset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -160,14 +163,14 @@
                     <div class="section-title"><h2>Cover image</h2><p>Shown first in the portfolio grid</p></div>
                     <div class="cover-tools">
                         <div class="field" id="coverPicker"><label for="filename">Choose an image</label><select id="filename" name="filename"></select></div>
-                        <label class="upload-label" id="uploadControl">Upload new cover<input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm"></label>
+                        <label class="upload-label" id="uploadControl" for="coverImage"><strong>Drop cover media</strong><span>or browse for one file</span><input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm"></label>
                         <div class="upload-name" id="uploadName"></div>
                     </div>
                 </section>
                 <section class="section">
                     <div class="section-title"><h2>Project images</h2><p>Select existing images or add files</p></div>
                     <div class="gallery-upload-tools">
-                        <label class="upload-label" id="galleryUploadControl">Upload media<input id="galleryUploads" name="gallery_uploads" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm" multiple></label>
+                        <label class="upload-label" id="galleryUploadControl" for="galleryUploads"><strong>Drop project media</strong><span>or browse for up to eight files</span><input id="galleryUploads" name="gallery_uploads" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm" multiple></label>
                         <div class="upload-name" id="galleryUploadName">Images up to 16 MB; MP4/WebM videos up to 50 MB.</div>
                     </div>
                     <input class="search" id="imageSearch" type="search" placeholder="Search images by filename or project" aria-label="Search project images">
@@ -203,6 +206,51 @@
 
         function isVideoAsset(filename) {
             return /\.(mp4|webm)$/i.test(filename);
+        }
+
+        function isSupportedMediaFile(file) {
+            return /\.(jpe?g|png|gif|webp|mp4|webm)$/i.test(file.name);
+        }
+
+        function updateInputFiles(input, files, append = false) {
+            const transfer = new DataTransfer();
+            const combinedFiles = append ? [...input.files, ...files] : files;
+            const seen = new Set();
+            combinedFiles.forEach(file => {
+                const key = `${file.name}:${file.size}:${file.lastModified}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                transfer.items.add(file);
+            });
+            input.files = transfer.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        function handleMediaDrop(event, zone, input) {
+            event.preventDefault();
+            zone.classList.remove('dragging');
+            const droppedFiles = [...(event.dataTransfer?.files || [])];
+            const supportedFiles = droppedFiles.filter(isSupportedMediaFile);
+            if (!supportedFiles.length) {
+                setStatus('Drop JPG, PNG, GIF, WebP, MP4, or WebM files.', 'error');
+                return;
+            }
+            if (supportedFiles.length !== droppedFiles.length) {
+                setStatus('Unsupported files were skipped. Use JPG, PNG, GIF, WebP, MP4, or WebM.', 'error');
+            }
+
+            if (input.id === 'coverImage') {
+                if (document.getElementById('projectId').value) {
+                    setStatus('Cover uploads are available when creating a new project.', 'error');
+                    return;
+                }
+                updateInputFiles(input, supportedFiles.slice(0, 1));
+                if (supportedFiles.length > 1) {
+                    updateInputFiles(document.getElementById('galleryUploads'), supportedFiles.slice(1), true);
+                }
+                return;
+            }
+            updateInputFiles(input, supportedFiles, true);
         }
 
         function validateUploadSelection(changedInput) {
@@ -587,6 +635,34 @@
         });
         document.getElementById('coverImage').addEventListener('change', event => validateUploadSelection(event.target));
         document.getElementById('galleryUploads').addEventListener('change', event => validateUploadSelection(event.target));
+        document.querySelectorAll('.upload-label').forEach(zone => {
+            const input = zone.querySelector('input[type="file"]');
+            let dragDepth = 0;
+            zone.addEventListener('dragenter', event => {
+                event.preventDefault();
+                dragDepth += 1;
+                zone.classList.add('dragging');
+            });
+            zone.addEventListener('dragover', event => {
+                event.preventDefault();
+                if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+            });
+            zone.addEventListener('dragleave', event => {
+                event.preventDefault();
+                dragDepth = Math.max(0, dragDepth - 1);
+                if (!dragDepth) zone.classList.remove('dragging');
+            });
+            zone.addEventListener('drop', event => {
+                dragDepth = 0;
+                handleMediaDrop(event, zone, input);
+            });
+        });
+        window.addEventListener('dragover', event => {
+            if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+        });
+        window.addEventListener('drop', event => {
+            if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+        });
         loadProjects().catch(error => setStatus(error.message, 'error'));
     </script>
 </body>
