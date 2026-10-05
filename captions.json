@@ -161,7 +161,7 @@
         "date": "April 2026",
         "type": "Interactive Travel Guide",
         "extra": "Passion Project",
-        "description": "",
+        "description": "**Makrail helps you find campsites you can reach by train.** It is an interactive map for finding campsites near train stations across Europe. Alongside campsites and railway stations, it shows useful places nearby, from supermarkets and bakeries to cafés, pubs, swimming spots, viewpoints and other places worth stopping for.\r\n\r\nI built Makrail to make spontaneous, low-car camping trips easier to plan. Instead of starting with a destination and figuring out how to get there, you can start with the railway network and see what is waiting around each station. The map lets you explore different regions, compare places and find campsites that are actually reachable by public transport.\r\n\r\nUnderneath the simple interface is a fairly large geospatial data project. Makrail collects and processes data from OpenStreetMap, combines railway infrastructure with campsites, amenities and points of interest, and uses this data to calculate what is within a useful distance of each station. I built the backend, data processing and map interface myself using Python, Flask, OpenStreetMap and Leaflet.\r\n\r\nFeedback and suggestions on this project are always welcome, as it's still a work in progress. You can [send an email](mailto:contact@makrail.nl) or follow updates on [Instagram](https://instagram.com/makrailmap).",
         "link": "https://makrail.com"
     }
 }
