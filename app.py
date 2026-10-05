@@ -496,11 +496,9 @@ def create_gif():
                 return jsonify({'error': 'Images must be under 16 MB each and 48 MB total.'}), 413
 
             with Image.open(BytesIO(data)) as source:
-                if source.width * source.height > 25_000_000:
-                    return jsonify({'error': 'Each image must be smaller than 25 megapixels.'}), 400
                 source.seek(0)
+                source.thumbnail((640, 640), Image.Resampling.LANCZOS)
                 frame = ImageOps.exif_transpose(source).convert('RGBA')
-                frame.thumbnail((640, 640), Image.Resampling.LANCZOS)
                 frames.append(frame)
     except (Image.DecompressionBombError, Image.UnidentifiedImageError, OSError, ValueError):
         return jsonify({'error': 'One or more files are not valid, supported images.'}), 400
