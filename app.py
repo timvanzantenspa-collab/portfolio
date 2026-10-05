@@ -456,17 +456,31 @@ def index():
 def about():
     return render_template('about.html', jsonld_scripts=about_page_scripts)
 
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not ADMIN_PASSWORD:
+            return jsonify({'error': 'Set ADMIN_PASSWORD to enable the project editor.'}), 503
+        if not session.get('admin_authenticated'):
+            if request.path.startswith('/admin/api/'):
+                return jsonify({'error': 'Please sign in again.'}), 401
+            return redirect(url_for('admin_login'))
+        return view(*args, **kwargs)
+    return wrapped
+
 @app.route('/gif-maker')
+@admin_required
 def gif_maker():
     return render_template('gif_maker.html')
 
-@app.route('/api/gif-maker', methods=['POST'])
+@app.route('/admin/api/gif-maker', methods=['POST'])
+@admin_required
 def create_gif():
     uploads = request.files.getlist('images')
     if len(uploads) < 2:
         return jsonify({'error': 'Choose at least two images.'}), 400
-    if len(uploads) > 30:
-        return jsonify({'error': 'A GIF can contain up to 30 images.'}), 400
+    if len(uploads) > 100:
+        return jsonify({'error': 'A GIF can contain up to 100 images.'}), 400
 
     duration = request.form.get('duration', 200, type=int)
     if duration is None or not 50 <= duration <= 1000:
@@ -532,18 +546,6 @@ def admin_csrf_token():
     if 'admin_csrf' not in session:
         session['admin_csrf'] = secrets.token_urlsafe(32)
     return session['admin_csrf']
-
-def admin_required(view):
-    @wraps(view)
-    def wrapped(*args, **kwargs):
-        if not ADMIN_PASSWORD:
-            return jsonify({'error': 'Set ADMIN_PASSWORD to enable the project editor.'}), 503
-        if not session.get('admin_authenticated'):
-            if request.path.startswith('/admin/api/'):
-                return jsonify({'error': 'Please sign in again.'}), 401
-            return redirect(url_for('admin_login'))
-        return view(*args, **kwargs)
-    return wrapped
 
 def valid_admin_csrf():
     supplied = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token', '')

@@ -91,7 +91,7 @@
                     <div class="dropzone" id="dropzone">
                         <div>
                             <strong>Drop your images here</strong>
-                            <p>PNG, JPG, WebP or GIF · up to 30 frames</p>
+                            <p>PNG, JPG, WebP or GIF · up to 100 frames</p>
                             <label class="choose-button" for="image-input">Choose images</label>
                             <input class="file-input" id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
                         </div>
@@ -186,9 +186,9 @@
 
         function addFiles(newFiles) {
             const images = Array.from(newFiles).filter(file => file.type.startsWith('image/'));
-            const acceptedImages = images.slice(0, 30 - files.length);
+            const acceptedImages = images.slice(0, 100 - files.length);
             files = [...files, ...acceptedImages];
-            message.textContent = acceptedImages.length < images.length ? 'You can add up to 30 images.' : newFiles.length > images.length ? 'Only image files can be added.' : '';
+            message.textContent = acceptedImages.length < images.length ? 'You can add up to 100 images.' : newFiles.length > images.length ? 'Only image files can be added.' : '';
             renderFiles();
         }
 
@@ -209,6 +209,14 @@
 
         makeButton.addEventListener('click', async () => {
             if (files.length < 2) return;
+            const oversizedImage = files.some(file => file.size > 16 * 1024 * 1024);
+            const totalSize = files.reduce((size, file) => size + file.size, 0);
+            if (oversizedImage || totalSize > 48 * 1024 * 1024) {
+                message.textContent = oversizedImage
+                    ? 'Each image must be under 16 MB.'
+                    : 'Keep the total image size under 48 MB.';
+                return;
+            }
             makeButton.disabled = true;
             makeButton.textContent = 'Making your GIF…';
             message.textContent = '';
@@ -216,10 +224,13 @@
             files.forEach(file => form.append('images', file, file.name));
             form.append('duration', durationInput.value);
             try {
-                const response = await fetch('/api/gif-maker', { method: 'POST', body: form });
+                const response = await fetch('/admin/api/gif-maker', { method: 'POST', body: form });
                 if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Could not make the GIF.');
+                    const data = await response.json().catch(() => ({}));
+                    const error = response.status === 413
+                        ? 'Upload is too large. Keep images under 16 MB each and 48 MB total.'
+                        : data.error || `Could not make the GIF (HTTP ${response.status}).`;
+                    throw new Error(error);
                 }
                 const blob = await response.blob();
                 if (previewUrl) URL.revokeObjectURL(previewUrl);
