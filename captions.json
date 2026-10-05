@@ -160,7 +160,9 @@
         "date": "2017",
         "type": "Photography",
         "extra": "For Bitbird Records",
-        "description": ""
+        "description": "",
+        "link": "",
+        "published": false
     },
     "Makrail.gif": {
         "title": "Makrail",
