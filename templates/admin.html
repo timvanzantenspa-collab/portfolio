@@ -67,6 +67,7 @@
         .asset-option.unavailable { opacity: .45; }
         .asset-empty { grid-column: 1 / -1; margin: 0; padding: 12px; color: var(--muted); font-size: 12px; }
         .asset-option img { width: 100%; height: 75px; object-fit: cover; background: #e7e9e3; }
+        .asset-option img.image-failed { visibility: hidden; }
         .asset-option span { overflow: hidden; padding: 5px 6px; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
         .form-actions { display: flex; align-items: center; gap: 12px; padding-top: 22px; border-top: 1px solid var(--line); }
         .save-button { min-height: 44px; padding: 0 22px; border: 1px solid var(--blue); background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; }
@@ -150,7 +151,7 @@
                     <div class="asset-grid" id="assetGrid"></div>
                 </section>
                 <div class="form-actions">
-                    <button class="save-button" id="saveButton" type="submit">Save and push to Git</button>
+                    <button class="save-button" id="saveButton" type="submit" disabled>Save and push to Git</button>
                     <button class="delete-button" id="deleteButton" type="button" hidden>Delete project</button>
                 </div>
             </form>
@@ -167,6 +168,9 @@
         let assets = [];
         let assetOwners = {};
         let selectedGalleryImages = new Set();
+        let gitPushConfigured = true;
+        let hasUnsavedChanges = false;
+        let isSaving = false;
 
         function imageUrl(filename) {
             return `/static/${encodeURIComponent(filename)}`;
@@ -175,6 +179,44 @@
         function setStatus(message, kind = '') {
             saveState.textContent = message;
             saveState.className = `save-state ${kind}`;
+        }
+
+        function setEditorStatus(message, kind = '') {
+            if (!gitPushConfigured) {
+                setStatus('Git publishing is not configured. Add GITHUB_TOKEN in Render before saving.', 'error');
+                return;
+            }
+            setStatus(message, kind);
+        }
+
+        function updateSaveAvailability() {
+            document.getElementById('saveButton').disabled = isSaving || !gitPushConfigured;
+            document.getElementById('deleteButton').disabled = isSaving || !gitPushConfigured;
+        }
+
+        function setLazyImage(image, filename) {
+            image.loading = 'lazy';
+            image.decoding = 'async';
+            image.alt = '';
+            image.addEventListener('error', () => {
+                if (image.dataset.retryAttempted) {
+                    image.classList.add('image-failed');
+                    return;
+                }
+                image.dataset.retryAttempted = 'true';
+                window.setTimeout(() => {
+                    const retryUrl = new URL(imageUrl(filename), window.location.href);
+                    retryUrl.searchParams.set('_retry', '1');
+                    image.src = retryUrl.toString();
+                }, 1200);
+            });
+            image.src = imageUrl(filename);
+        }
+
+        function markUnsavedChanges(event) {
+            if (event.target.id === 'imageSearch' || event.target.id === 'galleryUploads' || isSaving) return;
+            hasUnsavedChanges = true;
+            setEditorStatus('Unsaved changes. Save and push to publish.');
         }
 
         function renderProjectList(filter = '') {
@@ -193,8 +235,7 @@
                 button.type = 'button';
                 button.className = `project-row${document.getElementById('projectId').value === project.filename ? ' active' : ''}`;
                 const image = document.createElement('img');
-                image.src = imageUrl(project.filename);
-                image.alt = '';
+                setLazyImage(image, project.filename);
                 const copy = document.createElement('span');
                 copy.className = 'row-copy';
                 const title = document.createElement('span');
@@ -238,8 +279,7 @@
                 const label = document.createElement('label');
                 label.htmlFor = checkbox.id;
                 const image = document.createElement('img');
-                image.src = imageUrl(filename);
-                image.alt = '';
+                setLazyImage(image, filename);
                 const name = document.createElement('span');
                 name.textContent = checkbox.disabled && ownerProject ? `${filename} · ${ownerProject.title}` : filename;
                 label.append(image, name);
@@ -270,7 +310,11 @@
         }
 
         function editProject(project) {
+            const currentProject = document.getElementById('projectId').value;
+            if (hasUnsavedChanges && currentProject === project.filename) return;
+            if (hasUnsavedChanges && !window.confirm('Discard your unsaved changes and open another project?')) return;
             form.reset();
+            hasUnsavedChanges = false;
             document.getElementById('projectId').value = project.filename;
             document.getElementById('title').value = project.title;
             document.getElementById('date').value = project.date;
@@ -287,11 +331,13 @@
             renderCoverOptions(project.filename);
             renderAssets(project.images.filter(image => image !== project.filename), project.filename);
             renderProjectList(document.getElementById('searchProjects').value);
-            setStatus('Changes are committed and pushed to Git when saved.');
+            setEditorStatus('Changes are committed and pushed to Git when saved.');
         }
 
-        function newProject() {
+        function newProject(confirmDiscard = false) {
+            if (confirmDiscard && hasUnsavedChanges && !window.confirm('Discard your unsaved changes and start a new project?')) return;
             form.reset();
+            hasUnsavedChanges = false;
             document.getElementById('projectId').value = '';
             document.getElementById('pageTitle').textContent = 'New project';
             document.getElementById('deleteButton').hidden = true;
@@ -302,7 +348,7 @@
             renderCoverOptions();
             renderAssets();
             renderProjectList(document.getElementById('searchProjects').value);
-            setStatus('Add project details, then save to commit and push.');
+            setEditorStatus('Add project details, then save to commit and push.');
         }
 
         async function loadProjects(selectFilename = '') {
@@ -316,6 +362,8 @@
             projects = data.projects;
             assets = data.assets;
             assetOwners = data.assetOwners || {};
+            gitPushConfigured = data.gitPushConfigured !== false;
+            updateSaveAvailability();
             renderProjectList(document.getElementById('searchProjects').value);
             if (selectFilename) {
                 const project = projects.find(item => item.filename === selectFilename);
@@ -330,8 +378,13 @@
 
         form.addEventListener('submit', async event => {
             event.preventDefault();
+            if (!gitPushConfigured) {
+                setEditorStatus('Git publishing is not configured. Add GITHUB_TOKEN in Render before saving.', 'error');
+                return;
+            }
             const button = document.getElementById('saveButton');
-            button.disabled = true;
+            isSaving = true;
+            updateSaveAvailability();
             button.textContent = 'Saving...';
             setStatus('Writing project details and pushing the Git commit...');
             const data = new FormData(form);
@@ -348,25 +401,39 @@
                     }
                     return;
                 }
+                hasUnsavedChanges = false;
                 setStatus(result.commit ? `Saved and pushed to Git · ${result.commit}` : 'No changes to commit.', 'success');
                 await loadProjects(result.project);
                 setStatus(result.commit ? `Saved and pushed to Git · ${result.commit}` : 'No changes to commit.', 'success');
             } catch (error) {
                 setStatus(error.message, 'error');
             } finally {
-                button.disabled = false;
+                isSaving = false;
+                updateSaveAvailability();
                 button.textContent = 'Save and push to Git';
             }
         });
 
         document.getElementById('deleteButton').addEventListener('click', async () => {
             const filename = document.getElementById('projectId').value;
-            if (!filename || !window.confirm('Remove this project from the portfolio? Its image files will remain available.')) return;
+            const confirmation = hasUnsavedChanges
+                ? 'Discard unsaved changes and remove this project? Its image files will remain available.'
+                : 'Remove this project from the portfolio? Its image files will remain available.';
+            if (!filename || !window.confirm(confirmation)) return;
             setStatus('Removing project and pushing the Git commit...');
             try {
                 const response = await fetch(`/admin/api/projects/${encodeURIComponent(filename)}`, { method: 'DELETE', headers: { 'X-CSRF-Token': csrfToken } });
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.error || 'Could not remove the project.');
+                if (!response.ok) {
+                    if (result.saved) {
+                        hasUnsavedChanges = false;
+                        setStatus(`${result.error} The change was saved on this server, but was not shipped.`, 'error');
+                    } else {
+                        throw new Error(result.error || 'Could not remove the project.');
+                    }
+                    return;
+                }
+                hasUnsavedChanges = false;
                 await loadProjects();
                 setStatus(result.commit ? `Removed and pushed to Git · ${result.commit}` : 'Project removed.', 'success');
             } catch (error) {
@@ -374,8 +441,15 @@
             }
         });
 
-        document.getElementById('newProject').addEventListener('click', newProject);
+        document.getElementById('newProject').addEventListener('click', () => newProject(true));
         document.getElementById('searchProjects').addEventListener('input', event => renderProjectList(event.target.value));
+        form.addEventListener('input', markUnsavedChanges);
+        form.addEventListener('change', markUnsavedChanges);
+        window.addEventListener('beforeunload', event => {
+            if (!hasUnsavedChanges) return;
+            event.preventDefault();
+            event.returnValue = '';
+        });
         document.getElementById('imageSearch').addEventListener('input', () => {
             renderAssets([...selectedGalleryImages], document.getElementById('projectId').value);
         });
@@ -393,6 +467,10 @@
             document.getElementById('galleryUploadName').textContent = files.length
                 ? files.map(file => file.name).join(', ')
                 : 'Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).';
+            if (files.length) {
+                hasUnsavedChanges = true;
+                setEditorStatus('Unsaved changes. Save and push to publish.');
+            }
         });
         loadProjects().catch(error => setStatus(error.message, 'error'));
     </script>

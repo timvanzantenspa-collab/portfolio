@@ -2,6 +2,7 @@
 #Passw in render: ADMIN_PASSWORD
 from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from PIL import Image, ImageOps
+from datetime import timedelta
 import os
 import shutil
 from pathlib import Path
@@ -11,6 +12,7 @@ import hmac
 import secrets
 import subprocess
 import threading
+import time
 from functools import wraps
 from io import BytesIO
 from urllib.parse import urlsplit
@@ -23,6 +25,7 @@ app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', '').lower() in {'1', 'true', 'yes'} or bool(os.environ.get('RENDER')),
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
     MAX_CONTENT_LENGTH=64 * 1024 * 1024,
 )
 STATIC_FOLDER = Path(__file__).parent / 'static'
@@ -34,6 +37,13 @@ CACHE_FOLDER.mkdir(exist_ok=True)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 ADMIN_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ADMIN_WRITE_LOCK = threading.Lock()
+ADMIN_LOGIN_LOCK = threading.Lock()
+ADMIN_LOGIN_FAILURES = {}
+ADMIN_LOGIN_FAILURE_LIMIT = 5
+ADMIN_LOGIN_FAILURE_WINDOW = 15 * 60
+
+class GitPushUnavailable(RuntimeError):
+    pass
 
 # Load JSON-LD schemas on startup
 try:
@@ -342,6 +352,34 @@ def valid_admin_csrf():
     expected = session.get('admin_csrf', '')
     return bool(supplied and expected and hmac.compare_digest(supplied, expected))
 
+def login_failure_count(client_address):
+    now = time.monotonic()
+    with ADMIN_LOGIN_LOCK:
+        attempts = [
+            attempt for attempt in ADMIN_LOGIN_FAILURES.get(client_address, [])
+            if now - attempt < ADMIN_LOGIN_FAILURE_WINDOW
+        ]
+        if attempts:
+            ADMIN_LOGIN_FAILURES[client_address] = attempts
+        else:
+            ADMIN_LOGIN_FAILURES.pop(client_address, None)
+        return len(attempts)
+
+def record_login_failure(client_address):
+    now = time.monotonic()
+    with ADMIN_LOGIN_LOCK:
+        attempts = [
+            attempt for attempt in ADMIN_LOGIN_FAILURES.get(client_address, [])
+            if now - attempt < ADMIN_LOGIN_FAILURE_WINDOW
+        ]
+        attempts.append(now)
+        ADMIN_LOGIN_FAILURES[client_address] = attempts
+        return len(attempts)
+
+def clear_login_failures(client_address):
+    with ADMIN_LOGIN_LOCK:
+        ADMIN_LOGIN_FAILURES.pop(client_address, None)
+
 def prepare_admin_webp(upload_filename, upload_bytes, occupied_filenames):
     safe_name = secure_filename(upload_filename)
     if not safe_name or Path(safe_name).suffix.lower() not in ADMIN_IMAGE_EXTENSIONS:
@@ -451,10 +489,50 @@ def git_run(arguments, env=None):
         capture_output=True, text=True, timeout=45, check=False,
     )
 
+def git_push_branch():
+    branch = os.environ.get('GIT_BRANCH') or os.environ.get('RENDER_GIT_BRANCH')
+    if not branch:
+        branch_result = git_run(['symbolic-ref', '--quiet', '--short', 'HEAD'])
+        branch = branch_result.stdout.strip() if branch_result.returncode == 0 else 'main'
+    if git_run(['check-ref-format', '--branch', branch]).returncode != 0:
+        raise GitPushUnavailable('GIT_BRANCH is not a valid branch name.')
+    return branch
+
+def git_push_environment():
+    push_env = os.environ.copy()
+    token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
+    if token:
+        encoded_credentials = base64.b64encode(f'x-access-token:{token}'.encode()).decode()
+        push_env.update({
+            'GIT_CONFIG_COUNT': '1',
+            'GIT_CONFIG_KEY_0': 'http.https://github.com/.extraheader',
+            'GIT_CONFIG_VALUE_0': f'AUTHORIZATION: basic {encoded_credentials}',
+        })
+    return push_env
+
+def git_push_is_configured():
+    return not os.environ.get('RENDER') or bool(
+        os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
+    )
+
+def ensure_git_push_ready():
+    if not git_push_is_configured():
+        raise GitPushUnavailable('Git publishing is not configured. Add GITHUB_TOKEN in Render; no changes were saved.')
+    branch = git_push_branch()
+    push_result = git_run(
+        ['push', '--dry-run', 'origin', f'HEAD:refs/heads/{branch}'],
+        env=git_push_environment(),
+    )
+    if push_result.returncode != 0:
+        raise GitPushUnavailable('GitHub push access could not be verified; no changes were saved.')
+
 def commit_and_push_portfolio(uploaded_assets=None, title=''):
     if git_run(['rev-parse', '--is-inside-work-tree']).returncode != 0:
         raise RuntimeError('Git is not available for this deployment.')
 
+    branch = git_push_branch()
+    push_env = git_push_environment()
+    branch_ref = f'refs/heads/{branch}'
     paths = ['captions.json', 'carousels.json']
     uploaded_assets = uploaded_assets or []
     if uploaded_assets:
@@ -465,37 +543,28 @@ def commit_and_push_portfolio(uploaded_assets=None, title=''):
 
     diff_result = git_run(['diff', '--quiet', 'HEAD', '--', *paths])
     if diff_result.returncode == 0:
-        return {'shipped': True, 'commit': None}
-    if diff_result.returncode != 1:
+        head_result = git_run(['rev-parse', 'HEAD'])
+        remote_result = git_run(['ls-remote', 'origin', branch_ref], env=push_env)
+        if remote_result.returncode != 0:
+            raise RuntimeError('Could not check whether pending project changes reached GitHub.')
+        remote_head = remote_result.stdout.split()[0] if remote_result.stdout.strip() else ''
+        if head_result.returncode == 0 and remote_head == head_result.stdout.strip():
+            return {'shipped': True, 'commit': None}
+    elif diff_result.returncode != 1:
         raise RuntimeError('Could not inspect the Git changes.')
 
-    safe_title = ' '.join(title.split())[:100] or 'project details'
-    commit_result = git_run([
-        '-c', 'user.name=Portfolio Admin',
-        '-c', 'user.email=portfolio-admin@localhost',
-        'commit', '--only', '-m', f'Update portfolio project: {safe_title}',
-        '--', *paths,
-    ])
-    if commit_result.returncode != 0:
-        raise RuntimeError('Git could not commit the project changes.')
+    else:
+        safe_title = ' '.join(title.split())[:100] or 'project details'
+        commit_result = git_run([
+            '-c', 'user.name=Portfolio Admin',
+            '-c', 'user.email=portfolio-admin@localhost',
+            'commit', '--only', '-m', f'Update portfolio project: {safe_title}',
+            '--', *paths,
+        ])
+        if commit_result.returncode != 0:
+            raise RuntimeError('Git could not commit the project changes.')
 
-    branch = os.environ.get('GIT_BRANCH') or os.environ.get('RENDER_GIT_BRANCH')
-    if not branch:
-        branch_result = git_run(['symbolic-ref', '--quiet', '--short', 'HEAD'])
-        branch = branch_result.stdout.strip() if branch_result.returncode == 0 else 'main'
-    if git_run(['check-ref-format', '--branch', branch]).returncode != 0:
-        raise RuntimeError('GIT_BRANCH is not a valid branch name.')
-
-    push_env = os.environ.copy()
-    token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
-    if token:
-        encoded_credentials = base64.b64encode(f'x-access-token:{token}'.encode()).decode()
-        push_env.update({
-            'GIT_CONFIG_COUNT': '1',
-            'GIT_CONFIG_KEY_0': 'http.https://github.com/.extraheader',
-            'GIT_CONFIG_VALUE_0': f'AUTHORIZATION: basic {encoded_credentials}',
-        })
-    push_result = git_run(['push', 'origin', f'HEAD:refs/heads/{branch}'], env=push_env)
+    push_result = git_run(['push', 'origin', f'HEAD:{branch_ref}'], env=push_env)
     if push_result.returncode != 0:
         raise RuntimeError('Changes were committed, but Git push failed. Check GitHub write access and branch configuration.')
 
@@ -508,12 +577,20 @@ def admin_login():
     if request.method == 'POST':
         if not valid_admin_csrf():
             return render_template('admin_login.html', csrf_token=csrf_token, error='Please refresh the page and try again.', configured=bool(ADMIN_PASSWORD)), 400
+        client_address = request.remote_addr or 'unknown'
+        if login_failure_count(client_address) >= ADMIN_LOGIN_FAILURE_LIMIT:
+            return render_template('admin_login.html', csrf_token=csrf_token, error='Too many failed attempts. Try again in 15 minutes.', configured=bool(ADMIN_PASSWORD)), 429, {'Retry-After': str(ADMIN_LOGIN_FAILURE_WINDOW)}
         supplied_password = request.form.get('password', '')
         if ADMIN_PASSWORD and hmac.compare_digest(supplied_password, ADMIN_PASSWORD):
+            clear_login_failures(client_address)
             session.clear()
+            session.permanent = True
             session['admin_authenticated'] = True
             admin_csrf_token()
             return redirect(url_for('admin'))
+        failed_attempts = record_login_failure(client_address)
+        if failed_attempts >= ADMIN_LOGIN_FAILURE_LIMIT:
+            return render_template('admin_login.html', csrf_token=csrf_token, error='Too many failed attempts. Try again in 15 minutes.', configured=bool(ADMIN_PASSWORD)), 429, {'Retry-After': str(ADMIN_LOGIN_FAILURE_WINDOW)}
         error = 'Project editor is not configured yet.' if not ADMIN_PASSWORD else 'That password did not match.'
         return render_template('admin_login.html', csrf_token=csrf_token, error=error, configured=bool(ADMIN_PASSWORD)), 401 if ADMIN_PASSWORD else 503
     return render_template('admin_login.html', csrf_token=csrf_token, error='', configured=bool(ADMIN_PASSWORD))
@@ -539,6 +616,7 @@ def admin_projects():
             'projects': admin_project_records(),
             'assets': admin_image_files(),
             'assetOwners': admin_asset_owners(),
+            'gitPushConfigured': git_push_is_configured(),
         })
     if not valid_admin_csrf():
         return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
@@ -639,6 +717,11 @@ def admin_projects():
                 if image_group and image_group != old_group:
                     return jsonify({'error': f'"{image}" already belongs to another project.'}), 409
 
+            try:
+                ensure_git_push_ready()
+            except GitPushUnavailable as error:
+                return jsonify({'error': str(error), 'saved': False, 'shipped': False}), 503
+
             for image_name, image_bytes in prepared_uploads:
                 (STATIC_FOLDER / image_name).write_bytes(image_bytes)
                 uploaded_assets.append(f'static/{image_name}')
@@ -660,6 +743,8 @@ def admin_projects():
             result = commit_and_push_portfolio(uploaded_assets, title)
     except (OSError, ValueError, json.JSONDecodeError) as error:
         return jsonify({'error': f'Could not save the project: {error}'}), 500
+    except GitPushUnavailable as error:
+        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
     except (RuntimeError, subprocess.TimeoutExpired) as error:
         return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
 
@@ -676,6 +761,10 @@ def admin_delete_project(filename):
             carousels = read_admin_json(CAROUSELS_FILE)
             if filename not in {record['filename'] for record in admin_project_records()}:
                 return jsonify({'error': 'That project no longer exists. Refresh and try again.'}), 404
+            try:
+                ensure_git_push_ready()
+            except GitPushUnavailable as error:
+                return jsonify({'error': str(error), 'saved': False, 'shipped': False}), 503
             group_id = carousels.get(filename)
             removed_images = [
                 image for image, carousel_id in carousels.items()
@@ -689,6 +778,8 @@ def admin_delete_project(filename):
             result = commit_and_push_portfolio(title='Remove project')
     except (OSError, ValueError, json.JSONDecodeError) as error:
         return jsonify({'error': f'Could not remove the project: {error}'}), 500
+    except GitPushUnavailable as error:
+        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
     except (RuntimeError, subprocess.TimeoutExpired) as error:
         return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
     return jsonify({**result, 'deleted': filename})
@@ -701,6 +792,8 @@ def add_security_headers(response):
     response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
     if request.path.startswith('/admin'):
         response.headers.setdefault('Cache-Control', 'no-store')
+    if os.environ.get('RENDER'):
+        response.headers.setdefault('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
     return response
 
 @app.route('/robots.txt')
