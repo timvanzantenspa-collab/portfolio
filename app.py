@@ -1,6 +1,6 @@
 #Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
 #Passw in render: ADMIN_PASSWORD
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session, send_from_directory
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session, send_file, send_from_directory
 from PIL import Image, ImageOps
 import markdown
 import nh3
@@ -455,6 +455,78 @@ def index():
 @app.route('/about')
 def about():
     return render_template('about.html', jsonld_scripts=about_page_scripts)
+
+@app.route('/gif-maker')
+def gif_maker():
+    return render_template('gif_maker.html')
+
+@app.route('/api/gif-maker', methods=['POST'])
+def create_gif():
+    uploads = request.files.getlist('images')
+    if len(uploads) < 2:
+        return jsonify({'error': 'Choose at least two images.'}), 400
+    if len(uploads) > 30:
+        return jsonify({'error': 'A GIF can contain up to 30 images.'}), 400
+
+    duration = request.form.get('duration', 200, type=int)
+    if duration is None or not 50 <= duration <= 1000:
+        return jsonify({'error': 'Frame duration must be between 50 and 1000 milliseconds.'}), 400
+
+    frames = []
+    total_bytes = 0
+    try:
+        for upload in uploads:
+            data = upload.stream.read(16 * 1024 * 1024 + 1)
+            total_bytes += len(data)
+            if len(data) > 16 * 1024 * 1024 or total_bytes > 48 * 1024 * 1024:
+                return jsonify({'error': 'Images must be under 16 MB each and 48 MB total.'}), 413
+
+            with Image.open(BytesIO(data)) as source:
+                if source.width * source.height > 25_000_000:
+                    return jsonify({'error': 'Each image must be smaller than 25 megapixels.'}), 400
+                source.seek(0)
+                frame = ImageOps.exif_transpose(source).convert('RGBA')
+                frame.thumbnail((640, 640), Image.Resampling.LANCZOS)
+                frames.append(frame)
+    except (Image.DecompressionBombError, Image.UnidentifiedImageError, OSError, ValueError):
+        return jsonify({'error': 'One or more files are not valid, supported images.'}), 400
+
+    canvas_width = max(frame.width for frame in frames)
+    canvas_height = max(frame.height for frame in frames)
+    canvas_size = (canvas_width, canvas_height)
+    animation_frames = []
+
+    for frame in frames:
+        frame.thumbnail(canvas_size, Image.Resampling.LANCZOS)
+        canvas = Image.new('RGB', canvas_size, 'white')
+        canvas.paste(
+            frame,
+            ((canvas.width - frame.width) // 2, (canvas.height - frame.height) // 2),
+            frame.getchannel('A'),
+        )
+        animation_frames.append(canvas.quantize(colors=128, dither=Image.Dither.NONE))
+
+    output = BytesIO()
+    animation_frames[0].save(
+        output,
+        format='GIF',
+        save_all=True,
+        append_images=animation_frames[1:],
+        duration=duration,
+        loop=0,
+        optimize=True,
+        disposal=2,
+    )
+    output.seek(0)
+    response = send_file(
+        output,
+        mimetype='image/gif',
+        as_attachment=True,
+        download_name='frame-animation.gif',
+        max_age=0,
+    )
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 def admin_csrf_token():
     if 'admin_csrf' not in session:

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f2ec">
+    <meta name="description" content="Make a compact, looping GIF from your images.">
+    <title>GIF Maker | Tim van Zanten</title>
+    <link rel="icon" href="/static/Favicon/favicon.ico">
+    <style>
+        :root {
+            color-scheme: light;
+            --paper: #f4f2ec;
+            --ink: #182321;
+            --muted: #66716c;
+            --line: #d6d8ce;
+            --green: #b8ee5b;
+            --blue: #356bff;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--ink);
+            background-color: var(--paper);
+            background-image: radial-gradient(#18232112 0.7px, transparent 0.7px);
+            background-size: 12px 12px;
+            font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+        }
+        a { color: inherit; }
+        .page { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 28px 0 64px; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+        .wordmark { font-size: 13px; font-weight: 750; letter-spacing: 0.06em; text-decoration: none; }
+        .back-link { font-size: 13px; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+        main { padding-top: 48px; }
+        .eyebrow { margin: 0 0 12px; color: #486050; font-size: 12px; font-weight: 750; letter-spacing: 0.13em; text-transform: uppercase; }
+        h1 { margin: 0; font-size: clamp(38px, 7vw, 68px); line-height: 0.98; font-weight: 650; letter-spacing: 0; }
+        .intro { max-width: 540px; margin: 16px 0 34px; color: var(--muted); font-size: 16px; line-height: 1.55; }
+        .workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 0.84fr); gap: 32px; align-items: start; }
+        .controls { min-width: 0; }
+        .dropzone { display: grid; min-height: 176px; place-items: center; padding: 24px; border: 1px dashed #829087; background: #fffdf7cc; text-align: center; transition: border-color 160ms ease, background 160ms ease; }
+        .dropzone.dragging { border-color: var(--blue); background: #eaf0ff; }
+        .dropzone strong { display: block; margin-bottom: 6px; font-size: 17px; }
+        .dropzone p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+        .choose-button, .make-button, .download-button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; border: 0; padding: 0 16px; color: var(--ink); background: var(--green); font: inherit; font-size: 13px; font-weight: 750; text-decoration: none; cursor: pointer; }
+        .choose-button:hover, .make-button:hover, .download-button:hover { filter: brightness(0.96); }
+        .choose-button:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+        .file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+        .file-list { display: grid; gap: 7px; margin: 16px 0 24px; padding: 0; list-style: none; }
+        .file-row { display: grid; grid-template-columns: 42px minmax(0, 1fr) auto; gap: 11px; align-items: center; min-height: 56px; padding: 7px; border-bottom: 1px solid var(--line); }
+        .file-row img { width: 42px; height: 42px; object-fit: cover; background: white; }
+        .file-name { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+        .file-size { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
+        .row-actions { display: flex; gap: 3px; }
+        .icon-button { display: grid; width: 30px; height: 30px; place-items: center; border: 0; background: transparent; font-size: 17px; cursor: pointer; }
+        .icon-button:hover { background: #e5e7de; }
+        .settings { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 18px 0; border-top: 1px solid var(--line); }
+        .setting-label { font-size: 14px; font-weight: 700; }
+        .setting-value { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 400; }
+        .duration-control { width: min(210px, 48%); accent-color: #356bff; }
+        .make-button { width: 100%; min-height: 48px; background: var(--ink); color: white; }
+        .make-button:disabled { opacity: 0.55; cursor: wait; }
+        .message { min-height: 22px; margin: 10px 0 0; color: #9b3327; font-size: 13px; }
+        .result { position: sticky; top: 24px; }
+        .preview-stage { display: grid; min-height: 350px; aspect-ratio: 1 / 1; place-items: center; overflow: hidden; padding: 24px; border: 1px solid var(--line); background-color: #e8e8df; background-image: linear-gradient(45deg, #d6d8ce 25%, transparent 25%), linear-gradient(-45deg, #d6d8ce 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #d6d8ce 75%), linear-gradient(-45deg, transparent 75%, #d6d8ce 75%); background-position: 0 0, 0 8px, 8px -8px, -8px 0; background-size: 16px 16px; }
+        .preview-stage img { display: block; max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: auto; }
+        .empty-preview { max-width: 190px; color: #69736c; font-size: 14px; line-height: 1.5; text-align: center; }
+        .result-meta { display: flex; justify-content: space-between; gap: 12px; padding: 14px 0; color: var(--muted); font-size: 12px; }
+        .download-button { width: 100%; background: var(--blue); color: white; }
+        .download-button[hidden] { display: none; }
+        @media (max-width: 760px) {
+            .page { width: min(100% - 28px, 540px); padding-top: 18px; }
+            main { padding-top: 36px; }
+            .workspace { grid-template-columns: 1fr; gap: 30px; }
+            .result { position: static; }
+            .preview-stage { min-height: 0; }
+        }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="topbar">
+            <a class="wordmark" href="/">TIM VAN ZANTEN</a>
+            <a class="back-link" href="/">Back to portfolio</a>
+        </header>
+        <main>
+            <p class="eyebrow">A small studio tool</p>
+            <h1>Frame by<br>frame.</h1>
+            <p class="intro">Turn a handful of images into a centered, looping GIF. Your images stay in their original order unless you rearrange them.</p>
+            <div class="workspace">
+                <section class="controls" aria-label="GIF settings">
+                    <div class="dropzone" id="dropzone">
+                        <div>
+                            <strong>Drop your images here</strong>
+                            <p>PNG, JPG, WebP or GIF · up to 30 frames</p>
+                            <label class="choose-button" for="image-input">Choose images</label>
+                            <input class="file-input" id="image-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+                        </div>
+                    </div>
+                    <ol class="file-list" id="file-list" aria-label="Animation frames"></ol>
+                    <div class="settings">
+                        <label class="setting-label" for="duration">
+                            Frame duration
+                            <span class="setting-value" id="duration-value">200 ms · 5 fps</span>
+                        </label>
+                        <input class="duration-control" id="duration" type="range" min="50" max="1000" step="10" value="200">
+                    </div>
+                    <button class="make-button" id="make-button" type="button">Make looping GIF</button>
+                    <p class="message" id="message" role="status" aria-live="polite"></p>
+                </section>
+                <section class="result" aria-label="GIF preview">
+                    <div class="preview-stage" id="preview-stage">
+                        <p class="empty-preview" id="empty-preview">Your animation will appear here, centered and ready to download.</p>
+                        <img id="preview" alt="Generated looping GIF" hidden>
+                    </div>
+                    <div class="result-meta" id="result-meta" hidden>
+                        <span id="result-size"></span>
+                        <span id="result-dimensions"></span>
+                    </div>
+                    <a class="download-button" id="download-button" href="#" download="frame-animation.gif" hidden>Download GIF</a>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script>
+        const input = document.getElementById('image-input');
+        const fileList = document.getElementById('file-list');
+        const dropzone = document.getElementById('dropzone');
+        const durationInput = document.getElementById('duration');
+        const durationValue = document.getElementById('duration-value');
+        const makeButton = document.getElementById('make-button');
+        const message = document.getElementById('message');
+        const preview = document.getElementById('preview');
+        const emptyPreview = document.getElementById('empty-preview');
+        const downloadButton = document.getElementById('download-button');
+        const resultMeta = document.getElementById('result-meta');
+        let files = [];
+        let previewUrl = '';
+        let thumbnailUrls = [];
+
+        function updateDuration() {
+            const milliseconds = Number(durationInput.value);
+            durationValue.textContent = `${milliseconds} ms · ${(1000 / milliseconds).toFixed(1).replace(/\.0$/, '')} fps`;
+        }
+
+        function renderFiles() {
+            thumbnailUrls.forEach(URL.revokeObjectURL);
+            thumbnailUrls = [];
+            fileList.replaceChildren();
+            files.forEach((file, index) => {
+                const row = document.createElement('li');
+                row.className = 'file-row';
+                const thumbnail = document.createElement('img');
+                const thumbnailUrl = URL.createObjectURL(file);
+                thumbnailUrls.push(thumbnailUrl);
+                thumbnail.src = thumbnailUrl;
+                thumbnail.alt = '';
+                const details = document.createElement('span');
+                details.className = 'file-name';
+                details.textContent = file.name;
+                const size = document.createElement('span');
+                size.className = 'file-size';
+                size.textContent = `${(file.size / 1024).toFixed(0)} KB`;
+                details.append(size);
+                const actions = document.createElement('span');
+                actions.className = 'row-actions';
+                [[-1, 'Move frame up', '↑'], [1, 'Move frame down', '↓'], [0, 'Remove frame', '×']].forEach(([direction, label, symbol]) => {
+                    const button = document.createElement('button');
+                    button.className = 'icon-button';
+                    button.type = 'button';
+                    button.textContent = symbol;
+                    button.setAttribute('aria-label', label);
+                    button.title = label;
+                    button.disabled = direction < 0 && index === 0 || direction > 0 && index === files.length - 1;
+                    button.addEventListener('click', () => {
+                        if (direction === 0) files.splice(index, 1);
+                        else [files[index], files[index + direction]] = [files[index + direction], files[index]];
+                        renderFiles();
+                    });
+                    actions.append(button);
+                });
+                row.append(thumbnail, details, actions);
+                fileList.append(row);
+            });
+            makeButton.disabled = files.length < 2;
+        }
+
+        function addFiles(newFiles) {
+            const images = Array.from(newFiles).filter(file => file.type.startsWith('image/'));
+            const acceptedImages = images.slice(0, 30 - files.length);
+            files = [...files, ...acceptedImages];
+            message.textContent = acceptedImages.length < images.length ? 'You can add up to 30 images.' : newFiles.length > images.length ? 'Only image files can be added.' : '';
+            renderFiles();
+        }
+
+        input.addEventListener('change', event => {
+            addFiles(event.target.files);
+            input.value = '';
+        });
+        durationInput.addEventListener('input', updateDuration);
+        ['dragenter', 'dragover'].forEach(type => dropzone.addEventListener(type, event => {
+            event.preventDefault();
+            dropzone.classList.add('dragging');
+        }));
+        ['dragleave', 'drop'].forEach(type => dropzone.addEventListener(type, event => {
+            event.preventDefault();
+            dropzone.classList.remove('dragging');
+        }));
+        dropzone.addEventListener('drop', event => addFiles(event.dataTransfer.files));
+
+        makeButton.addEventListener('click', async () => {
+            if (files.length < 2) return;
+            makeButton.disabled = true;
+            makeButton.textContent = 'Making your GIF…';
+            message.textContent = '';
+            const form = new FormData();
+            files.forEach(file => form.append('images', file, file.name));
+            form.append('duration', durationInput.value);
+            try {
+                const response = await fetch('/api/gif-maker', { method: 'POST', body: form });
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Could not make the GIF.');
+                }
+                const blob = await response.blob();
+                if (previewUrl) URL.revokeObjectURL(previewUrl);
+                previewUrl = URL.createObjectURL(blob);
+                preview.src = previewUrl;
+                preview.hidden = false;
+                emptyPreview.hidden = true;
+                downloadButton.href = previewUrl;
+                downloadButton.hidden = false;
+                resultMeta.hidden = false;
+                document.getElementById('result-size').textContent = `${(blob.size / 1024 / 1024).toFixed(2)} MB`;
+                preview.onload = () => {
+                    document.getElementById('result-dimensions').textContent = `${preview.naturalWidth} × ${preview.naturalHeight} px`;
+                };
+            } catch (error) {
+                message.textContent = error.message;
+            } finally {
+                makeButton.disabled = files.length < 2;
+                makeButton.textContent = 'Make looping GIF';
+            }
+        });
+        updateDuration();
+        renderFiles();
+    </script>
+</body>
+</html>
