@@ -74,6 +74,25 @@
         .upload-name { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; }
         .gallery-upload-tools { display: grid; gap: 8px; margin-bottom: 12px; }
         .gallery-upload-tools .upload-name { min-height: auto; }
+        .media-order-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 0 8px; }
+        .media-order-heading h3 { margin: 0; font: 700 11px var(--sans); text-transform: uppercase; }
+        .media-order-heading p { margin: 0; color: var(--muted); font-size: 11px; }
+        .selected-media-list { display: grid; gap: 6px; margin: 0 0 16px; padding: 0; list-style: none; }
+        .selected-media-row { display: grid; grid-template-columns: 25px 52px minmax(0, 1fr) auto; align-items: center; gap: 9px; min-width: 0; padding: 6px; border: 1px solid var(--line); background: #fff; }
+        .selected-media-position { color: var(--muted); font-size: 11px; text-align: center; }
+        .selected-media-row img, .selected-media-row video, .selected-media-row .video-thumbnail { display: block; width: 52px; height: 52px; object-fit: cover; background: #171717; }
+        .selected-media-copy { display: grid; gap: 4px; min-width: 0; }
+        .selected-media-name { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+        .selected-media-kind { color: var(--muted); font-size: 10px; }
+        .selected-media-actions { display: flex; gap: 4px; }
+        .selected-media-actions button { min-width: 32px; min-height: 30px; padding: 0 7px; border: 1px solid var(--line); background: #fff; font-size: 12px; }
+        .selected-media-actions button:hover:not(:disabled) { border-color: var(--ink); }
+        .selected-media-actions button:disabled { opacity: .4; cursor: default; }
+        .media-empty { margin: 0; padding: 12px; border: 1px dashed var(--line); color: var(--muted); font-size: 12px; }
+        .asset-browser-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+        .asset-browser-tools .search { margin: 0; }
+        .sort-field { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+        .sort-field select { min-height: 38px; padding: 0 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 12px; }
         .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; max-height: 250px; overflow: auto; padding: 2px; }
         .asset-option { position: relative; min-width: 0; }
         .asset-option input { position: absolute; top: 7px; left: 7px; z-index: 1; width: 17px; height: 17px; accent-color: var(--blue); }
@@ -110,6 +129,12 @@
             .form-actions { flex-wrap: wrap; }
             .delete-button { margin-left: auto; }
             .asset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .asset-browser-tools { grid-template-columns: 1fr; }
+            .sort-field { justify-self: start; }
+            .media-order-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+            .selected-media-row { grid-template-columns: 22px 44px minmax(0, 1fr) auto; gap: 7px; }
+            .selected-media-row img, .selected-media-row video, .selected-media-row .video-thumbnail { width: 44px; height: 44px; }
+            .selected-media-actions button { min-width: 28px; padding: 0 5px; }
         }
     </style>
 </head>
@@ -173,7 +198,14 @@
                         <label class="upload-label" id="galleryUploadControl" for="galleryUploads"><strong>Drop project media</strong><span>or browse for up to eight files</span><input id="galleryUploads" name="gallery_uploads" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm" multiple></label>
                         <div class="upload-name" id="galleryUploadName">Images up to 16 MB; MP4/WebM videos up to 50 MB.</div>
                     </div>
-                    <input class="search" id="imageSearch" type="search" placeholder="Search images by filename or project" aria-label="Search project images">
+                    <div class="media-order-heading"><h3>Selected media</h3><p>The cover stays first. Use arrows to arrange the gallery.</p></div>
+                    <ol class="selected-media-list" id="selectedMediaList" aria-label="Selected project media"></ol>
+                    <div class="asset-browser-tools">
+                        <input class="search" id="imageSearch" type="search" placeholder="Search images by filename or project" aria-label="Search project images">
+                        <label class="sort-field" for="assetSort">Sort media
+                            <select id="assetSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select>
+                        </label>
+                    </div>
                     <div class="asset-grid" id="assetGrid"></div>
                 </section>
                 <div class="form-actions">
@@ -192,8 +224,11 @@
         const uploadControl = document.getElementById('uploadControl');
         let projects = [];
         let assets = [];
+        let assetModified = {};
         let assetOwners = {};
         let selectedGalleryImages = new Set();
+        let galleryOrder = [];
+        let mediaPreviewUrls = [];
         let gitPushConfigured = true;
         let hasUnsavedChanges = false;
         let isSaving = false;
@@ -210,6 +245,10 @@
 
         function isSupportedMediaFile(file) {
             return /\.(jpe?g|png|gif|webp|mp4|webm)$/i.test(file.name);
+        }
+
+        function mediaFileKey(file) {
+            return `${file.name}:${file.size}:${file.lastModified}`;
         }
 
         function updateInputFiles(input, files, append = false) {
@@ -259,6 +298,7 @@
             const galleryFiles = [...galleryInput.files];
             if (galleryFiles.length > 8) {
                 galleryInput.value = '';
+                syncGalleryUploadOrder();
                 setStatus('Upload at most eight media files per save.', 'error');
                 return;
             }
@@ -269,15 +309,18 @@
             if (oversized) {
                 if (oversized === coverFile) coverInput.value = '';
                 else galleryInput.value = '';
+                syncGalleryUploadOrder();
                 setStatus(`${oversized.name} exceeds its ${isVideoAsset(oversized.name) ? '50 MB video' : '16 MB image'} limit.`, 'error');
                 return;
             }
             if (files.reduce((total, file) => total + file.size, 0) > 60 * 1024 * 1024) {
                 changedInput.value = '';
+                syncGalleryUploadOrder();
                 setStatus('Uploads must total 60 MB or less per save.', 'error');
                 return;
             }
 
+            syncGalleryUploadOrder();
             document.getElementById('uploadName').textContent = coverFile?.name || 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
             document.getElementById('galleryUploadName').textContent = galleryFiles.length
                 ? galleryFiles.map(file => file.name).join(', ')
@@ -294,6 +337,162 @@
             thumbnail.textContent = `${filename.split('.').pop().toUpperCase()} VIDEO`;
             thumbnail.setAttribute('aria-label', `${filename} video`);
             return thumbnail;
+        }
+
+        function currentCoverAsset() {
+            return document.getElementById('coverImage').files.length
+                ? ''
+                : document.getElementById('filename').value;
+        }
+
+        function syncGalleryUploadOrder() {
+            const files = [...document.getElementById('galleryUploads').files];
+            const fileKeys = new Set(files.map(mediaFileKey));
+            galleryOrder = galleryOrder.filter(item => item.kind === 'asset'
+                ? selectedGalleryImages.has(item.filename)
+                : fileKeys.has(item.key));
+            const orderedUploadKeys = new Set(galleryOrder.filter(item => item.kind === 'upload').map(item => item.key));
+            files.forEach(file => {
+                const key = mediaFileKey(file);
+                if (!orderedUploadKeys.has(key)) galleryOrder.push({ kind: 'upload', key, file });
+            });
+            renderSelectedMedia();
+        }
+
+        function syncSelectedGalleryImages() {
+            selectedGalleryImages = new Set(
+                galleryOrder.filter(item => item.kind === 'asset').map(item => item.filename),
+            );
+        }
+
+        function makeSelectedMediaThumbnail(filename, file = null) {
+            if (file && isVideoAsset(file.name)) {
+                const video = document.createElement('video');
+                const objectUrl = URL.createObjectURL(file);
+                mediaPreviewUrls.push(objectUrl);
+                video.src = objectUrl;
+                video.muted = true;
+                video.playsInline = true;
+                return video;
+            }
+            const image = document.createElement('img');
+            if (file) {
+                const objectUrl = URL.createObjectURL(file);
+                mediaPreviewUrls.push(objectUrl);
+                image.src = objectUrl;
+            } else {
+                image.src = imageUrl(filename);
+            }
+            image.alt = '';
+            return image;
+        }
+
+        function renderSelectedMedia() {
+            mediaPreviewUrls.forEach(URL.revokeObjectURL);
+            mediaPreviewUrls = [];
+            const list = document.getElementById('selectedMediaList');
+            list.replaceChildren();
+            const coverFile = document.getElementById('coverImage').files[0] || null;
+            const coverFilename = coverFile?.name || document.getElementById('filename').value;
+            const items = coverFilename ? [{ kind: 'cover', filename: coverFilename, file: coverFile }] : [];
+            items.push(...galleryOrder);
+
+            if (!items.length) {
+                const empty = document.createElement('li');
+                empty.className = 'media-empty';
+                empty.textContent = 'Dropped and selected media will appear here.';
+                list.append(empty);
+                return;
+            }
+
+            items.forEach((item, index) => {
+                const row = document.createElement('li');
+                row.className = 'selected-media-row';
+                const position = document.createElement('span');
+                position.className = 'selected-media-position';
+                position.textContent = `${index + 1}`;
+                const filename = item.kind === 'asset' ? item.filename : item.file?.name || item.filename;
+                row.append(position, makeSelectedMediaThumbnail(filename, item.file));
+
+                const copy = document.createElement('span');
+                copy.className = 'selected-media-copy';
+                const name = document.createElement('span');
+                name.className = 'selected-media-name';
+                name.textContent = filename;
+                const kind = document.createElement('span');
+                kind.className = 'selected-media-kind';
+                kind.textContent = item.kind === 'cover' ? 'Cover' : item.kind === 'upload' ? 'Pending upload' : 'Gallery image';
+                copy.append(name, kind);
+                row.append(copy);
+
+                const actions = document.createElement('div');
+                actions.className = 'selected-media-actions';
+                if (item.kind !== 'cover') {
+                    const galleryIndex = galleryOrder.indexOf(item);
+                    const upButton = document.createElement('button');
+                    upButton.type = 'button';
+                    upButton.textContent = '↑';
+                    upButton.title = 'Move up';
+                    upButton.setAttribute('aria-label', `Move ${filename} up`);
+                    upButton.disabled = galleryIndex === 0;
+                    upButton.addEventListener('click', () => moveGalleryMedia(galleryIndex, -1));
+                    const downButton = document.createElement('button');
+                    downButton.type = 'button';
+                    downButton.textContent = '↓';
+                    downButton.title = 'Move down';
+                    downButton.setAttribute('aria-label', `Move ${filename} down`);
+                    downButton.disabled = galleryIndex === galleryOrder.length - 1;
+                    downButton.addEventListener('click', () => moveGalleryMedia(galleryIndex, 1));
+                    actions.append(upButton, downButton);
+                }
+                if (item.kind !== 'cover' || item.file) {
+                    const removeButton = document.createElement('button');
+                    removeButton.type = 'button';
+                    removeButton.textContent = 'Remove';
+                    removeButton.addEventListener('click', () => removeSelectedMedia(item));
+                    actions.append(removeButton);
+                }
+                if (actions.childElementCount) row.append(actions);
+                list.append(row);
+            });
+        }
+
+        function moveGalleryMedia(index, offset) {
+            const target = index + offset;
+            if (target < 0 || target >= galleryOrder.length) return;
+            [galleryOrder[index], galleryOrder[target]] = [galleryOrder[target], galleryOrder[index]];
+            syncSelectedGalleryImages();
+            renderAssets(null, currentCoverAsset());
+            renderSelectedMedia();
+            hasUnsavedChanges = true;
+            setEditorStatus('Unsaved changes. Save and push to publish.');
+        }
+
+        function removeSelectedMedia(item) {
+            if (item.kind === 'cover') {
+                if (item.file) {
+                    const input = document.getElementById('coverImage');
+                    input.value = '';
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                } else {
+                    const select = document.getElementById('filename');
+                    select.value = '';
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                return;
+            }
+            if (item.kind === 'asset') {
+                selectedGalleryImages.delete(item.filename);
+                galleryOrder = galleryOrder.filter(entry => entry !== item);
+                syncSelectedGalleryImages();
+                renderAssets(null, currentCoverAsset());
+                renderSelectedMedia();
+                hasUnsavedChanges = true;
+                setEditorStatus('Unsaved changes. Save and push to publish.');
+                return;
+            }
+            const input = document.getElementById('galleryUploads');
+            updateInputFiles(input, [...input.files].filter(file => mediaFileKey(file) !== item.key));
         }
 
         function setStatus(message, kind = '') {
@@ -334,7 +533,7 @@
         }
 
         function markUnsavedChanges(event) {
-            if (event.target.id === 'imageSearch' || event.target.id === 'galleryUploads' || isSaving) return;
+            if (event.target.id === 'imageSearch' || event.target.id === 'assetSort' || event.target.id === 'galleryUploads' || isSaving) return;
             hasUnsavedChanges = true;
             setEditorStatus('Unsaved changes. Save and push to publish.');
         }
@@ -425,12 +624,23 @@
             });
         }
 
-        function renderAssets(selected = [], coverFilename = '') {
+        function renderAssets(selected = null, coverFilename = currentCoverAsset()) {
             const grid = document.getElementById('assetGrid');
             grid.replaceChildren();
-            selectedGalleryImages = new Set(selected);
+            if (selected !== null) {
+                selectedGalleryImages = new Set(selected);
+                galleryOrder = [...selectedGalleryImages].map(filename => ({ kind: 'asset', filename }));
+                [...document.getElementById('galleryUploads').files].forEach(file => {
+                    galleryOrder.push({ kind: 'upload', key: mediaFileKey(file), file });
+                });
+            }
             const filter = document.getElementById('imageSearch').value.trim().toLowerCase();
-            assets.forEach((filename, index) => {
+            const sortOrder = document.getElementById('assetSort').value;
+            const sortedAssets = [...assets].sort((first, second) => {
+                const difference = (assetModified[second] || 0) - (assetModified[first] || 0);
+                return (sortOrder === 'oldest' ? -difference : difference) || first.localeCompare(second);
+            });
+            sortedAssets.forEach((filename, index) => {
                 if (filename === coverFilename) return;
                 const owner = assetOwners[filename];
                 const ownerProject = projects.find(project => project.filename === owner);
@@ -447,8 +657,14 @@
                 checkbox.disabled = Boolean(owner && owner !== currentProject);
                 if (checkbox.disabled) wrapper.classList.add('unavailable');
                 checkbox.addEventListener('change', () => {
-                    if (checkbox.checked) selectedGalleryImages.add(filename);
-                    else selectedGalleryImages.delete(filename);
+                    if (checkbox.checked) {
+                        selectedGalleryImages.add(filename);
+                        galleryOrder.push({ kind: 'asset', filename });
+                    } else {
+                        selectedGalleryImages.delete(filename);
+                        galleryOrder = galleryOrder.filter(item => item.kind !== 'asset' || item.filename !== filename);
+                    }
+                    renderSelectedMedia();
                 });
                 const label = document.createElement('label');
                 label.htmlFor = checkbox.id;
@@ -466,6 +682,7 @@
                 empty.textContent = filter ? 'No images match that search.' : 'No images available.';
                 grid.append(empty);
             }
+            renderSelectedMedia();
         }
 
         function renderCoverOptions(selected = '') {
@@ -522,7 +739,7 @@
             document.getElementById('uploadName').textContent = 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
             document.getElementById('galleryUploadName').textContent = 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
             renderCoverOptions();
-            renderAssets();
+            renderAssets([], currentCoverAsset());
             renderProjectList(document.getElementById('searchProjects').value);
             setEditorStatus('Add project details, then save to commit and push.');
         }
@@ -537,6 +754,7 @@
             if (!response.ok) throw new Error(data.error || 'Could not load projects.');
             projects = data.projects;
             assets = data.assets;
+            assetModified = data.assetModified || {};
             assetOwners = data.assetOwners || {};
             gitPushConfigured = data.gitPushConfigured !== false;
             updateSaveAvailability();
@@ -566,6 +784,10 @@
             const data = new FormData(form);
             data.delete('images');
             selectedGalleryImages.forEach(filename => data.append('images', filename));
+            const pendingFiles = [...document.getElementById('galleryUploads').files];
+            data.append('gallery_order', JSON.stringify(galleryOrder.map(item => item.kind === 'asset'
+                ? { kind: 'asset', filename: item.filename }
+                : { kind: 'upload', index: pendingFiles.findIndex(file => mediaFileKey(file) === item.key) })));
             try {
                 const response = await fetch('/admin/api/projects', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body: data });
                 const result = await response.json();
@@ -631,7 +853,17 @@
             event.returnValue = '';
         });
         document.getElementById('imageSearch').addEventListener('input', () => {
-            renderAssets([...selectedGalleryImages], document.getElementById('projectId').value);
+            renderAssets(null, currentCoverAsset());
+        });
+        document.getElementById('assetSort').addEventListener('change', () => renderAssets(null, currentCoverAsset()));
+        document.getElementById('filename').addEventListener('change', () => {
+            const selectedCover = document.getElementById('filename').value;
+            if (selectedGalleryImages.has(selectedCover)) {
+                selectedGalleryImages.delete(selectedCover);
+                galleryOrder = galleryOrder.filter(item => item.kind !== 'asset' || item.filename !== selectedCover);
+            }
+            renderAssets(null, currentCoverAsset());
+            renderSelectedMedia();
         });
         document.getElementById('coverImage').addEventListener('change', event => validateUploadSelection(event.target));
         document.getElementById('galleryUploads').addEventListener('change', event => validateUploadSelection(event.target));

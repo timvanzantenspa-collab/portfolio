@@ -499,6 +499,46 @@ def admin_media_files():
         if path.is_file() and path.suffix.lower() in ADMIN_MEDIA_EXTENSIONS
     )
 
+def admin_media_modified_times():
+    modified_times = {}
+    for filename in admin_media_files():
+        try:
+            modified_times[filename] = (STATIC_FOLDER / filename).stat().st_mtime
+        except OSError:
+            continue
+    return modified_times
+
+def order_admin_gallery_images(gallery_order, selected_assets, uploaded_assets):
+    if gallery_order is None:
+        return list(dict.fromkeys([*selected_assets, *uploaded_assets]))
+    if not isinstance(gallery_order, list):
+        raise ValueError('Gallery order must be a list.')
+
+    ordered_images = []
+    seen_assets = set()
+    seen_uploads = set()
+    for item in gallery_order:
+        if not isinstance(item, dict):
+            raise ValueError('Gallery order contains an invalid item.')
+        if item.get('kind') == 'asset':
+            filename = item.get('filename')
+            if not isinstance(filename, str) or filename not in selected_assets or filename in seen_assets:
+                raise ValueError('Gallery order contains an invalid or duplicate asset.')
+            seen_assets.add(filename)
+            ordered_images.append(filename)
+        elif item.get('kind') == 'upload':
+            index = item.get('index')
+            if isinstance(index, bool) or not isinstance(index, int) or not 0 <= index < len(uploaded_assets) or index in seen_uploads:
+                raise ValueError('Gallery order contains an invalid or duplicate upload.')
+            seen_uploads.add(index)
+            ordered_images.append(uploaded_assets[index])
+        else:
+            raise ValueError('Gallery order contains an unknown media type.')
+
+    if seen_assets != set(selected_assets) or seen_uploads != set(range(len(uploaded_assets))):
+        raise ValueError('Gallery order must include every selected image and upload exactly once.')
+    return ordered_images
+
 def admin_asset_owners():
     captions = load_captions()
     carousels = load_carousels()
@@ -837,9 +877,11 @@ def admin_logout():
 @admin_required
 def admin_projects():
     if request.method == 'GET':
+        media_files = admin_media_files()
         return jsonify({
             'projects': admin_project_records(),
-            'assets': admin_media_files(),
+            'assets': media_files,
+            'assetModified': admin_media_modified_times(),
             'assetOwners': admin_asset_owners(),
             'gitPushConfigured': git_push_is_configured(),
         })
@@ -852,9 +894,15 @@ def admin_projects():
     if request.is_json:
         data = request.get_json(silent=True) or {}
         gallery_images = data.get('images', [])
+        gallery_order = data.get('gallery_order')
     else:
         data = request.form
         gallery_images = request.form.getlist('images')
+        raw_gallery_order = request.form.get('gallery_order')
+        try:
+            gallery_order = json.loads(raw_gallery_order) if raw_gallery_order else None
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Gallery order must be valid JSON.'}), 400
 
     project_id = str(data.get('project_id', '')).strip()
     filename = str(data.get('filename', '')).strip()
@@ -890,6 +938,7 @@ def admin_projects():
                 return jsonify({'error': 'Upload no more than eight gallery images at a time.'}), 400
 
             prepared_uploads = []
+            prepared_gallery_names = []
             upload_names = set()
             cover_filename = None
             uploads = []
@@ -919,6 +968,8 @@ def admin_projects():
                 prepared_uploads.append((media_name, media_bytes))
                 if image_file is upload:
                     cover_filename = media_name
+                else:
+                    prepared_gallery_names.append(media_name)
 
             if cover_filename:
                 filename = cover_filename
@@ -932,8 +983,14 @@ def admin_projects():
                 gallery_images = [gallery_images]
             if not isinstance(gallery_images, list) or any(not isinstance(image, str) for image in gallery_images):
                 return jsonify({'error': 'Choose valid gallery images.'}), 400
-            uploaded_gallery_names = [name for name, _ in prepared_uploads if name != cover_filename]
-            selected_images = list(dict.fromkeys([filename, *gallery_images, *uploaded_gallery_names]))
+            gallery_images = list(dict.fromkeys(gallery_images))
+            try:
+                ordered_gallery_images = order_admin_gallery_images(
+                    gallery_order, gallery_images, prepared_gallery_names,
+                )
+            except ValueError as error:
+                return jsonify({'error': str(error)}), 400
+            selected_images = list(dict.fromkeys([filename, *ordered_gallery_images]))
             if any(image not in assets and image not in upload_names for image in selected_images):
                 return jsonify({'error': 'One of the selected gallery images is no longer available.'}), 400
 
