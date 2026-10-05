@@ -303,10 +303,24 @@
             filter: brightness(1);
         }
 
+        .image-item video {
+            position: relative;
+            z-index: 1;
+            max-width: 280px;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            background: #111;
+        }
+
         .image-item:hover img {
             transform: scale(1.02);
             filter: brightness(1.05);
         }
+
+        .image-item:hover video { transform: scale(1.02); }
 
         .image-item.is-record-art {
             align-self: start;
@@ -859,6 +873,8 @@
             height: 100%;
         }
 
+        .modal-image > a[hidden], .modal-image > video[hidden] { display: none; }
+
         .modal-image-background {
             position: absolute;
             inset: 0;
@@ -887,6 +903,17 @@
             transform: perspective(900px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
             transform-style: preserve-3d;
             transition: transform 180ms ease-out;
+        }
+
+        .modal-image > video {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            max-width: calc(100% - 64px);
+            max-height: calc(100% - 64px);
+            object-fit: contain;
+            background: #111;
         }
 
         .modal-image img.animate {
@@ -1517,6 +1544,7 @@
                 <a id="modalImageLink" href="#" target="_blank" rel="noopener noreferrer" style="cursor: pointer;">
                     <img id="modalImage" src="" alt="" style="cursor: pointer;">
                 </a>
+                <video id="modalVideo" controls muted loop autoplay playsinline preload="metadata" hidden aria-label="Project video"></video>
                 <div class="carousel-controls" id="carouselControls">
                     <button class="carousel-nav-btn" id="prevBtn" onclick="navigateCarousel(-1)" aria-label="Previous image">←</button>
                     <button class="carousel-nav-btn" id="nextBtn" onclick="navigateCarousel(1)" aria-label="Next image">→</button>
@@ -1681,6 +1709,10 @@
             }
         }
 
+        function isVideoMedia(media) {
+            return media?.media_type === 'video' || /\.(mp4|webm)$/i.test(media?.filename || '');
+        }
+
         function displayImages() {
             const grid = document.getElementById('imageGrid');
             const endIndex = Math.min(currentIndex + imagesPerLoad, allImages.length);
@@ -1688,11 +1720,13 @@
 
             for (let i = currentIndex; i < endIndex; i++) {
                 const imageData = allImages[i];
+                const isVideo = isVideoMedia(imageData);
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'image-item';
+                if (isVideo) itemDiv.classList.add('is-video');
                 const caption = imageCaptions[imageData.filename] || {};
                 const projectTitle = caption.title || imageData.filename;
-                if (['album', 'ep', 'single'].includes((caption.type || '').trim().toLowerCase())) {
+                if (!isVideo && ['album', 'ep', 'single'].includes((caption.type || '').trim().toLowerCase())) {
                     itemDiv.classList.add('is-record-art');
                     itemDiv.addEventListener('pointermove', tiltVinylArtwork);
                     itemDiv.addEventListener('pointerleave', resetVinylArtworkTilt);
@@ -1715,10 +1749,19 @@
                     itemDiv.style.setProperty('--random-offset-h', '0px');
                 }
 
-                const img = document.createElement('img');
-                img.dataset.src = imageData.url; // Store actual src in data attribute
-                img.alt = imageData.filename;
-                img.style.opacity = '0'; // Start invisible
+                const mediaElement = document.createElement(isVideo ? 'video' : 'img');
+                mediaElement.dataset.src = imageData.url;
+                mediaElement.style.opacity = '0';
+                if (isVideo) {
+                    mediaElement.muted = true;
+                    mediaElement.autoplay = true;
+                    mediaElement.loop = true;
+                    mediaElement.playsInline = true;
+                    mediaElement.preload = 'none';
+                    mediaElement.setAttribute('aria-label', projectTitle);
+                } else {
+                    mediaElement.alt = imageData.filename;
+                }
 
                 if (itemDiv.classList.contains('is-record-art')) {
                     const vinylDisc = document.createElement('span');
@@ -1734,7 +1777,7 @@
                     itemDiv.appendChild(vinylDisc);
                 }
 
-                itemDiv.appendChild(img);
+                itemDiv.appendChild(mediaElement);
                 
                 // Create tooltip with title and date
                 const tooltip = document.createElement('div');
@@ -1758,12 +1801,26 @@
                 // Use Intersection Observer for lazy loading
                 const observer = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
+                        const media = entry.target.querySelector('img, video');
+                        if (!media) return;
+                        if (media.tagName === 'VIDEO') {
+                            if (!entry.isIntersecting) {
+                                if (media.hasAttribute('src')) media.pause();
+                                return;
+                            }
+                            if (!media.hasAttribute('src') && media.dataset.src) {
+                                media.src = media.dataset.src;
+                                media.load();
+                            }
+                            const playback = media.play();
+                            if (playback) playback.catch(() => {});
+                            return;
+                        }
                         if (entry.isIntersecting) {
-                            const img = entry.target.querySelector('img');
-                            if (img && img.dataset.src && !img.src) {
-                                img.src = img.dataset.src;
-                                img.style.transition = 'opacity 0.4s ease-out';
-                                img.onload = () => img.style.opacity = '1';
+                            if (media.dataset.src && !media.hasAttribute('src')) {
+                                media.src = media.dataset.src;
+                                media.style.transition = 'opacity 0.4s ease-out';
+                                media.onload = () => media.style.opacity = '1';
                                 observer.unobserve(entry.target);
                             }
                         }
@@ -1851,7 +1908,7 @@
                 }
             } catch (error) {
                 console.error('Error loading carousel:', error);
-                carouselImages = [{filename: filename, url: imageUrl}];
+                carouselImages = [{filename: filename, url: imageUrl, media_type: isVideoMedia({filename}) ? 'video' : 'image'}];
                 carouselPrimaryFilename = filename;
                 carouselCurrentIndex = 0;
                 document.getElementById('carouselControls').classList.remove('active');
@@ -1860,9 +1917,11 @@
             // Preload next image in carousel for smooth transitions
             if (carouselImages.length > 1) {
                 const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
-                const nextImageUrl = carouselImages[nextIndex].url;
-                const preloadImg = new Image();
-                preloadImg.src = nextImageUrl; // Start preloading
+                const nextMedia = carouselImages[nextIndex];
+                if (!isVideoMedia(nextMedia)) {
+                    const preloadImg = new Image();
+                    preloadImg.src = nextMedia.url;
+                }
             }
             
             displayCarouselImage(carouselCurrentIndex);
@@ -1877,11 +1936,14 @@
             const carouselItem = carouselImages[index];
             const filename = carouselItem.filename;
             const imageUrl = carouselItem.url;
+            const isVideo = isVideoMedia(carouselItem);
             // Use primary image's caption for all images in carousel
             const captionFilename = carouselPrimaryFilename || filename;
             const caption = imageCaptions[captionFilename] || {};
             
             const img = document.getElementById('modalImage');
+            const video = document.getElementById('modalVideo');
+            const imageLinkElement = document.getElementById('modalImageLink');
             resetModalImageTilt();
             
             // Remove animation class to reset
@@ -1890,16 +1952,34 @@
             // Trigger reflow to ensure animation restarts
             void img.offsetWidth;
             
-            // Update image and trigger animation with error handling
-            img.src = imageUrl;
-            img.alt = filename;
-            img.classList.add('animate');
-            
-            img.onerror = function() {
-                img.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E';
-            };
-            
-            document.getElementById('modalImageBackground').style.backgroundImage = `url('${imageUrl}')`;
+            if (isVideo) {
+                img.removeAttribute('src');
+                img.classList.remove('animate');
+                imageLinkElement.hidden = true;
+                video.hidden = false;
+                video.muted = true;
+                video.loop = true;
+                video.autoplay = true;
+                video.playsInline = true;
+                video.src = imageUrl;
+                video.load();
+                const playback = video.play();
+                if (playback) playback.catch(() => {});
+                document.getElementById('modalImageBackground').style.backgroundImage = 'none';
+            } else {
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                video.hidden = true;
+                imageLinkElement.hidden = false;
+                img.src = imageUrl;
+                img.alt = filename;
+                img.classList.add('animate');
+                img.onerror = function() {
+                    img.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E';
+                };
+                document.getElementById('modalImageBackground').style.backgroundImage = `url('${imageUrl}')`;
+            }
             
             // Set title with word-by-word styling for hover effect
             const titleElement = document.getElementById('modalTitle');
@@ -1981,9 +2061,11 @@
             // Preload next image after direction change
             if (carouselImages.length > 1) {
                 const nextIndex = (carouselCurrentIndex + 1) % carouselImages.length;
-                const nextImageUrl = carouselImages[nextIndex].url;
-                const preloadImg = new Image();
-                preloadImg.src = nextImageUrl;
+                const nextMedia = carouselImages[nextIndex];
+                if (!isVideoMedia(nextMedia)) {
+                    const preloadImg = new Image();
+                    preloadImg.src = nextMedia.url;
+                }
             }
             
             modal.classList.add('active');
@@ -1997,6 +2079,10 @@
             const modal = document.getElementById('modal');
             modal.classList.remove('active');
             document.body.style.overflow = 'auto';
+            const video = document.getElementById('modalVideo');
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
             // Reset modal title states when closing
             modalTitleStates = {};
         }

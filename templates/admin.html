@@ -30,6 +30,8 @@
         .project-row:hover { background: #f4f5ff; }
         .project-row.active { border-color: var(--blue); background: #f4f5ff; }
         .project-row img { width: 54px; height: 54px; object-fit: cover; background: #e7e9e3; }
+        .video-thumbnail { display: grid; place-items: center; background: #171717; color: #fff; font-size: 10px; font-weight: 700; }
+        .project-row .video-thumbnail { width: 54px; height: 54px; }
         .row-copy { min-width: 0; align-self: center; }
         .row-title { display: block; overflow: hidden; color: var(--ink); font: 600 14px/1.25 var(--sans); text-overflow: ellipsis; white-space: nowrap; }
         .row-meta { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
@@ -77,6 +79,7 @@
         .asset-option.unavailable { opacity: .45; }
         .asset-empty { grid-column: 1 / -1; margin: 0; padding: 12px; color: var(--muted); font-size: 12px; }
         .asset-option img { width: 100%; height: 75px; object-fit: cover; background: #e7e9e3; }
+        .asset-option .video-thumbnail { width: 100%; height: 75px; flex: 0 0 75px; }
         .asset-option img.image-failed { visibility: hidden; }
         .asset-option span { overflow: hidden; padding: 5px 6px; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
         .form-actions { display: flex; align-items: center; gap: 12px; padding-top: 22px; border-top: 1px solid var(--line); }
@@ -157,15 +160,15 @@
                     <div class="section-title"><h2>Cover image</h2><p>Shown first in the portfolio grid</p></div>
                     <div class="cover-tools">
                         <div class="field" id="coverPicker"><label for="filename">Choose an image</label><select id="filename" name="filename"></select></div>
-                        <label class="upload-label" id="uploadControl">Upload new cover<input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp"></label>
+                        <label class="upload-label" id="uploadControl">Upload new cover<input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm"></label>
                         <div class="upload-name" id="uploadName"></div>
                     </div>
                 </section>
                 <section class="section">
                     <div class="section-title"><h2>Project images</h2><p>Select existing images or add files</p></div>
                     <div class="gallery-upload-tools">
-                        <label class="upload-label" id="galleryUploadControl">Upload images<input id="galleryUploads" name="gallery_uploads" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple></label>
-                        <div class="upload-name" id="galleryUploadName">Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).</div>
+                        <label class="upload-label" id="galleryUploadControl">Upload media<input id="galleryUploads" name="gallery_uploads" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm" multiple></label>
+                        <div class="upload-name" id="galleryUploadName">Images up to 16 MB; MP4/WebM videos up to 50 MB.</div>
                     </div>
                     <input class="search" id="imageSearch" type="search" placeholder="Search images by filename or project" aria-label="Search project images">
                     <div class="asset-grid" id="assetGrid"></div>
@@ -196,6 +199,53 @@
 
         function imageUrl(filename) {
             return `/static/${encodeURIComponent(filename)}`;
+        }
+
+        function isVideoAsset(filename) {
+            return /\.(mp4|webm)$/i.test(filename);
+        }
+
+        function validateUploadSelection(changedInput) {
+            const coverInput = document.getElementById('coverImage');
+            const galleryInput = document.getElementById('galleryUploads');
+            const galleryFiles = [...galleryInput.files];
+            if (galleryFiles.length > 8) {
+                galleryInput.value = '';
+                setStatus('Upload at most eight media files per save.', 'error');
+                return;
+            }
+
+            const coverFile = coverInput.files[0];
+            const files = [...(coverFile ? [coverFile] : []), ...galleryFiles];
+            const oversized = files.find(file => file.size > (isVideoAsset(file.name) ? 50 : 16) * 1024 * 1024);
+            if (oversized) {
+                if (oversized === coverFile) coverInput.value = '';
+                else galleryInput.value = '';
+                setStatus(`${oversized.name} exceeds its ${isVideoAsset(oversized.name) ? '50 MB video' : '16 MB image'} limit.`, 'error');
+                return;
+            }
+            if (files.reduce((total, file) => total + file.size, 0) > 60 * 1024 * 1024) {
+                changedInput.value = '';
+                setStatus('Uploads must total 60 MB or less per save.', 'error');
+                return;
+            }
+
+            document.getElementById('uploadName').textContent = coverFile?.name || 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
+            document.getElementById('galleryUploadName').textContent = galleryFiles.length
+                ? galleryFiles.map(file => file.name).join(', ')
+                : 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
+            if (files.length) {
+                hasUnsavedChanges = true;
+                setEditorStatus('Unsaved changes. Save and push to publish.');
+            }
+        }
+
+        function videoThumbnail(filename) {
+            const thumbnail = document.createElement('div');
+            thumbnail.className = 'video-thumbnail';
+            thumbnail.textContent = `${filename.split('.').pop().toUpperCase()} VIDEO`;
+            thumbnail.setAttribute('aria-label', `${filename} video`);
+            return thumbnail;
         }
 
         function setStatus(message, kind = '') {
@@ -310,8 +360,8 @@
                 const button = document.createElement('button');
                 button.type = 'button';
                 button.className = `project-row${document.getElementById('projectId').value === project.filename ? ' active' : ''}`;
-                const image = document.createElement('img');
-                setLazyImage(image, project.filename);
+                const thumbnail = isVideoAsset(project.filename) ? videoThumbnail(project.filename) : document.createElement('img');
+                if (!isVideoAsset(project.filename)) setLazyImage(thumbnail, project.filename);
                 const copy = document.createElement('span');
                 copy.className = 'row-copy';
                 const title = document.createElement('span');
@@ -321,7 +371,7 @@
                 meta.className = 'row-meta';
                 meta.textContent = [project.date, `${project.images.length} image${project.images.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
                 copy.append(title, meta);
-                button.append(image, copy);
+                button.append(thumbnail, copy);
                 button.addEventListener('click', () => editProject(project));
                 projectList.append(button);
             });
@@ -354,11 +404,11 @@
                 });
                 const label = document.createElement('label');
                 label.htmlFor = checkbox.id;
-                const image = document.createElement('img');
-                setLazyImage(image, filename);
+                const thumbnail = isVideoAsset(filename) ? videoThumbnail(filename) : document.createElement('img');
+                if (!isVideoAsset(filename)) setLazyImage(thumbnail, filename);
                 const name = document.createElement('span');
                 name.textContent = checkbox.disabled && ownerProject ? `${filename} · ${ownerProject.title}` : filename;
-                label.append(image, name);
+                label.append(thumbnail, name);
                 wrapper.append(checkbox, label);
                 grid.append(wrapper);
             });
@@ -421,8 +471,8 @@
             document.getElementById('deleteButton').hidden = true;
             coverPicker.classList.remove('disabled');
             uploadControl.classList.remove('disabled');
-            document.getElementById('uploadName').textContent = 'JPG, PNG, GIF, or WebP. Maximum 16 MB.';
-            document.getElementById('galleryUploadName').textContent = 'Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).';
+            document.getElementById('uploadName').textContent = 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
+            document.getElementById('galleryUploadName').textContent = 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
             renderCoverOptions();
             renderAssets();
             renderProjectList(document.getElementById('searchProjects').value);
@@ -535,25 +585,8 @@
         document.getElementById('imageSearch').addEventListener('input', () => {
             renderAssets([...selectedGalleryImages], document.getElementById('projectId').value);
         });
-        document.getElementById('coverImage').addEventListener('change', event => {
-            document.getElementById('uploadName').textContent = event.target.files[0]?.name || 'JPG, PNG, GIF, or WebP. Maximum 16 MB.';
-        });
-        document.getElementById('galleryUploads').addEventListener('change', event => {
-            const files = [...event.target.files];
-            if (files.length > 8) {
-                event.target.value = '';
-                document.getElementById('galleryUploadName').textContent = 'Choose no more than eight images at a time.';
-                setStatus('Upload at most eight gallery images per save.', 'error');
-                return;
-            }
-            document.getElementById('galleryUploadName').textContent = files.length
-                ? files.map(file => file.name).join(', ')
-                : 'Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).';
-            if (files.length) {
-                hasUnsavedChanges = true;
-                setEditorStatus('Unsaved changes. Save and push to publish.');
-            }
-        });
+        document.getElementById('coverImage').addEventListener('change', event => validateUploadSelection(event.target));
+        document.getElementById('galleryUploads').addEventListener('change', event => validateUploadSelection(event.target));
         loadProjects().catch(error => setStatus(error.message, 'error'));
     </script>
 </body>

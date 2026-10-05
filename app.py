@@ -38,6 +38,10 @@ CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 CACHE_FOLDER.mkdir(exist_ok=True)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 ADMIN_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+ADMIN_VIDEO_EXTENSIONS = {'.mp4', '.webm'}
+ADMIN_MEDIA_EXTENSIONS = ADMIN_IMAGE_EXTENSIONS | ADMIN_VIDEO_EXTENSIONS
+MAX_IMAGE_UPLOAD_BYTES = 16 * 1024 * 1024
+MAX_VIDEO_UPLOAD_BYTES = 50 * 1024 * 1024
 ADMIN_WRITE_LOCK = threading.Lock()
 ADMIN_LOGIN_LOCK = threading.Lock()
 ADMIN_LOGIN_FAILURES = {}
@@ -118,6 +122,9 @@ def get_static_path(filename):
     except ValueError:
         return None
     return candidate
+
+def is_video_filename(filename):
+    return Path(filename).suffix.lower() in ADMIN_VIDEO_EXTENSIONS
 
 def parse_date(date_str):
     """Parse date string and return sortable tuple (year, month).
@@ -217,10 +224,13 @@ def get_image_files():
     return filtered_images
 
 def downscale_image(filename):
-    """Return WebP image URL. If file is already WebP in static, serve it directly."""
+    """Return an optimized image URL or the original video URL."""
     original_path = get_static_path(filename)
     if original_path is None:
         return ''
+
+    if is_video_filename(filename):
+        return f'/static/{filename}'
     
     # If the WebP file exists in static folder, serve it directly
     if filename.lower().endswith('.webp') and original_path.exists():
@@ -453,17 +463,42 @@ def prepare_admin_webp(upload_filename, upload_bytes, occupied_filenames):
 
     return output_filename, webp_bytes.getvalue()
 
-def admin_image_files():
+def prepare_admin_media(upload_filename, upload_bytes, occupied_filenames):
+    safe_name = secure_filename(upload_filename)
+    extension = Path(safe_name).suffix.lower()
+    if not safe_name or extension not in ADMIN_MEDIA_EXTENSIONS:
+        raise ValueError('Use a JPG, PNG, GIF, WebP, MP4, or WebM file.')
+
+    if extension in ADMIN_VIDEO_EXTENSIONS:
+        if len(upload_bytes) > MAX_VIDEO_UPLOAD_BYTES:
+            raise ValueError('Videos must be 50 MB or smaller.')
+        if extension == '.mp4' and (len(upload_bytes) < 12 or upload_bytes[4:8] != b'ftyp'):
+            raise ValueError('That file is not a valid MP4 video.')
+        if extension == '.webm' and not upload_bytes.startswith(b'\x1a\x45\xdf\xa3'):
+            raise ValueError('That file is not a valid WebM video.')
+
+        image_stem = Path(safe_name).stem.strip('._- ') or 'project-video'
+        occupied = {name.casefold() for name in occupied_filenames}
+        output_filename = f'{image_stem}{extension}'
+        suffix = 2
+        while output_filename.casefold() in occupied:
+            output_filename = f'{image_stem}-{suffix}{extension}'
+            suffix += 1
+        return output_filename, upload_bytes
+
+    return prepare_admin_webp(safe_name, upload_bytes, occupied_filenames)
+
+def admin_media_files():
     return sorted(
         path.name for path in STATIC_FOLDER.iterdir()
-        if path.is_file() and path.suffix.lower() in ADMIN_IMAGE_EXTENSIONS
+        if path.is_file() and path.suffix.lower() in ADMIN_MEDIA_EXTENSIONS
     )
 
 def admin_asset_owners():
     captions = load_captions()
     carousels = load_carousels()
     owners = {}
-    for filename in admin_image_files():
+    for filename in admin_media_files():
         project_filename = carousels.get(filename)
         if project_filename in captions:
             owners[filename] = project_filename
@@ -639,7 +674,7 @@ def admin_projects():
     if request.method == 'GET':
         return jsonify({
             'projects': admin_project_records(),
-            'assets': admin_image_files(),
+            'assets': admin_media_files(),
             'assetOwners': admin_asset_owners(),
             'gitPushConfigured': git_push_is_configured(),
         })
@@ -684,7 +719,7 @@ def admin_projects():
             if project_id and project_id not in {record['filename'] for record in admin_project_records()}:
                 return jsonify({'error': 'That project no longer exists. Refresh and try again.'}), 404
 
-            assets = set(admin_image_files())
+            assets = set(admin_media_files())
             if len(gallery_uploads) > 8:
                 return jsonify({'error': 'Upload no more than eight gallery images at a time.'}), 400
 
@@ -701,21 +736,23 @@ def admin_projects():
             for image_file in uploads:
                 safe_name = secure_filename(image_file.filename)
                 extension = Path(safe_name).suffix.lower()
-                if not safe_name or extension not in ADMIN_IMAGE_EXTENSIONS:
-                    return jsonify({'error': 'Use JPG, PNG, GIF, or WebP images.'}), 400
-                upload_bytes = image_file.stream.read(16 * 1024 * 1024 + 1)
-                if len(upload_bytes) > 16 * 1024 * 1024:
-                    return jsonify({'error': 'Each image must be 16 MB or smaller.'}), 413
+                if not safe_name or extension not in ADMIN_MEDIA_EXTENSIONS:
+                    return jsonify({'error': 'Use a JPG, PNG, GIF, WebP, MP4, or WebM file.'}), 400
+                upload_limit = MAX_VIDEO_UPLOAD_BYTES if extension in ADMIN_VIDEO_EXTENSIONS else MAX_IMAGE_UPLOAD_BYTES
+                upload_bytes = image_file.stream.read(upload_limit + 1)
+                if len(upload_bytes) > upload_limit:
+                    limit_message = 'Videos must be 50 MB or smaller.' if extension in ADMIN_VIDEO_EXTENSIONS else 'Images must be 16 MB or smaller.'
+                    return jsonify({'error': limit_message}), 413
                 try:
-                    webp_name, webp_bytes = prepare_admin_webp(
+                    media_name, media_bytes = prepare_admin_media(
                         safe_name, upload_bytes, assets | upload_names,
                     )
                 except ValueError as error:
                     return jsonify({'error': str(error)}), 400
-                upload_names.add(webp_name)
-                prepared_uploads.append((webp_name, webp_bytes))
+                upload_names.add(media_name)
+                prepared_uploads.append((media_name, media_bytes))
                 if image_file is upload:
-                    cover_filename = webp_name
+                    cover_filename = media_name
 
             if cover_filename:
                 filename = cover_filename
@@ -857,7 +894,8 @@ def get_images():
         cached_url = downscale_image(img)
         image_data.append({
             'filename': img,
-            'url': cached_url
+            'url': cached_url,
+            'media_type': 'video' if is_video_filename(img) else 'image',
         })
     
     return jsonify(image_data)
@@ -882,7 +920,8 @@ def get_carousel(filename):
         image_path = get_static_path(filename)
         if image_path is not None and image_path.is_file():
             url = downscale_image(filename)
-            return jsonify({'primary': filename, 'images': [{'filename': filename, 'url': url}]})
+            media_type = 'video' if is_video_filename(filename) else 'image'
+            return jsonify({'primary': filename, 'images': [{'filename': filename, 'url': url, 'media_type': media_type}]})
         return jsonify({'primary': filename, 'images': []})
     
     # Find all images in this carousel, preserving the order from carousels.json
@@ -901,7 +940,8 @@ def get_carousel(filename):
         image_path = get_static_path(img)
         if image_path is not None and image_path.is_file():
             url = downscale_image(img)
-            carousel_data.append({'filename': img, 'url': url})
+            media_type = 'video' if is_video_filename(img) else 'image'
+            carousel_data.append({'filename': img, 'url': url, 'media_type': media_type})
     
     return jsonify({'primary': primary_image, 'images': carousel_data})
 
