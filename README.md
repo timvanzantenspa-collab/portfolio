@@ -70,7 +70,7 @@ Edit `captions.json` to add titles and descriptions to your images:
 
 ### Manage Projects
 
-Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. Project descriptions support Markdown links, bold, italic, lists, and a live preview. The editor accepts up to eight gallery files per save: images are optimized to WebP, while MP4/WebM files remain videos and autoplay muted inline in the portfolio and carousel. Images are limited to 16 MB each, videos to 50 MB each, and a save to 60 MB total. Saving commits the data and media assets and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
+Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. Project descriptions support Markdown links, bold, italic, lists, and a live preview. The editor accepts up to eight gallery files per save: images are optimized to WebP, while MP4/WebM files remain videos and autoplay muted inline in the portfolio and carousel. Each selected image or video can have its own destination URL; leave it blank to use the project URL. Images are limited to 16 MB each, videos to 50 MB each, and a save to 60 MB total. Saving commits the data and media assets and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
 
 Configure these environment variables on the server (for Render, use the service's Environment page):
 

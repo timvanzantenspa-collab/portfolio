@@ -39,6 +39,7 @@ CACHE_FOLDER = Path(__file__).parent / 'static' / '.cache'
 CAPTIONS_FILE = Path(__file__).parent / 'captions.json'
 IMAGE_ORDER_FILE = Path(__file__).parent / 'image_order.json'
 CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
+IMAGE_LINKS_FILE = Path(__file__).parent / 'image_links.json'
 CACHE_FOLDER.mkdir(exist_ok=True)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY', 'timvanzantenspa-collab/portfolio')
@@ -98,6 +99,62 @@ def load_carousels():
         except:
             return {}
     return {}
+
+def load_image_links():
+    if IMAGE_LINKS_FILE.exists():
+        try:
+            with IMAGE_LINKS_FILE.open('r', encoding='utf-8') as data_file:
+                value = json.load(data_file)
+            return value if isinstance(value, dict) else {}
+        except (OSError, json.JSONDecodeError):
+            return {}
+    return {}
+
+def normalize_optional_http_url(value):
+    if value is None:
+        return ''
+    if not isinstance(value, str):
+        raise ValueError('Image links must be text.')
+    value = value.strip()
+    if not value:
+        return ''
+    parsed = urlsplit(value)
+    if len(value) > 2048 or parsed.scheme not in {'http', 'https'} or not parsed.netloc:
+        raise ValueError('Image links must be valid http:// or https:// URLs no longer than 2,048 characters.')
+    return value
+
+def normalize_image_link_updates(value):
+    if not isinstance(value, dict) or not isinstance(value.get('gallery', []), list):
+        raise ValueError('Per-image links must contain a cover URL and a gallery list.')
+    normalized = {
+        'cover': normalize_optional_http_url(value.get('cover', '')),
+        'gallery': [],
+    }
+    seen = set()
+    for item in value.get('gallery', []):
+        if not isinstance(item, dict):
+            raise ValueError('A per-image link entry is invalid.')
+        kind = item.get('kind')
+        if kind == 'asset':
+            identifier = item.get('filename')
+            if not isinstance(identifier, str) or not identifier:
+                raise ValueError('A linked gallery asset is invalid.')
+        elif kind == 'upload':
+            identifier = item.get('index')
+            if isinstance(identifier, bool) or not isinstance(identifier, int) or identifier < 0:
+                raise ValueError('A linked gallery upload is invalid.')
+        else:
+            raise ValueError('A per-image link entry has an unknown media type.')
+        key = (kind, identifier)
+        if key in seen:
+            raise ValueError('A gallery image has duplicate link data.')
+        seen.add(key)
+        normalized['gallery'].append({
+            'kind': kind,
+            'identifier': identifier,
+            'url': normalize_optional_http_url(item.get('url', '')),
+        })
+    return normalized
 
 def render_markdown_description(description):
     if not isinstance(description, str) or not description:
@@ -604,10 +661,11 @@ def persist_admin_updates(file_updates):
         temporary_path.write_bytes(contents)
         temporary_path.replace(destination)
 
-def build_admin_file_updates(captions, carousels, uploaded_media=()):
+def build_admin_file_updates(captions, carousels, uploaded_media=(), image_links=None):
     file_updates = {
         'captions.json': serialize_admin_json(captions),
         'carousels.json': serialize_admin_json(carousels),
+        'image_links.json': serialize_admin_json(image_links or {}),
     }
     for filename, contents in uploaded_media:
         file_updates[f'static/{filename}'] = contents
@@ -798,7 +856,7 @@ def commit_and_push_portfolio(uploaded_assets=None, title='', file_updates=None)
     branch = git_push_branch()
     push_env = git_push_environment()
     branch_ref = f'refs/heads/{branch}'
-    paths = ['captions.json', 'carousels.json']
+    paths = ['captions.json', 'carousels.json', 'image_links.json']
     uploaded_assets = uploaded_assets or []
     if uploaded_assets:
         paths.extend(uploaded_assets)
@@ -883,6 +941,7 @@ def admin_projects():
             'assets': media_files,
             'assetModified': admin_media_modified_times(),
             'assetOwners': admin_asset_owners(),
+            'imageLinks': load_image_links(),
             'gitPushConfigured': git_push_is_configured(),
         })
     if not valid_admin_csrf():
@@ -895,14 +954,22 @@ def admin_projects():
         data = request.get_json(silent=True) or {}
         gallery_images = data.get('images', [])
         gallery_order = data.get('gallery_order')
+        raw_image_link_updates = data.get('image_link_updates')
     else:
         data = request.form
         gallery_images = request.form.getlist('images')
         raw_gallery_order = request.form.get('gallery_order')
+        raw_image_link_updates = request.form.get('image_link_updates')
         try:
             gallery_order = json.loads(raw_gallery_order) if raw_gallery_order else None
         except json.JSONDecodeError:
             return jsonify({'error': 'Gallery order must be valid JSON.'}), 400
+    try:
+        image_link_updates = normalize_image_link_updates(
+            json.loads(raw_image_link_updates) if isinstance(raw_image_link_updates, str) else raw_image_link_updates,
+        ) if raw_image_link_updates is not None else None
+    except (ValueError, json.JSONDecodeError) as error:
+        return jsonify({'error': str(error)}), 400
 
     project_id = str(data.get('project_id', '')).strip()
     filename = str(data.get('filename', '')).strip()
@@ -930,6 +997,7 @@ def admin_projects():
         with ADMIN_WRITE_LOCK:
             captions = read_admin_json(CAPTIONS_FILE)
             carousels = read_admin_json(CAROUSELS_FILE)
+            image_links = load_image_links()
             if project_id and project_id not in {record['filename'] for record in admin_project_records()}:
                 return jsonify({'error': 'That project no longer exists. Refresh and try again.'}), 404
 
@@ -995,12 +1063,42 @@ def admin_projects():
                 return jsonify({'error': 'One of the selected gallery images is no longer available.'}), 400
 
             old_group = carousels.get(project_id) if project_id else None
+            old_project_images = [
+                image for image, group_id in carousels.items()
+                if old_group and group_id == old_group
+            ] if old_group else ([project_id] if project_id else [])
             for image in selected_images:
                 if image != filename and image in captions:
                     return jsonify({'error': f'"{image}" is already the cover of another project.'}), 409
                 image_group = carousels.get(image)
                 if image_group and image_group != old_group:
                     return jsonify({'error': f'"{image}" already belongs to another project.'}), 409
+
+            if image_link_updates is not None:
+                resolved_gallery_links = {}
+                for item in image_link_updates['gallery']:
+                    if item['kind'] == 'asset':
+                        linked_filename = item['identifier']
+                        if linked_filename not in ordered_gallery_images or linked_filename in resolved_gallery_links:
+                            return jsonify({'error': 'Image links must match selected gallery media.'}), 400
+                    else:
+                        upload_index = item['identifier']
+                        if upload_index >= len(prepared_gallery_names):
+                            return jsonify({'error': 'An image link refers to an unavailable upload.'}), 400
+                        linked_filename = prepared_gallery_names[upload_index]
+                        if linked_filename in resolved_gallery_links:
+                            return jsonify({'error': 'Image links contain a duplicate upload.'}), 400
+                    resolved_gallery_links[linked_filename] = item['url']
+                if set(resolved_gallery_links) != set(ordered_gallery_images):
+                    return jsonify({'error': 'Add a link setting for every selected gallery image.'}), 400
+
+                for image in set(old_project_images) | set(selected_images):
+                    image_links.pop(image, None)
+                if image_link_updates['cover']:
+                    image_links[filename] = image_link_updates['cover']
+                image_links.update({
+                    image: link for image, link in resolved_gallery_links.items() if link
+                })
 
             try:
                 ensure_git_push_ready()
@@ -1020,7 +1118,7 @@ def admin_projects():
                     carousels[image] = filename
 
             uploaded_assets = [f'static/{image_name}' for image_name, _ in prepared_uploads]
-            file_updates = build_admin_file_updates(captions, carousels, prepared_uploads)
+            file_updates = build_admin_file_updates(captions, carousels, prepared_uploads, image_links)
             if github_api_publishing_enabled():
                 result = commit_and_push_portfolio(uploaded_assets, title, file_updates)
                 persist_admin_updates(file_updates)
@@ -1071,6 +1169,7 @@ def admin_delete_project(filename):
         with ADMIN_WRITE_LOCK:
             captions = read_admin_json(CAPTIONS_FILE)
             carousels = read_admin_json(CAROUSELS_FILE)
+            image_links = load_image_links()
             if filename not in {record['filename'] for record in admin_project_records()}:
                 return jsonify({'error': 'That project no longer exists. Refresh and try again.'}), 404
             try:
@@ -1085,7 +1184,8 @@ def admin_delete_project(filename):
             for image in removed_images:
                 captions.pop(image, None)
                 carousels.pop(image, None)
-            file_updates = build_admin_file_updates(captions, carousels)
+                image_links.pop(image, None)
+            file_updates = build_admin_file_updates(captions, carousels, image_links=image_links)
             if github_api_publishing_enabled():
                 result = commit_and_push_portfolio(title='Remove project', file_updates=file_updates)
                 persist_admin_updates(file_updates)
@@ -1161,6 +1261,7 @@ def get_captions():
 def get_carousel(filename):
     """API endpoint to get carousel images for a specific image with WebP URLs"""
     carousels_map = load_carousels()
+    image_links = load_image_links()
     carousel_id = carousels_map.get(filename)
     
     if not carousel_id:
@@ -1169,7 +1270,12 @@ def get_carousel(filename):
         if image_path is not None and image_path.is_file():
             url = downscale_image(filename)
             media_type = 'video' if is_video_filename(filename) else 'image'
-            return jsonify({'primary': filename, 'images': [{'filename': filename, 'url': url, 'media_type': media_type}]})
+            return jsonify({'primary': filename, 'images': [{
+                'filename': filename,
+                'url': url,
+                'media_type': media_type,
+                'link': image_links.get(filename, ''),
+            }]})
         return jsonify({'primary': filename, 'images': []})
     
     # Find all images in this carousel, preserving the order from carousels.json
@@ -1189,7 +1295,12 @@ def get_carousel(filename):
         if image_path is not None and image_path.is_file():
             url = downscale_image(img)
             media_type = 'video' if is_video_filename(img) else 'image'
-            carousel_data.append({'filename': img, 'url': url, 'media_type': media_type})
+            carousel_data.append({
+                'filename': img,
+                'url': url,
+                'media_type': media_type,
+                'link': image_links.get(img, ''),
+            })
     
     return jsonify({'primary': primary_image, 'images': carousel_data})
 

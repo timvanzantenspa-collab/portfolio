@@ -2014,12 +2014,12 @@
             }
             
             // Set links if available
-            const linkUrl = caption.link || '#';
+            const linkUrl = carouselItem.link || caption.link || '#';
             const imageLink = document.getElementById('modalImageLink');
             const titleLink = document.getElementById('modalTitleLink');
             const linkButton = document.getElementById('modalLinkButton');
             
-            if (caption.link) {
+            if (linkUrl !== '#') {
                 imageLink.href = linkUrl;
                 imageLink.style.cursor = 'pointer';
                 imageLink.onclick = null;
@@ -2090,10 +2090,11 @@
         function openModalLink() {
             const captionFilename = carouselPrimaryFilename || carouselImages[carouselCurrentIndex].filename;
             const caption = imageCaptions[captionFilename] || {};
-            const linkUrl = caption.link;
+            const carouselItem = carouselImages[carouselCurrentIndex] || {};
+            const linkUrl = carouselItem.link || caption.link;
             
             if (linkUrl) {
-                window.open(linkUrl, '_blank');
+                window.open(linkUrl, '_blank', 'noopener');
             }
         }
 
