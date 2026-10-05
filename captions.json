@@ -8,11 +8,13 @@
         "link": "https://open.spotify.com/album/7LRNYGPlZ0ToXf1GalHCF3"
     },
     "Best thing all week.webp": {
-        "title": "Best thing all week",
-        "date": "April 2018",
-        "type": "Single",
-        "description": "One of my fav. singles I made as SoundPatrol.",
-        "link": "https://open.spotify.com/album/4O38Vr2fW1CGDp2gH2RJVf"
+        "title": "SoundPatrol's singles",
+        "date": "2014 - 2025",
+        "type": "Singles",
+        "extra": "",
+        "description": "",
+        "link": "https://open.spotify.com/album/4O38Vr2fW1CGDp2gH2RJVf",
+        "published": true
     },
     "bloem.webp": {
         "title": "Flowers - Creative Coding",
@@ -134,7 +136,7 @@
         "title": "De Speld - MARK",
         "date": "2021",
         "type": "BA Graduation Project",
-        "extra": "Rebranding of De Speld en Partners",
+        "extra": "Rebranding of the branded content bureau of De Speld.",
         "description": "For my graduation project at HU Communication & Multimedia Design, I reimagined **De Speld en Partners**, the commercial arm of [De Speld](https://www.speld.nl/). The starting point was a simple question: what if they stopped selling the reach of De Speld and started selling what they were actually good at?\r\n\r\nAt the time, De Speld and Partners mainly created branded content that was published through De Speld's own channels. I researched the organisation, its audience and the advertising landscape, and spoke with people from creative and media agencies to explore a different direction. The opportunity was to move closer to the creative process itself: helping brands and agencies develop campaigns with the humour, writing and social awareness that De Speld had built its reputation on.\r\n\r\nI developed **Mark**, a new name and identity for this proposed whitelabel service. Mark would work behind the scenes, joining creative teams to develop campaign concepts and copy without necessarily putting the De Speld name on the finished work.\r\n\r\nI created the positioning, name, visual identity, website and a series of example campaigns. The result was a complete brand concept built around one proposition:\r\n\r\n**De inhaakspecialist. De beste schrijvers voor humor en maatschappelijke scherpte.**\r\n\r\nThe project was my graduation project and combined research, strategy, copywriting, branding, web design and campaign development.",
         "link": "https://www.adformatie.nl/marketing/customer-experience/de-speld-maakt-satirische-reclame-voor-sapjesmerk-innocent",
         "published": true
@@ -160,9 +162,7 @@
         "date": "2017",
         "type": "Photography",
         "extra": "For Bitbird Records",
-        "description": "",
-        "link": "",
-        "published": false
+        "description": ""
     },
     "Makrail.gif": {
         "title": "Makrail",
