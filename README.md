@@ -68,6 +68,19 @@ Edit `captions.json` to add titles and descriptions to your images:
 
 **Click any image** to see its title and description in a modal!
 
+### Manage Projects
+
+Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. The editor can use images already in `static/`, upload a new cover, or add up to eight gallery images to a project at a time. Saving updates `captions.json` and `carousels.json`, commits the data and uploaded assets, and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
+
+Configure these environment variables on the server (for Render, use the service's Environment page):
+
+- `ADMIN_PASSWORD` - password for `/admin`.
+- `SECRET_KEY` - a long, random value used to protect the admin session.
+- `GITHUB_TOKEN` - a GitHub token with Contents write access to this repository. Keep it in the host's secret environment settings; never commit it.
+- `GIT_BRANCH` - optional push target; defaults to the checked-out branch, or `main` when the checkout is detached.
+
+For local use, set `ADMIN_PASSWORD` and `SECRET_KEY` in the shell before starting Flask. Git must have push access to `origin`; local Git credential-manager authentication is used when `GITHUB_TOKEN` is not set. If Git push fails, the editor reports that the change was saved on the running server but was not shipped.
+
 ### 4. Run the Server
 
 ```bash

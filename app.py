@@ -1,19 +1,38 @@
 #Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request, redirect, url_for, session
 from PIL import Image
 import os
 import shutil
 from pathlib import Path
 import json
+import base64
+import hmac
+import secrets
+import subprocess
+import threading
+from functools import wraps
+from io import BytesIO
+from urllib.parse import urlsplit
+from werkzeug.utils import secure_filename
 from generate_jsonld import generate_all_schemas, load_resume_content, get_schema_script_tags, get_about_page_script_tags
 
 app = Flask(__name__)
+app.config.update(
+    SECRET_KEY=os.environ.get('SECRET_KEY') or secrets.token_hex(32),
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', '').lower() in {'1', 'true', 'yes'} or bool(os.environ.get('RENDER')),
+    MAX_CONTENT_LENGTH=64 * 1024 * 1024,
+)
 STATIC_FOLDER = Path(__file__).parent / 'static'
 CACHE_FOLDER = Path(__file__).parent / 'static' / '.cache'
 CAPTIONS_FILE = Path(__file__).parent / 'captions.json'
 IMAGE_ORDER_FILE = Path(__file__).parent / 'image_order.json'
 CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 CACHE_FOLDER.mkdir(exist_ok=True)
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+ADMIN_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+ADMIN_WRITE_LOCK = threading.Lock()
 
 # Load JSON-LD schemas on startup
 try:
@@ -300,12 +319,340 @@ def index():
 def about():
     return render_template('about.html', jsonld_scripts=about_page_scripts)
 
+def admin_csrf_token():
+    if 'admin_csrf' not in session:
+        session['admin_csrf'] = secrets.token_urlsafe(32)
+    return session['admin_csrf']
+
+def admin_required(view):
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not ADMIN_PASSWORD:
+            return jsonify({'error': 'Set ADMIN_PASSWORD to enable the project editor.'}), 503
+        if not session.get('admin_authenticated'):
+            if request.path.startswith('/admin/api/'):
+                return jsonify({'error': 'Please sign in again.'}), 401
+            return redirect(url_for('admin_login'))
+        return view(*args, **kwargs)
+    return wrapped
+
+def valid_admin_csrf():
+    supplied = request.headers.get('X-CSRF-Token') or request.form.get('csrf_token', '')
+    expected = session.get('admin_csrf', '')
+    return bool(supplied and expected and hmac.compare_digest(supplied, expected))
+
+def admin_image_files():
+    return sorted(
+        path.name for path in STATIC_FOLDER.iterdir()
+        if path.is_file() and path.suffix.lower() in ADMIN_IMAGE_EXTENSIONS
+    )
+
+def admin_asset_owners():
+    captions = load_captions()
+    carousels = load_carousels()
+    owners = {}
+    for filename in admin_image_files():
+        project_filename = carousels.get(filename)
+        if project_filename in captions:
+            owners[filename] = project_filename
+        elif filename in captions:
+            owners[filename] = filename
+    return owners
+
+def admin_project_records():
+    captions = load_captions()
+    carousels = load_carousels()
+    records = []
+    for filename in get_image_files():
+        caption = captions.get(filename, {})
+        carousel_id = carousels.get(filename)
+        images = [
+            image for image, group_id in carousels.items()
+            if carousel_id and group_id == carousel_id
+        ] if carousel_id else [filename]
+        records.append({
+            'filename': filename,
+            'title': caption.get('title', ''),
+            'date': caption.get('date', ''),
+            'type': caption.get('type', ''),
+            'extra': caption.get('extra', ''),
+            'description': caption.get('description', ''),
+            'link': caption.get('link', ''),
+            'images': images,
+        })
+    return records
+
+def read_admin_json(path):
+    with path.open('r', encoding='utf-8') as data_file:
+        value = json.load(data_file)
+    if not isinstance(value, dict):
+        raise ValueError(f'{path.name} must contain a JSON object.')
+    return value
+
+def write_admin_json(path, value):
+    temporary_path = path.with_suffix(path.suffix + '.tmp')
+    with temporary_path.open('w', encoding='utf-8') as data_file:
+        json.dump(value, data_file, ensure_ascii=False, indent=4)
+        data_file.write('\n')
+    temporary_path.replace(path)
+
+def git_run(arguments, env=None):
+    return subprocess.run(
+        ['git', *arguments], cwd=Path(__file__).parent, env=env,
+        capture_output=True, text=True, timeout=45, check=False,
+    )
+
+def commit_and_push_portfolio(uploaded_assets=None, title=''):
+    if git_run(['rev-parse', '--is-inside-work-tree']).returncode != 0:
+        raise RuntimeError('Git is not available for this deployment.')
+
+    paths = ['captions.json', 'carousels.json']
+    uploaded_assets = uploaded_assets or []
+    if uploaded_assets:
+        paths.extend(uploaded_assets)
+        add_result = git_run(['add', '--intent-to-add', '--', *uploaded_assets])
+        if add_result.returncode != 0:
+            raise RuntimeError('Could not stage the uploaded project images.')
+
+    diff_result = git_run(['diff', '--quiet', 'HEAD', '--', *paths])
+    if diff_result.returncode == 0:
+        return {'shipped': True, 'commit': None}
+    if diff_result.returncode != 1:
+        raise RuntimeError('Could not inspect the Git changes.')
+
+    safe_title = ' '.join(title.split())[:100] or 'project details'
+    commit_result = git_run([
+        '-c', 'user.name=Portfolio Admin',
+        '-c', 'user.email=portfolio-admin@localhost',
+        'commit', '--only', '-m', f'Update portfolio project: {safe_title}',
+        '--', *paths,
+    ])
+    if commit_result.returncode != 0:
+        raise RuntimeError('Git could not commit the project changes.')
+
+    branch = os.environ.get('GIT_BRANCH') or os.environ.get('RENDER_GIT_BRANCH')
+    if not branch:
+        branch_result = git_run(['symbolic-ref', '--quiet', '--short', 'HEAD'])
+        branch = branch_result.stdout.strip() if branch_result.returncode == 0 else 'main'
+    if git_run(['check-ref-format', '--branch', branch]).returncode != 0:
+        raise RuntimeError('GIT_BRANCH is not a valid branch name.')
+
+    push_env = os.environ.copy()
+    token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
+    if token:
+        encoded_credentials = base64.b64encode(f'x-access-token:{token}'.encode()).decode()
+        push_env.update({
+            'GIT_CONFIG_COUNT': '1',
+            'GIT_CONFIG_KEY_0': 'http.https://github.com/.extraheader',
+            'GIT_CONFIG_VALUE_0': f'AUTHORIZATION: basic {encoded_credentials}',
+        })
+    push_result = git_run(['push', 'origin', f'HEAD:refs/heads/{branch}'], env=push_env)
+    if push_result.returncode != 0:
+        raise RuntimeError('Changes were committed, but Git push failed. Check GitHub write access and branch configuration.')
+
+    commit_hash = git_run(['rev-parse', '--short', 'HEAD']).stdout.strip()
+    return {'shipped': True, 'commit': commit_hash}
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    csrf_token = admin_csrf_token()
+    if request.method == 'POST':
+        if not valid_admin_csrf():
+            return render_template('admin_login.html', csrf_token=csrf_token, error='Please refresh the page and try again.', configured=bool(ADMIN_PASSWORD)), 400
+        supplied_password = request.form.get('password', '')
+        if ADMIN_PASSWORD and hmac.compare_digest(supplied_password, ADMIN_PASSWORD):
+            session.clear()
+            session['admin_authenticated'] = True
+            admin_csrf_token()
+            return redirect(url_for('admin'))
+        error = 'Project editor is not configured yet.' if not ADMIN_PASSWORD else 'That password did not match.'
+        return render_template('admin_login.html', csrf_token=csrf_token, error=error, configured=bool(ADMIN_PASSWORD)), 401 if ADMIN_PASSWORD else 503
+    return render_template('admin_login.html', csrf_token=csrf_token, error='', configured=bool(ADMIN_PASSWORD))
+
+@app.route('/admin')
+@admin_required
+def admin():
+    return render_template('admin.html', csrf_token=admin_csrf_token())
+
+@app.route('/admin/logout', methods=['POST'])
+@admin_required
+def admin_logout():
+    if not valid_admin_csrf():
+        return 'Invalid request token.', 400
+    session.clear()
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin/api/projects', methods=['GET', 'POST'])
+@admin_required
+def admin_projects():
+    if request.method == 'GET':
+        return jsonify({
+            'projects': admin_project_records(),
+            'assets': admin_image_files(),
+            'assetOwners': admin_asset_owners(),
+        })
+    if not valid_admin_csrf():
+        return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+
+    uploaded_assets = []
+    upload = request.files.get('cover_image')
+    gallery_uploads = [file for file in request.files.getlist('gallery_uploads') if file.filename]
+    if request.is_json:
+        data = request.get_json(silent=True) or {}
+        gallery_images = data.get('images', [])
+    else:
+        data = request.form
+        gallery_images = request.form.getlist('images')
+
+    project_id = str(data.get('project_id', '')).strip()
+    filename = str(data.get('filename', '')).strip()
+    title = str(data.get('title', '')).strip()
+    fields = {
+        'title': title,
+        'date': str(data.get('date', '')).strip(),
+        'type': str(data.get('type', '')).strip(),
+        'extra': str(data.get('extra', '')).strip(),
+        'description': str(data.get('description', '')).strip(),
+        'link': str(data.get('link', '')).strip(),
+    }
+    limits = {'title': 160, 'date': 80, 'type': 100, 'extra': 160, 'description': 12000, 'link': 2048}
+    if not title:
+        return jsonify({'error': 'Add a project title before saving.'}), 400
+    if any(len(fields[key]) > limit for key, limit in limits.items()):
+        return jsonify({'error': 'One of the project fields is too long.'}), 400
+    if fields['link']:
+        parsed_link = urlsplit(fields['link'])
+        if parsed_link.scheme not in {'http', 'https'} or not parsed_link.netloc:
+            return jsonify({'error': 'Project links must start with http:// or https://.'}), 400
+
+    try:
+        with ADMIN_WRITE_LOCK:
+            captions = read_admin_json(CAPTIONS_FILE)
+            carousels = read_admin_json(CAROUSELS_FILE)
+            if project_id and project_id not in {record['filename'] for record in admin_project_records()}:
+                return jsonify({'error': 'That project no longer exists. Refresh and try again.'}), 404
+
+            assets = set(admin_image_files())
+            if len(gallery_uploads) > 8:
+                return jsonify({'error': 'Upload no more than eight gallery images at a time.'}), 400
+
+            prepared_uploads = []
+            upload_names = set()
+            cover_filename = None
+            uploads = []
+            if upload and upload.filename:
+                if project_id:
+                    return jsonify({'error': 'For an existing project, choose a cover already in the portfolio and upload gallery images below.'}), 400
+                uploads.append(upload)
+            uploads.extend(gallery_uploads)
+
+            for image_file in uploads:
+                safe_name = secure_filename(image_file.filename)
+                extension = Path(safe_name).suffix.lower()
+                if not safe_name or extension not in ADMIN_IMAGE_EXTENSIONS:
+                    return jsonify({'error': 'Use JPG, PNG, GIF, or WebP images.'}), 400
+                if safe_name in assets or safe_name in upload_names:
+                    return jsonify({'error': f'An image named "{safe_name}" already exists. Rename the file and try again.'}), 409
+                upload_bytes = image_file.stream.read(16 * 1024 * 1024 + 1)
+                if len(upload_bytes) > 16 * 1024 * 1024:
+                    return jsonify({'error': 'Each image must be 16 MB or smaller.'}), 413
+                try:
+                    with Image.open(BytesIO(upload_bytes)) as image:
+                        image.verify()
+                except Exception:
+                    return jsonify({'error': f'"{safe_name}" is not a readable image.'}), 400
+                upload_names.add(safe_name)
+                prepared_uploads.append((safe_name, upload_bytes))
+                if image_file is upload:
+                    cover_filename = safe_name
+
+            if cover_filename:
+                filename = cover_filename
+
+            if filename not in assets and filename not in upload_names:
+                return jsonify({'error': 'Choose an image from the portfolio or upload a new cover.'}), 400
+            if filename in captions and filename != project_id:
+                return jsonify({'error': 'That image already belongs to another project. Choose an unused cover.'}), 409
+
+            if isinstance(gallery_images, str):
+                gallery_images = [gallery_images]
+            if not isinstance(gallery_images, list) or any(not isinstance(image, str) for image in gallery_images):
+                return jsonify({'error': 'Choose valid gallery images.'}), 400
+            uploaded_gallery_names = [name for name, _ in prepared_uploads if name != cover_filename]
+            selected_images = list(dict.fromkeys([filename, *gallery_images, *uploaded_gallery_names]))
+            if any(image not in assets and image not in upload_names for image in selected_images):
+                return jsonify({'error': 'One of the selected gallery images is no longer available.'}), 400
+
+            old_group = carousels.get(project_id) if project_id else None
+            for image in selected_images:
+                if image != filename and image in captions:
+                    return jsonify({'error': f'"{image}" is already the cover of another project.'}), 409
+                image_group = carousels.get(image)
+                if image_group and image_group != old_group:
+                    return jsonify({'error': f'"{image}" already belongs to another project.'}), 409
+
+            for image_name, image_bytes in prepared_uploads:
+                (STATIC_FOLDER / image_name).write_bytes(image_bytes)
+                uploaded_assets.append(f'static/{image_name}')
+
+            if project_id and project_id != filename:
+                captions.pop(project_id, None)
+            captions[filename] = fields
+
+            if old_group:
+                carousels = {image: group for image, group in carousels.items() if group != old_group}
+            for image in selected_images:
+                carousels.pop(image, None)
+            if len(selected_images) > 1:
+                for image in selected_images:
+                    carousels[image] = filename
+
+            write_admin_json(CAPTIONS_FILE, captions)
+            write_admin_json(CAROUSELS_FILE, carousels)
+            result = commit_and_push_portfolio(uploaded_assets, title)
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        return jsonify({'error': f'Could not save the project: {error}'}), 500
+    except (RuntimeError, subprocess.TimeoutExpired) as error:
+        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
+
+    return jsonify({**result, 'project': filename})
+
+@app.route('/admin/api/projects/<path:filename>', methods=['DELETE'])
+@admin_required
+def admin_delete_project(filename):
+    if not valid_admin_csrf():
+        return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+    try:
+        with ADMIN_WRITE_LOCK:
+            captions = read_admin_json(CAPTIONS_FILE)
+            carousels = read_admin_json(CAROUSELS_FILE)
+            if filename not in {record['filename'] for record in admin_project_records()}:
+                return jsonify({'error': 'That project no longer exists. Refresh and try again.'}), 404
+            group_id = carousels.get(filename)
+            removed_images = [
+                image for image, carousel_id in carousels.items()
+                if group_id and carousel_id == group_id
+            ] or [filename]
+            for image in removed_images:
+                captions.pop(image, None)
+                carousels.pop(image, None)
+            write_admin_json(CAPTIONS_FILE, captions)
+            write_admin_json(CAROUSELS_FILE, carousels)
+            result = commit_and_push_portfolio(title='Remove project')
+    except (OSError, ValueError, json.JSONDecodeError) as error:
+        return jsonify({'error': f'Could not remove the project: {error}'}), 500
+    except (RuntimeError, subprocess.TimeoutExpired) as error:
+        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
+    return jsonify({**result, 'deleted': filename})
+
 @app.after_request
 def add_security_headers(response):
     response.headers.setdefault('X-Content-Type-Options', 'nosniff')
     response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
     response.headers.setdefault('X-Frame-Options', 'DENY')
     response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+    if request.path.startswith('/admin'):
+        response.headers.setdefault('Cache-Control', 'no-store')
     return response
 
 @app.route('/robots.txt')

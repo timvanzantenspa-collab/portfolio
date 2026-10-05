@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Project editor | Tim van Zanten</title>
+    <style>
+        :root { color-scheme: light; --ink: #000; --muted: #555; --paper: #fff; --panel: #fff; --line: #dedede; --blue: #0101FF; --green: #236344; --red: #a23b2e; --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; }
+        * { box-sizing: border-box; }
+        body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; }
+        button, input, select, textarea { font: inherit; }
+        button { cursor: pointer; }
+        .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: var(--panel); border-bottom: 1px solid var(--line); }
+        .brand { display: flex; align-items: center; gap: 12px; color: var(--blue); text-decoration: none; font: 700 14px var(--sans); text-transform: uppercase; }
+        .brand-mark { display: grid; width: 24px; height: 24px; place-items: center; background: var(--blue); color: #fff; font: 700 12px var(--sans); }
+        .top-actions { display: flex; align-items: center; gap: 20px; }
+        .top-actions a, .logout { color: var(--muted); text-decoration: none; font-size: 12px; }
+        .logout { padding: 8px 0; border: 0; background: none; }
+        .layout { display: grid; grid-template-columns: 320px minmax(0, 1fr); max-width: 1440px; min-height: calc(100vh - 64px); margin: 0 auto; }
+        .sidebar { min-width: 0; padding: 24px 18px; border-right: 1px solid var(--line); }
+        .sidebar-head { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 18px; }
+        .sidebar-head h2 { margin: 0; font: 700 11px var(--sans); letter-spacing: 1px; text-transform: uppercase; }
+        .count { color: var(--muted); font: 12px var(--sans); }
+        .new-button { display: flex; width: 100%; min-height: 42px; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; border: 1px solid var(--blue); background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; }
+        .new-button:hover, .save-button:hover { background: #082bd0; }
+        .search { width: 100%; height: 38px; margin-bottom: 12px; padding: 0 11px; border: 1px solid var(--line); border-radius: 0; background: #fff; font-size: 13px; }
+        .project-list { display: grid; gap: 3px; }
+        .project-row { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 11px; width: 100%; padding: 8px; border: 1px solid transparent; background: transparent; text-align: left; }
+        .project-row:hover { background: #f4f5ff; }
+        .project-row.active { border-color: var(--blue); background: #f4f5ff; }
+        .project-row img { width: 54px; height: 54px; object-fit: cover; background: #e7e9e3; }
+        .row-copy { min-width: 0; align-self: center; }
+        .row-title { display: block; overflow: hidden; color: var(--ink); font: 600 14px/1.25 var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+        .row-meta { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
+        .empty-list { padding: 18px 8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .editor { width: min(100%, 940px); min-width: 0; padding: 42px clamp(22px, 5vw, 68px) 60px; }
+        .editor-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 30px; }
+        .eyebrow { margin: 0 0 9px; color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; }
+        h1 { margin: 0; font: 300 35px/1.1 var(--sans); letter-spacing: 0; }
+        .save-state { max-width: 300px; padding: 9px 11px; border-left: 2px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.45; }
+        .save-state.success { border-color: var(--green); color: var(--green); }
+        .save-state.error { border-color: var(--red); color: var(--red); }
+        .section { padding: 23px 0; border-top: 1px solid var(--line); }
+        .section-title { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 18px; }
+        .section-title h2 { margin: 0; font: 700 12px var(--sans); letter-spacing: .5px; }
+        .section-title p { margin: 0; color: var(--muted); font-size: 11px; }
+        .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .field { display: grid; gap: 7px; min-width: 0; }
+        .field.full { grid-column: 1 / -1; }
+        .field label { color: #454b46; font-size: 11px; font-weight: 700; }
+        .field input, .field select, .field textarea { width: 100%; min-height: 41px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font-size: 13px; }
+        .field textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
+        .field input:focus, .field select:focus, .field textarea:focus, .search:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+        .cover-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; }
+        .upload-label { display: inline-flex; min-height: 41px; align-items: center; justify-content: center; padding: 0 13px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+        .upload-label:hover { border-color: var(--ink); }
+        .upload-label input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+        .upload-name { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; }
+        .gallery-upload-tools { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+        .gallery-upload-tools .upload-name { min-height: auto; }
+        .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; max-height: 250px; overflow: auto; padding: 2px; }
+        .asset-option { position: relative; min-width: 0; }
+        .asset-option input { position: absolute; top: 7px; left: 7px; z-index: 1; width: 17px; height: 17px; accent-color: var(--blue); }
+        .asset-option label { display: flex; height: 100%; min-height: 104px; flex-direction: column; border: 1px solid var(--line); background: #fff; cursor: pointer; }
+        .asset-option input:checked + label { border: 2px solid var(--blue); }
+        .asset-option.unavailable { opacity: .45; }
+        .asset-empty { grid-column: 1 / -1; margin: 0; padding: 12px; color: var(--muted); font-size: 12px; }
+        .asset-option img { width: 100%; height: 75px; object-fit: cover; background: #e7e9e3; }
+        .asset-option span { overflow: hidden; padding: 5px 6px; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+        .form-actions { display: flex; align-items: center; gap: 12px; padding-top: 22px; border-top: 1px solid var(--line); }
+        .save-button { min-height: 44px; padding: 0 22px; border: 1px solid var(--blue); background: var(--blue); color: #fff; font-size: 13px; font-weight: 700; }
+        .delete-button { min-height: 40px; margin-left: auto; padding: 0 10px; border: 0; background: transparent; color: var(--red); font-size: 12px; }
+        .delete-button:hover { text-decoration: underline; }
+        .disabled { opacity: .55; pointer-events: none; }
+        @media (max-width: 760px) {
+            .topbar { height: 56px; padding: 0 16px; }
+            .top-actions { gap: 13px; }
+            .layout { grid-template-columns: minmax(0, 1fr); }
+            .sidebar { padding: 16px; border-right: 0; border-bottom: 1px solid var(--line); }
+            .project-list { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+            .project-row { flex: 0 0 220px; }
+            .editor { padding: 28px 18px 42px; }
+            .editor-header { display: block; }
+            .save-state { margin-top: 16px; }
+            h1 { font-size: 30px; }
+        }
+        @media (max-width: 480px) {
+            .fields { grid-template-columns: 1fr; }
+            .field.full { grid-column: auto; }
+            .cover-tools { grid-template-columns: 1fr; }
+            .upload-label { justify-self: start; }
+            .form-actions { flex-wrap: wrap; }
+            .delete-button { margin-left: auto; }
+            .asset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/" target="_blank" rel="noreferrer"><span class="brand-mark">T</span><span>Tim van Zanten</span></a>
+        <div class="top-actions">
+            <a href="/" target="_blank" rel="noreferrer">View portfolio</a>
+            <form method="post" action="{{ url_for('admin_logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="logout" type="submit">Sign out</button>
+            </form>
+        </div>
+    </header>
+    <div class="layout">
+        <aside class="sidebar" aria-label="Projects">
+            <div class="sidebar-head"><h2>Projects</h2><span class="count" id="projectCount">0</span></div>
+            <button class="new-button" id="newProject" type="button"><span aria-hidden="true">+</span> New project</button>
+            <input class="search" id="searchProjects" type="search" placeholder="Find a project" aria-label="Find a project">
+            <div class="project-list" id="projectList"></div>
+        </aside>
+        <main class="editor">
+            <div class="editor-header">
+                <div><p class="eyebrow">Portfolio / Project editor</p><h1 id="pageTitle">Project details</h1></div>
+                <div class="save-state" id="saveState" role="status" aria-live="polite">Changes are committed and pushed to Git when saved.</div>
+            </div>
+            <form id="projectForm">
+                <input type="hidden" id="projectId" name="project_id">
+                <section class="section">
+                    <div class="section-title"><h2>Project information</h2></div>
+                    <div class="fields">
+                        <div class="field full"><label for="title">Project title</label><input id="title" name="title" maxlength="160" required></div>
+                        <div class="field"><label for="date">Date or date range</label><input id="date" name="date" maxlength="80" placeholder="e.g. May 2024"></div>
+                        <div class="field"><label for="type">Type</label><input id="type" name="type" maxlength="100" placeholder="e.g. Album, Exhibition"></div>
+                        <div class="field"><label for="extra">Credit or category</label><input id="extra" name="extra" maxlength="160"></div>
+                        <div class="field"><label for="link">Project link</label><input id="link" name="link" type="url" maxlength="2048" placeholder="https://"></div>
+                        <div class="field full"><label for="description">Description</label><textarea id="description" name="description" maxlength="12000" placeholder="A short description of the work"></textarea></div>
+                    </div>
+                </section>
+                <section class="section">
+                    <div class="section-title"><h2>Cover image</h2><p>Shown first in the portfolio grid</p></div>
+                    <div class="cover-tools">
+                        <div class="field" id="coverPicker"><label for="filename">Choose an image</label><select id="filename" name="filename"></select></div>
+                        <label class="upload-label" id="uploadControl">Upload new cover<input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp"></label>
+                        <div class="upload-name" id="uploadName"></div>
+                    </div>
+                </section>
+                <section class="section">
+                    <div class="section-title"><h2>Project images</h2><p>Select existing images or add files</p></div>
+                    <div class="gallery-upload-tools">
+                        <label class="upload-label" id="galleryUploadControl">Upload images<input id="galleryUploads" name="gallery_uploads" type="file" accept="image/jpeg,image/png,image/gif,image/webp" multiple></label>
+                        <div class="upload-name" id="galleryUploadName">Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).</div>
+                    </div>
+                    <input class="search" id="imageSearch" type="search" placeholder="Search images by filename or project" aria-label="Search project images">
+                    <div class="asset-grid" id="assetGrid"></div>
+                </section>
+                <div class="form-actions">
+                    <button class="save-button" id="saveButton" type="submit">Save and push to Git</button>
+                    <button class="delete-button" id="deleteButton" type="button" hidden>Delete project</button>
+                </div>
+            </form>
+        </main>
+    </div>
+    <script>
+        const csrfToken = {{ csrf_token|tojson }};
+        const form = document.getElementById('projectForm');
+        const projectList = document.getElementById('projectList');
+        const saveState = document.getElementById('saveState');
+        const coverPicker = document.getElementById('coverPicker');
+        const uploadControl = document.getElementById('uploadControl');
+        let projects = [];
+        let assets = [];
+        let assetOwners = {};
+        let selectedGalleryImages = new Set();
+
+        function imageUrl(filename) {
+            return `/static/${encodeURIComponent(filename)}`;
+        }
+
+        function setStatus(message, kind = '') {
+            saveState.textContent = message;
+            saveState.className = `save-state ${kind}`;
+        }
+
+        function renderProjectList(filter = '') {
+            projectList.replaceChildren();
+            const visible = projects.filter(project => project.title.toLowerCase().includes(filter.toLowerCase()));
+            document.getElementById('projectCount').textContent = `${projects.length}`;
+            if (!visible.length) {
+                const empty = document.createElement('div');
+                empty.className = 'empty-list';
+                empty.textContent = projects.length ? 'No matching projects.' : 'No projects yet. Add one to get started.';
+                projectList.append(empty);
+                return;
+            }
+            visible.forEach(project => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = `project-row${document.getElementById('projectId').value === project.filename ? ' active' : ''}`;
+                const image = document.createElement('img');
+                image.src = imageUrl(project.filename);
+                image.alt = '';
+                const copy = document.createElement('span');
+                copy.className = 'row-copy';
+                const title = document.createElement('span');
+                title.className = 'row-title';
+                title.textContent = project.title || project.filename;
+                const meta = document.createElement('span');
+                meta.className = 'row-meta';
+                meta.textContent = [project.date, `${project.images.length} image${project.images.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
+                copy.append(title, meta);
+                button.append(image, copy);
+                button.addEventListener('click', () => editProject(project));
+                projectList.append(button);
+            });
+        }
+
+        function renderAssets(selected = [], coverFilename = '') {
+            const grid = document.getElementById('assetGrid');
+            grid.replaceChildren();
+            selectedGalleryImages = new Set(selected);
+            const filter = document.getElementById('imageSearch').value.trim().toLowerCase();
+            assets.forEach((filename, index) => {
+                if (filename === coverFilename) return;
+                const owner = assetOwners[filename];
+                const ownerProject = projects.find(project => project.filename === owner);
+                if (filter && !`${filename} ${ownerProject?.title || ''}`.toLowerCase().includes(filter)) return;
+                const wrapper = document.createElement('div');
+                wrapper.className = 'asset-option';
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'images';
+                checkbox.value = filename;
+                checkbox.id = `asset-${index}`;
+                checkbox.checked = selectedGalleryImages.has(filename);
+                const currentProject = document.getElementById('projectId').value;
+                checkbox.disabled = Boolean(owner && owner !== currentProject);
+                if (checkbox.disabled) wrapper.classList.add('unavailable');
+                checkbox.addEventListener('change', () => {
+                    if (checkbox.checked) selectedGalleryImages.add(filename);
+                    else selectedGalleryImages.delete(filename);
+                });
+                const label = document.createElement('label');
+                label.htmlFor = checkbox.id;
+                const image = document.createElement('img');
+                image.src = imageUrl(filename);
+                image.alt = '';
+                const name = document.createElement('span');
+                name.textContent = checkbox.disabled && ownerProject ? `${filename} · ${ownerProject.title}` : filename;
+                label.append(image, name);
+                wrapper.append(checkbox, label);
+                grid.append(wrapper);
+            });
+            if (!grid.childElementCount) {
+                const empty = document.createElement('p');
+                empty.className = 'asset-empty';
+                empty.textContent = filter ? 'No images match that search.' : 'No images available.';
+                grid.append(empty);
+            }
+        }
+
+        function renderCoverOptions(selected = '') {
+            const select = document.getElementById('filename');
+            const currentProject = document.getElementById('projectId').value;
+            select.replaceChildren();
+            assets.forEach(filename => {
+                const owner = assetOwners[filename];
+                if (owner && owner !== currentProject) return;
+                const option = document.createElement('option');
+                option.value = filename;
+                option.textContent = filename;
+                select.append(option);
+            });
+            if (selected && assets.includes(selected)) select.value = selected;
+        }
+
+        function editProject(project) {
+            form.reset();
+            document.getElementById('projectId').value = project.filename;
+            document.getElementById('title').value = project.title;
+            document.getElementById('date').value = project.date;
+            document.getElementById('type').value = project.type;
+            document.getElementById('extra').value = project.extra;
+            document.getElementById('description').value = project.description;
+            document.getElementById('link').value = project.link;
+            document.getElementById('pageTitle').textContent = project.title || 'Project details';
+            document.getElementById('deleteButton').hidden = false;
+            coverPicker.classList.remove('disabled');
+            uploadControl.classList.add('disabled');
+            document.getElementById('uploadName').textContent = 'Cover uploads are available when creating a new project.';
+            document.getElementById('coverImage').value = '';
+            renderCoverOptions(project.filename);
+            renderAssets(project.images.filter(image => image !== project.filename), project.filename);
+            renderProjectList(document.getElementById('searchProjects').value);
+            setStatus('Changes are committed and pushed to Git when saved.');
+        }
+
+        function newProject() {
+            form.reset();
+            document.getElementById('projectId').value = '';
+            document.getElementById('pageTitle').textContent = 'New project';
+            document.getElementById('deleteButton').hidden = true;
+            coverPicker.classList.remove('disabled');
+            uploadControl.classList.remove('disabled');
+            document.getElementById('uploadName').textContent = 'JPG, PNG, GIF, or WebP. Maximum 16 MB.';
+            document.getElementById('galleryUploadName').textContent = 'Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).';
+            renderCoverOptions();
+            renderAssets();
+            renderProjectList(document.getElementById('searchProjects').value);
+            setStatus('Add project details, then save to commit and push.');
+        }
+
+        async function loadProjects(selectFilename = '') {
+            const response = await fetch('/admin/api/projects');
+            if (response.status === 401) {
+                window.location.href = '/admin/login';
+                return;
+            }
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Could not load projects.');
+            projects = data.projects;
+            assets = data.assets;
+            assetOwners = data.assetOwners || {};
+            renderProjectList(document.getElementById('searchProjects').value);
+            if (selectFilename) {
+                const project = projects.find(item => item.filename === selectFilename);
+                if (project) editProject(project);
+                else newProject();
+            } else if (projects.length) {
+                editProject(projects[0]);
+            } else {
+                newProject();
+            }
+        }
+
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const button = document.getElementById('saveButton');
+            button.disabled = true;
+            button.textContent = 'Saving...';
+            setStatus('Writing project details and pushing the Git commit...');
+            const data = new FormData(form);
+            data.delete('images');
+            selectedGalleryImages.forEach(filename => data.append('images', filename));
+            try {
+                const response = await fetch('/admin/api/projects', { method: 'POST', headers: { 'X-CSRF-Token': csrfToken }, body: data });
+                const result = await response.json();
+                if (!response.ok) {
+                    if (result.saved) {
+                        setStatus(`${result.error} The edit is saved on this server, but was not shipped.`, 'error');
+                    } else {
+                        throw new Error(result.error || 'Could not save the project.');
+                    }
+                    return;
+                }
+                setStatus(result.commit ? `Saved and pushed to Git · ${result.commit}` : 'No changes to commit.', 'success');
+                await loadProjects(result.project);
+                setStatus(result.commit ? `Saved and pushed to Git · ${result.commit}` : 'No changes to commit.', 'success');
+            } catch (error) {
+                setStatus(error.message, 'error');
+            } finally {
+                button.disabled = false;
+                button.textContent = 'Save and push to Git';
+            }
+        });
+
+        document.getElementById('deleteButton').addEventListener('click', async () => {
+            const filename = document.getElementById('projectId').value;
+            if (!filename || !window.confirm('Remove this project from the portfolio? Its image files will remain available.')) return;
+            setStatus('Removing project and pushing the Git commit...');
+            try {
+                const response = await fetch(`/admin/api/projects/${encodeURIComponent(filename)}`, { method: 'DELETE', headers: { 'X-CSRF-Token': csrfToken } });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Could not remove the project.');
+                await loadProjects();
+                setStatus(result.commit ? `Removed and pushed to Git · ${result.commit}` : 'Project removed.', 'success');
+            } catch (error) {
+                setStatus(error.message, 'error');
+            }
+        });
+
+        document.getElementById('newProject').addEventListener('click', newProject);
+        document.getElementById('searchProjects').addEventListener('input', event => renderProjectList(event.target.value));
+        document.getElementById('imageSearch').addEventListener('input', () => {
+            renderAssets([...selectedGalleryImages], document.getElementById('projectId').value);
+        });
+        document.getElementById('coverImage').addEventListener('change', event => {
+            document.getElementById('uploadName').textContent = event.target.files[0]?.name || 'JPG, PNG, GIF, or WebP. Maximum 16 MB.';
+        });
+        document.getElementById('galleryUploads').addEventListener('change', event => {
+            const files = [...event.target.files];
+            if (files.length > 8) {
+                event.target.value = '';
+                document.getElementById('galleryUploadName').textContent = 'Choose no more than eight images at a time.';
+                setStatus('Upload at most eight gallery images per save.', 'error');
+                return;
+            }
+            document.getElementById('galleryUploadName').textContent = files.length
+                ? files.map(file => file.name).join(', ')
+                : 'Add up to 8 JPG, PNG, GIF, or WebP images (16 MB each).';
+        });
+        loadProjects().catch(error => setStatus(error.message, 'error'));
+    </script>
+</body>
+</html>
