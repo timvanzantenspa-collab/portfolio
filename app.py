@@ -15,6 +15,7 @@ import secrets
 import subprocess
 import threading
 import time
+import re
 from functools import wraps
 from io import BytesIO
 from urllib.parse import urlsplit
@@ -576,7 +577,8 @@ def git_push_is_configured():
     )
 
 def git_push_failure_message(result):
-    output = f'{result.stderr or ""}\n{result.stdout or ""}'.lower()
+    raw_output = f'{result.stderr or ""}\n{result.stdout or ""}'
+    output = raw_output.lower()
     if 'not a git repository' in output:
         return 'Render did not provide a Git checkout to push from. Redeploy from the connected GitHub repository.'
     if 'authentication failed' in output or 'invalid username or password' in output or 'http 401' in output:
@@ -585,7 +587,15 @@ def git_push_failure_message(result):
         return 'GitHub denied the push. Grant this token Contents: Read and write access to this repository and allow pushes to the configured branch.'
     if 'repository not found' in output:
         return 'GitHub could not find this repository for the configured token. Check the token repository access.'
-    return 'GitHub push verification failed. Check token repository access and branch protection in GitHub.'
+
+    details = raw_output.strip()
+    for token in (os.environ.get('GITHUB_TOKEN'), os.environ.get('GIT_PUSH_TOKEN')):
+        if token:
+            details = details.replace(token, '[redacted]')
+    details = re.sub(r'(?i)(authorization:\s*(?:basic|bearer)\s+)\S+', r'\1[redacted]', details)
+    details = re.sub(r'https?://[^/\s@]+:[^@\s]+@', 'https://[redacted]@', details)
+    details = ' '.join(details.split())
+    return f'Git push verification failed: {details[:240] or "Git returned no error details."}'
 
 def ensure_git_push_ready():
     if not git_push_is_configured():
