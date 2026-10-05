@@ -74,6 +74,7 @@
         .description-preview { min-height: 44px; padding: 12px; border: 1px solid var(--line); color: var(--ink); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
         .description-preview > :first-child { margin-top: 0; }
         .description-preview > :last-child { margin-bottom: 0; }
+        .description-preview p + p { margin-top: .9em; }
         .description-preview a { color: var(--blue); }
         .description-preview pre, .description-preview code { white-space: pre-wrap; }
         .field input:focus, .field select:focus, .field textarea:focus, .search:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
@@ -597,6 +598,14 @@
             setEditorStatus('Unsaved changes. Save and push to publish.');
         }
 
+        function insertDescriptionParagraphBreak(event) {
+            if (event.key !== 'Enter' || !event.shiftKey) return;
+            event.preventDefault();
+            const field = event.currentTarget;
+            field.setRangeText('\n\n', field.selectionStart, field.selectionEnd, 'end');
+            field.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
         function updateDescriptionPreview() {
             window.clearTimeout(descriptionPreviewTimer);
             const description = document.getElementById('description').value;
@@ -927,6 +936,7 @@
         document.getElementById('newProject').addEventListener('click', () => newProject(true));
         document.getElementById('searchProjects').addEventListener('input', event => renderProjectList(event.target.value));
         document.getElementById('description').addEventListener('input', updateDescriptionPreview);
+        document.getElementById('description').addEventListener('keydown', insertDescriptionParagraphBreak);
         document.getElementById('descriptionBold').addEventListener('click', () => wrapDescriptionSelection('**', '**', 'bold text'));
         document.getElementById('descriptionItalic').addEventListener('click', () => wrapDescriptionSelection('*', '*', 'italic text'));
         document.getElementById('descriptionLink').addEventListener('click', insertDescriptionLink);
