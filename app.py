@@ -10,6 +10,7 @@ import shutil
 from pathlib import Path
 import json
 import base64
+import hashlib
 import hmac
 import secrets
 import subprocess
@@ -18,7 +19,9 @@ import time
 import re
 from functools import wraps
 from io import BytesIO
-from urllib.parse import urlsplit
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlsplit
+from urllib.request import Request, urlopen
 from werkzeug.utils import secure_filename
 from generate_jsonld import generate_all_schemas, load_resume_content, get_schema_script_tags, get_about_page_script_tags
 
@@ -38,6 +41,7 @@ IMAGE_ORDER_FILE = Path(__file__).parent / 'image_order.json'
 CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 CACHE_FOLDER.mkdir(exist_ok=True)
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
+GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY', 'timvanzantenspa-collab/portfolio')
 ADMIN_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
 ADMIN_VIDEO_EXTENSIONS = {'.mp4', '.webm'}
 ADMIN_MEDIA_EXTENSIONS = ADMIN_IMAGE_EXTENSIONS | ADMIN_VIDEO_EXTENSIONS
@@ -544,6 +548,31 @@ def write_admin_json(path, value):
         data_file.write('\n')
     temporary_path.replace(path)
 
+def serialize_admin_json(value):
+    return (json.dumps(value, ensure_ascii=False, indent=4) + '\n').encode('utf-8')
+
+def persist_admin_updates(file_updates):
+    root = Path(__file__).parent.resolve()
+    for relative_path, contents in file_updates.items():
+        destination = (root / relative_path).resolve()
+        try:
+            destination.relative_to(root)
+        except ValueError as error:
+            raise ValueError('Invalid portfolio update path.') from error
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        temporary_path = destination.with_suffix(destination.suffix + '.tmp')
+        temporary_path.write_bytes(contents)
+        temporary_path.replace(destination)
+
+def build_admin_file_updates(captions, carousels, uploaded_media=()):
+    file_updates = {
+        'captions.json': serialize_admin_json(captions),
+        'carousels.json': serialize_admin_json(carousels),
+    }
+    for filename, contents in uploaded_media:
+        file_updates[f'static/{filename}'] = contents
+    return file_updates
+
 def git_run(arguments, env=None):
     return subprocess.run(
         ['git', *arguments], cwd=Path(__file__).parent, env=env,
@@ -576,6 +605,109 @@ def git_push_is_configured():
         os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
     )
 
+def github_api_publishing_enabled():
+    return bool(
+        os.environ.get('RENDER')
+        or os.environ.get('GITHUB_TOKEN')
+        or os.environ.get('GIT_PUSH_TOKEN')
+    )
+
+def github_repository_slug():
+    repository = GITHUB_REPOSITORY.strip()
+    if not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+', repository):
+        raise GitPushUnavailable('GITHUB_REPOSITORY must use owner/repository format.')
+    return repository
+
+def github_api_request(method, path, payload=None):
+    token = os.environ.get('GITHUB_TOKEN') or os.environ.get('GIT_PUSH_TOKEN')
+    if not token:
+        raise GitPushUnavailable('GITHUB_TOKEN is not configured in this running service.')
+    body = json.dumps(payload).encode('utf-8') if payload is not None else None
+    api_request = Request(
+        f'https://api.github.com{path}',
+        data=body,
+        method=method,
+        headers={
+            'Accept': 'application/vnd.github+json',
+            'Authorization': f'Bearer {token}',
+            'X-GitHub-Api-Version': '2022-11-28',
+            'User-Agent': 'Portfolio-Admin',
+            'Content-Type': 'application/json',
+        },
+    )
+    try:
+        with urlopen(api_request, timeout=45) as response:
+            response_body = response.read()
+    except HTTPError as error:
+        if error.code == 401:
+            message = 'GitHub rejected GITHUB_TOKEN. Replace it with a valid, unexpired token.'
+        elif error.code == 403:
+            message = 'GitHub denied access. Grant this token Contents: Read and write access to this repository.'
+        elif error.code == 404:
+            message = 'GitHub could not find the configured repository or branch. Check GITHUB_REPOSITORY and GIT_BRANCH.'
+        elif error.code in {409, 422}:
+            message = 'The GitHub branch changed or rejected the commit. Retry after checking branch protection.'
+        else:
+            message = f'GitHub API returned HTTP {error.code}.'
+        raise GitPushUnavailable(message) from error
+    except URLError as error:
+        raise GitPushUnavailable('Could not connect to the GitHub API. Check Render outbound network access.') from error
+    try:
+        return json.loads(response_body.decode('utf-8')) if response_body else {}
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise GitPushUnavailable('GitHub returned an unreadable API response.') from error
+
+def commit_portfolio_to_github(file_updates, title):
+    repository = github_repository_slug()
+    branch = git_push_branch()
+    branch_ref = quote(f'heads/{branch}', safe='/')
+    ref_data = github_api_request('GET', f'/repos/{repository}/git/ref/{branch_ref}')
+    parent_sha = ref_data['object']['sha']
+    parent_commit = github_api_request('GET', f'/repos/{repository}/git/commits/{parent_sha}')
+    base_tree_sha = parent_commit['tree']['sha']
+    existing_tree = github_api_request(
+        'GET', f'/repos/{repository}/git/trees/{base_tree_sha}?recursive=1',
+    )
+    existing_blobs = {entry['path']: entry['sha'] for entry in existing_tree.get('tree', [])}
+
+    changed_files = {}
+    for path, contents in file_updates.items():
+        blob_header = f'blob {len(contents)}\0'.encode('ascii')
+        blob_sha = hashlib.sha1(blob_header + contents).hexdigest()
+        if existing_blobs.get(path) != blob_sha:
+            changed_files[path] = (contents, blob_sha)
+    if not changed_files:
+        return {'shipped': True, 'commit': None}
+
+    tree_entries = []
+    for path, (contents, _) in changed_files.items():
+        blob = github_api_request('POST', f'/repos/{repository}/git/blobs', {
+            'content': base64.b64encode(contents).decode('ascii'),
+            'encoding': 'base64',
+        })
+        tree_entries.append({
+            'path': path,
+            'mode': '100644',
+            'type': 'blob',
+            'sha': blob['sha'],
+        })
+
+    tree = github_api_request('POST', f'/repos/{repository}/git/trees', {
+        'base_tree': base_tree_sha,
+        'tree': tree_entries,
+    })
+    safe_title = ' '.join(title.split())[:100] or 'project details'
+    commit = github_api_request('POST', f'/repos/{repository}/git/commits', {
+        'message': f'Update portfolio project: {safe_title}',
+        'tree': tree['sha'],
+        'parents': [parent_sha],
+    })
+    github_api_request('PATCH', f'/repos/{repository}/git/refs/{branch_ref}', {
+        'sha': commit['sha'],
+        'force': False,
+    })
+    return {'shipped': True, 'commit': commit['sha'][:7]}
+
 def git_push_failure_message(result):
     raw_output = f'{result.stderr or ""}\n{result.stdout or ""}'
     output = raw_output.lower()
@@ -601,6 +733,13 @@ def ensure_git_push_ready():
     if not git_push_is_configured():
         raise GitPushUnavailable('Git publishing is not configured. Add GITHUB_TOKEN in Render; no changes were saved.')
     branch = git_push_branch()
+    if github_api_publishing_enabled():
+        repository = github_repository_slug()
+        ref_data = github_api_request(
+            'GET', f'/repos/{repository}/git/ref/{quote(f"heads/{branch}", safe="/")}',
+        )
+        github_api_request('GET', f'/repos/{repository}/git/commits/{ref_data["object"]["sha"]}')
+        return
     push_result = git_run(
         ['push', '--dry-run', 'origin', f'HEAD:refs/heads/{branch}'],
         env=git_push_environment(),
@@ -608,7 +747,11 @@ def ensure_git_push_ready():
     if push_result.returncode != 0:
         raise GitPushUnavailable(git_push_failure_message(push_result))
 
-def commit_and_push_portfolio(uploaded_assets=None, title=''):
+def commit_and_push_portfolio(uploaded_assets=None, title='', file_updates=None):
+    if github_api_publishing_enabled():
+        if file_updates is None:
+            raise GitPushUnavailable('Portfolio file contents were not provided to the GitHub publisher.')
+        return commit_portfolio_to_github(file_updates, title)
     if git_run(['rev-parse', '--is-inside-work-tree']).returncode != 0:
         raise RuntimeError('Git is not available for this deployment.')
 
@@ -734,6 +877,7 @@ def admin_projects():
         if parsed_link.scheme not in {'http', 'https'} or not parsed_link.netloc:
             return jsonify({'error': 'Project links must start with http:// or https://.'}), 400
 
+    saved_locally = False
     try:
         with ADMIN_WRITE_LOCK:
             captions = read_admin_json(CAPTIONS_FILE)
@@ -806,10 +950,6 @@ def admin_projects():
             except GitPushUnavailable as error:
                 return jsonify({'error': str(error), 'saved': False, 'shipped': False}), 503
 
-            for image_name, image_bytes in prepared_uploads:
-                (STATIC_FOLDER / image_name).write_bytes(image_bytes)
-                uploaded_assets.append(f'static/{image_name}')
-
             if project_id and project_id != filename:
                 captions.pop(project_id, None)
             captions[filename] = fields
@@ -822,15 +962,21 @@ def admin_projects():
                 for image in selected_images:
                     carousels[image] = filename
 
-            write_admin_json(CAPTIONS_FILE, captions)
-            write_admin_json(CAROUSELS_FILE, carousels)
-            result = commit_and_push_portfolio(uploaded_assets, title)
+            uploaded_assets = [f'static/{image_name}' for image_name, _ in prepared_uploads]
+            file_updates = build_admin_file_updates(captions, carousels, prepared_uploads)
+            if github_api_publishing_enabled():
+                result = commit_and_push_portfolio(uploaded_assets, title, file_updates)
+                persist_admin_updates(file_updates)
+            else:
+                persist_admin_updates(file_updates)
+                result = commit_and_push_portfolio(uploaded_assets, title)
+            saved_locally = True
     except (OSError, ValueError, json.JSONDecodeError) as error:
         return jsonify({'error': f'Could not save the project: {error}'}), 500
     except GitPushUnavailable as error:
-        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
+        return jsonify({'error': str(error), 'saved': saved_locally, 'shipped': False}), 502 if saved_locally else 503
     except (RuntimeError, subprocess.TimeoutExpired) as error:
-        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
+        return jsonify({'error': str(error), 'saved': saved_locally, 'shipped': False}), 502
 
     return jsonify({**result, 'project': filename})
 
@@ -850,13 +996,14 @@ def admin_description_preview():
 def admin_git_status():
     if not valid_admin_csrf():
         return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+    saved_locally = False
     try:
         ensure_git_push_ready()
     except GitPushUnavailable as error:
         return jsonify({'ready': False, 'error': str(error)}), 503
     except subprocess.TimeoutExpired:
         return jsonify({'ready': False, 'error': 'GitHub did not respond in time. Try again shortly.'}), 503
-    return jsonify({'ready': True, 'message': 'GitHub publishing is ready.'})
+    return jsonify({'ready': True, 'message': 'GitHub repository and branch are reachable; write access is checked when you save.'})
 
 @app.route('/admin/api/projects/<path:filename>', methods=['DELETE'])
 @admin_required
@@ -881,15 +1028,20 @@ def admin_delete_project(filename):
             for image in removed_images:
                 captions.pop(image, None)
                 carousels.pop(image, None)
-            write_admin_json(CAPTIONS_FILE, captions)
-            write_admin_json(CAROUSELS_FILE, carousels)
-            result = commit_and_push_portfolio(title='Remove project')
+            file_updates = build_admin_file_updates(captions, carousels)
+            if github_api_publishing_enabled():
+                result = commit_and_push_portfolio(title='Remove project', file_updates=file_updates)
+                persist_admin_updates(file_updates)
+            else:
+                persist_admin_updates(file_updates)
+                result = commit_and_push_portfolio(title='Remove project')
+            saved_locally = True
     except (OSError, ValueError, json.JSONDecodeError) as error:
         return jsonify({'error': f'Could not remove the project: {error}'}), 500
     except GitPushUnavailable as error:
-        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
+        return jsonify({'error': str(error), 'saved': saved_locally, 'shipped': False}), 502 if saved_locally else 503
     except (RuntimeError, subprocess.TimeoutExpired) as error:
-        return jsonify({'error': str(error), 'saved': True, 'shipped': False}), 502
+        return jsonify({'error': str(error), 'saved': saved_locally, 'shipped': False}), 502
     return jsonify({**result, 'deleted': filename})
 
 @app.after_request

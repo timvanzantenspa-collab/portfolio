@@ -77,9 +77,10 @@ Configure these environment variables on the server (for Render, use the service
 - `ADMIN_PASSWORD` - password for `/admin`.
 - `SECRET_KEY` - a long, random value used to protect the admin session.
 - `GITHUB_TOKEN` - a GitHub token with Contents write access to this repository. Keep it in the host's secret environment settings; never commit it.
+- `GITHUB_REPOSITORY` - optional `owner/repository` override; defaults to `timvanzantenspa-collab/portfolio`.
 - `GIT_BRANCH` - optional push target; defaults to the checked-out branch, or `main` when the checkout is detached.
 
-For local use, set `ADMIN_PASSWORD` and `SECRET_KEY` in the shell before starting Flask. Git must have push access to `origin`; local Git credential-manager authentication is used when `GITHUB_TOKEN` is not set. If Git push fails, the editor reports that the change was saved on the running server but was not shipped.
+When `GITHUB_TOKEN` is set, the editor publishes atomic commits through the GitHub API, so the app does not need a local Git remote. The token needs Contents read/write permission and access to the target branch; failed publishing leaves project files untouched. For local use without a token, set `ADMIN_PASSWORD` and `SECRET_KEY` before starting Flask; local Git credential-manager authentication is used instead.
 
 ### 4. Run the Server
 
