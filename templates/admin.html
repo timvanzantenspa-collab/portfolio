@@ -29,11 +29,14 @@
         .project-row { display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 11px; width: 100%; padding: 8px; border: 1px solid transparent; background: transparent; text-align: left; }
         .project-row:hover { background: #f4f5ff; }
         .project-row.active { border-color: var(--blue); background: #f4f5ff; }
+        .project-row.unpublished .row-title { color: var(--muted); }
         .project-row img { width: 54px; height: 54px; object-fit: cover; background: #e7e9e3; }
         .video-thumbnail { display: grid; place-items: center; background: #171717; color: #fff; font-size: 10px; font-weight: 700; }
         .project-row .video-thumbnail { width: 54px; height: 54px; }
         .row-copy { min-width: 0; align-self: center; }
-        .row-title { display: block; overflow: hidden; color: var(--ink); font: 600 14px/1.25 var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+        .row-title-line { display: flex; align-items: center; gap: 7px; min-width: 0; }
+        .row-title { display: block; min-width: 0; overflow: hidden; color: var(--ink); font: 600 14px/1.25 var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+        .row-status { flex: 0 0 auto; padding: 2px 5px; background: #f8e9e7; color: #8c3027; font: 700 9px/1.2 var(--sans); }
         .row-meta { display: block; margin-top: 5px; color: var(--muted); font-size: 11px; }
         .empty-list { padding: 18px 8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
         .editor { width: min(100%, 940px); min-width: 0; padding: 42px clamp(22px, 5vw, 68px) 60px; }
@@ -52,6 +55,16 @@
         .field.full { grid-column: 1 / -1; }
         .field label { color: #454b46; font-size: 11px; font-weight: 700; }
         .field input, .field select, .field textarea { width: 100%; min-height: 41px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font-size: 13px; }
+        .publish-toggle { display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 9px 11px; border: 1px solid var(--line); cursor: pointer; }
+        .publish-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .publish-switch { position: relative; flex: 0 0 38px; width: 38px; height: 22px; background: #a6a6a6; transition: background .16s ease; }
+        .publish-switch::after { position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: #fff; content: ''; transition: transform .16s ease; }
+        .publish-toggle input:checked + .publish-switch { background: var(--blue); }
+        .publish-toggle input:checked + .publish-switch::after { transform: translateX(16px); }
+        .publish-toggle input:focus-visible + .publish-switch { outline: 2px solid var(--blue); outline-offset: 2px; }
+        .publish-copy { display: grid; gap: 2px; }
+        .publish-copy strong { font-size: 12px; }
+        .publish-copy small { color: var(--muted); font-size: 11px; font-weight: 400; }
         .field textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
         .markdown-toolbar { display: flex; gap: 4px; padding: 5px; border: 1px solid var(--line); border-bottom: 0; background: #f7f7f7; }
         .markdown-toolbar button { min-width: 32px; height: 30px; padding: 0 8px; border: 1px solid transparent; background: transparent; color: var(--ink); font-size: 12px; }
@@ -87,7 +100,7 @@
         .media-link-input { width: 100%; min-width: 0; min-height: 34px; padding: 6px 8px; border: 1px solid var(--line); color: var(--ink); font-size: 11px; }
         .media-link-input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
         .selected-media-actions { display: flex; gap: 4px; }
-        .selected-media-actions button { min-width: 32px; min-height: 30px; padding: 0 7px; border: 1px solid var(--line); background: #fff; font-size: 12px; }
+        .selected-media-actions button { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; padding: 0; border: 1px solid var(--line); background: #fff; font-size: 15px; }
         .selected-media-actions button:hover:not(:disabled) { border-color: var(--ink); }
         .selected-media-actions button:disabled { opacity: .4; cursor: default; }
         .media-empty { margin: 0; padding: 12px; border: 1px dashed var(--line); color: var(--muted); font-size: 12px; }
@@ -137,7 +150,7 @@
             .selected-media-row { grid-template-columns: 22px 44px minmax(0, 1fr) auto; gap: 7px; }
             .selected-media-row img, .selected-media-row video, .selected-media-row .video-thumbnail { width: 44px; height: 44px; }
             .media-link-input { grid-column: 3 / 5; grid-row: 2; }
-            .selected-media-actions button { min-width: 28px; padding: 0 5px; }
+            .selected-media-actions button { flex-basis: 30px; width: 30px; height: 30px; }
         }
     </style>
 </head>
@@ -174,6 +187,14 @@
                         <div class="field"><label for="type">Type</label><input id="type" name="type" maxlength="100" placeholder="e.g. Album, Exhibition"></div>
                         <div class="field"><label for="extra">Credit or category</label><input id="extra" name="extra" maxlength="160"></div>
                         <div class="field"><label for="link">Project link</label><input id="link" name="link" type="url" maxlength="2048" placeholder="https://"></div>
+                        <div class="field full">
+                            <label>Site visibility</label>
+                            <label class="publish-toggle">
+                                <input id="publishProject" type="checkbox" checked aria-describedby="publishHelp">
+                                <span class="publish-switch" aria-hidden="true"></span>
+                                <span class="publish-copy"><strong id="publishState">Published</strong><small id="publishHelp">Visible on the portfolio site</small></span>
+                            </label>
+                        </div>
                         <div class="field full description-field">
                             <label for="description">Description</label>
                             <div class="markdown-toolbar" role="toolbar" aria-label="Description formatting">
@@ -476,7 +497,9 @@
                 if (item.kind !== 'cover' || item.file) {
                     const removeButton = document.createElement('button');
                     removeButton.type = 'button';
-                    removeButton.textContent = 'Remove';
+                    removeButton.textContent = '×';
+                    removeButton.title = 'Remove media';
+                    removeButton.setAttribute('aria-label', `Remove ${filename}`);
                     removeButton.addEventListener('click', () => removeSelectedMedia(item));
                     actions.append(removeButton);
                 }
@@ -539,6 +562,14 @@
         function updateSaveAvailability() {
             document.getElementById('saveButton').disabled = isSaving || !gitPushConfigured;
             document.getElementById('deleteButton').disabled = isSaving || !gitPushConfigured;
+        }
+
+        function updatePublishControl() {
+            const published = document.getElementById('publishProject').checked;
+            document.getElementById('publishState').textContent = published ? 'Published' : 'Unpublished';
+            document.getElementById('publishHelp').textContent = published
+                ? 'Visible on the portfolio site'
+                : 'Hidden from the portfolio site; retained in the editor';
         }
 
         function setLazyImage(image, filename) {
@@ -634,7 +665,7 @@
             visible.forEach(project => {
                 const button = document.createElement('button');
                 button.type = 'button';
-                button.className = `project-row${document.getElementById('projectId').value === project.filename ? ' active' : ''}`;
+                button.className = `project-row${document.getElementById('projectId').value === project.filename ? ' active' : ''}${project.published === false ? ' unpublished' : ''}`;
                 const thumbnail = isVideoAsset(project.filename) ? videoThumbnail(project.filename) : document.createElement('img');
                 if (!isVideoAsset(project.filename)) setLazyImage(thumbnail, project.filename);
                 const copy = document.createElement('span');
@@ -642,10 +673,20 @@
                 const title = document.createElement('span');
                 title.className = 'row-title';
                 title.textContent = project.title || project.filename;
+                const titleLine = document.createElement('span');
+                titleLine.className = 'row-title-line';
+                titleLine.append(title);
+                if (project.published === false) {
+                    const status = document.createElement('span');
+                    status.className = 'row-status';
+                    status.textContent = 'OFF';
+                    status.setAttribute('aria-label', 'Unpublished');
+                    titleLine.append(status);
+                }
                 const meta = document.createElement('span');
                 meta.className = 'row-meta';
                 meta.textContent = [project.date, `${project.images.length} image${project.images.length === 1 ? '' : 's'}`].filter(Boolean).join(' · ');
-                copy.append(title, meta);
+                copy.append(titleLine, meta);
                 button.append(thumbnail, copy);
                 button.addEventListener('click', () => editProject(project));
                 projectList.append(button);
@@ -682,7 +723,7 @@
                 checkbox.id = `asset-${index}`;
                 checkbox.checked = selectedGalleryImages.has(filename);
                 const currentProject = document.getElementById('projectId').value;
-                checkbox.disabled = Boolean(owner && owner !== currentProject);
+                checkbox.disabled = Boolean(owner && owner !== currentProject && filename === owner);
                 if (checkbox.disabled) wrapper.classList.add('unavailable');
                 checkbox.addEventListener('change', () => {
                     if (checkbox.checked) {
@@ -736,6 +777,8 @@
             hasUnsavedChanges = false;
             editedImageLinks = {};
             document.getElementById('projectId').value = project.filename;
+            document.getElementById('publishProject').checked = project.published !== false;
+            updatePublishControl();
             document.getElementById('title').value = project.title;
             document.getElementById('date').value = project.date;
             document.getElementById('type').value = project.type;
@@ -762,6 +805,8 @@
             hasUnsavedChanges = false;
             editedImageLinks = {};
             document.getElementById('projectId').value = '';
+            document.getElementById('publishProject').checked = true;
+            updatePublishControl();
             document.getElementById('pageTitle').textContent = 'New project';
             document.getElementById('deleteButton').hidden = true;
             coverPicker.classList.remove('disabled');
@@ -813,6 +858,7 @@
             button.textContent = 'Saving...';
             setStatus('Writing project details and pushing the Git commit...');
             const data = new FormData(form);
+            data.set('published', document.getElementById('publishProject').checked ? 'true' : 'false');
             data.delete('images');
             selectedGalleryImages.forEach(filename => data.append('images', filename));
             const pendingFiles = [...document.getElementById('galleryUploads').files];
@@ -884,6 +930,7 @@
         document.getElementById('descriptionBold').addEventListener('click', () => wrapDescriptionSelection('**', '**', 'bold text'));
         document.getElementById('descriptionItalic').addEventListener('click', () => wrapDescriptionSelection('*', '*', 'italic text'));
         document.getElementById('descriptionLink').addEventListener('click', insertDescriptionLink);
+        document.getElementById('publishProject').addEventListener('change', updatePublishControl);
         form.addEventListener('input', markUnsavedChanges);
         form.addEventListener('change', markUnsavedChanges);
         window.addEventListener('beforeunload', event => {
