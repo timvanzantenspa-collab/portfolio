@@ -229,6 +229,8 @@
                     const data = await response.json().catch(() => ({}));
                     const error = response.status === 413
                         ? 'Upload is too large. Keep images under 16 MB each and 48 MB total.'
+                        : [502, 504].includes(response.status)
+                            ? 'The server could not finish this GIF. Try fewer images or lower-resolution files.'
                         : data.error || `Could not make the GIF (HTTP ${response.status}).`;
                     throw new Error(error);
                 }

@@ -49,6 +49,8 @@ ADMIN_VIDEO_EXTENSIONS = {'.mp4', '.webm'}
 ADMIN_MEDIA_EXTENSIONS = ADMIN_IMAGE_EXTENSIONS | ADMIN_VIDEO_EXTENSIONS
 MAX_IMAGE_UPLOAD_BYTES = 16 * 1024 * 1024
 MAX_VIDEO_UPLOAD_BYTES = 50 * 1024 * 1024
+MAX_GIF_SOURCE_PIXELS = 120_000_000
+MAX_GIF_TOTAL_PIXELS = 1_000_000_000
 ADMIN_WRITE_LOCK = threading.Lock()
 ADMIN_LOGIN_LOCK = threading.Lock()
 ADMIN_LOGIN_FAILURES = {}
@@ -486,37 +488,51 @@ def create_gif():
     if duration is None or not 50 <= duration <= 1000:
         return jsonify({'error': 'Frame duration must be between 50 and 1000 milliseconds.'}), 400
 
-    frames = []
     total_bytes = 0
+    total_pixels = 0
+    canvas_width = 0
+    canvas_height = 0
     try:
         for upload in uploads:
-            data = upload.stream.read(16 * 1024 * 1024 + 1)
-            total_bytes += len(data)
-            if len(data) > 16 * 1024 * 1024 or total_bytes > 48 * 1024 * 1024:
+            upload.stream.seek(0, os.SEEK_END)
+            upload_size = upload.stream.tell()
+            total_bytes += upload_size
+            if upload_size > 16 * 1024 * 1024 or total_bytes > 48 * 1024 * 1024:
                 return jsonify({'error': 'Images must be under 16 MB each and 48 MB total.'}), 413
 
-            with Image.open(BytesIO(data)) as source:
-                source.seek(0)
+            upload.stream.seek(0)
+            with Image.open(upload.stream) as source:
+                width, height = source.size
+                image_pixels = width * height
+                total_pixels += image_pixels
+                if image_pixels > MAX_GIF_SOURCE_PIXELS:
+                    return jsonify({'error': 'An image exceeds the 120 megapixel processing limit.'}), 400
+                if total_pixels > MAX_GIF_TOTAL_PIXELS:
+                    return jsonify({'error': 'The selected images exceed the total processing limit. Use fewer or smaller images.'}), 400
+
+                if source.getexif().get(274) in {5, 6, 7, 8}:
+                    width, height = height, width
+                scale = min(1, 640 / max(width, height))
+                canvas_width = max(canvas_width, round(width * scale))
+                canvas_height = max(canvas_height, round(height * scale))
+            upload.stream.seek(0)
+
+        canvas_size = (max(1, canvas_width), max(1, canvas_height))
+        animation_frames = []
+        for upload in uploads:
+            with Image.open(upload.stream) as source:
                 source.thumbnail((640, 640), Image.Resampling.LANCZOS)
                 frame = ImageOps.exif_transpose(source).convert('RGBA')
-                frames.append(frame)
+                frame.thumbnail(canvas_size, Image.Resampling.LANCZOS)
+                canvas = Image.new('RGB', canvas_size, 'white')
+                canvas.paste(
+                    frame,
+                    ((canvas.width - frame.width) // 2, (canvas.height - frame.height) // 2),
+                    frame.getchannel('A'),
+                )
+                animation_frames.append(canvas.quantize(colors=128, dither=Image.Dither.NONE))
     except (Image.DecompressionBombError, Image.UnidentifiedImageError, OSError, ValueError):
         return jsonify({'error': 'One or more files are not valid, supported images.'}), 400
-
-    canvas_width = max(frame.width for frame in frames)
-    canvas_height = max(frame.height for frame in frames)
-    canvas_size = (canvas_width, canvas_height)
-    animation_frames = []
-
-    for frame in frames:
-        frame.thumbnail(canvas_size, Image.Resampling.LANCZOS)
-        canvas = Image.new('RGB', canvas_size, 'white')
-        canvas.paste(
-            frame,
-            ((canvas.width - frame.width) // 2, (canvas.height - frame.height) // 2),
-            frame.getchannel('A'),
-        )
-        animation_frames.append(canvas.quantize(colors=128, dither=Image.Dither.NONE))
 
     output = BytesIO()
     animation_frames[0].save(
