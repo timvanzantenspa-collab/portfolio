@@ -24,6 +24,7 @@
     let velocityX = 0;
     let velocityY = 0;
     let isOverInteractive = false;
+    let cursorOverScrollbar = false;
     let cursorVisible = false;
     let isPointerPressed = false;
     let lastTimestamp = performance.now();
@@ -52,12 +53,57 @@
         '[role="button"]', '.title-word', '.hero-social-link',
         '.modal-close', '.nav-link'
     ];
+    const scrollableElements = [
+        document.documentElement,
+        ...document.querySelectorAll('.modal, .modal-content, .search-results')
+    ];
 
     function isOverInteractiveElement() {
         const element = document.elementFromPoint(currentX, currentY);
         if (!element) return false;
         return interactiveSelectors.some(selector => {
             return element.matches(selector) || element.closest(selector);
+        });
+    }
+
+    function isOverScrollbar() {
+        const root = document.documentElement;
+        const rootScrollbarWidth = window.innerWidth - root.clientWidth;
+        if (rootScrollbarWidth > 0 && root.scrollHeight > root.clientHeight) {
+            const isRtl = getComputedStyle(root).direction === 'rtl';
+            const inRootScrollbar = isRtl
+                ? currentX >= 0 && currentX < rootScrollbarWidth
+                : currentX >= root.clientWidth && currentX <= window.innerWidth;
+            if (inRootScrollbar && currentY >= 0 && currentY <= window.innerHeight) return true;
+        }
+
+        return scrollableElements.some(element => {
+            if (!element.isConnected || element.clientHeight === 0 || element.scrollHeight <= element.clientHeight) {
+                return false;
+            }
+
+            const style = getComputedStyle(element);
+            if (!['auto', 'scroll', 'overlay'].includes(style.overflowY)) return false;
+
+            const rect = element.getBoundingClientRect();
+            const scale = rect.width / element.offsetWidth;
+            if (!Number.isFinite(scale) || scale <= 0) return false;
+
+            const borderLeft = parseFloat(style.borderLeftWidth) || 0;
+            const borderRight = parseFloat(style.borderRightWidth) || 0;
+            const scrollbarWidth = element.offsetWidth - element.clientWidth - borderLeft - borderRight;
+            if (scrollbarWidth <= 0) return false;
+
+            const isRtl = style.direction === 'rtl';
+            const scrollbarLeft = isRtl
+                ? rect.left + borderLeft * scale
+                : rect.right - (borderRight + scrollbarWidth) * scale;
+            const scrollbarRight = scrollbarLeft + scrollbarWidth * scale;
+            const top = rect.top + (parseFloat(style.borderTopWidth) || 0) * scale;
+            const bottom = rect.bottom - (parseFloat(style.borderBottomWidth) || 0) * scale;
+
+            return currentX >= scrollbarLeft && currentX <= scrollbarRight
+                && currentY >= top && currentY <= bottom;
         });
     }
 
@@ -124,7 +170,13 @@
             }
         }
 
-        const focusScale = isPointerPressed ? 0.45 : (isOverInteractive ? 0.78 : 1);
+        const isNowOverScrollbar = isOverScrollbar();
+        if (isNowOverScrollbar !== cursorOverScrollbar) {
+            cursorOverScrollbar = isNowOverScrollbar;
+            cursorContainer.classList.toggle('cursor-scrollbar-state', isNowOverScrollbar);
+        }
+
+        const focusScale = cursorOverScrollbar ? 0.45 : (isPointerPressed ? 0.45 : (isOverInteractive ? 0.78 : 1));
         const transformScaleX = scaleX * focusScale;
         const transformScaleY = scaleY * focusScale;
 

@@ -2,7 +2,7 @@
 <html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="{{ meta_description }}" data-no-translate>
     <meta name="theme-color" content="#0101FF">
     <meta property="og:type" content="article">
@@ -38,8 +38,19 @@
             html { zoom: 0.9; }
         }
         * { box-sizing: border-box; }
+        html {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+            overscroll-behavior: none;
+            background: #fff;
+        }
         body {
             margin: 0;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+            overscroll-behavior: none;
             color: #111;
             background: #fff;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
