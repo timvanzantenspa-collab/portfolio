@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 The easiest way to add and manage projects is through `/admin`. The editor can upload a cover image and gallery media, edit project details, and publish changes to GitHub. See [Manage Projects](#manage-projects) for the required environment variables.
 
-Project data can also be edited directly in `captions.json`. Project descriptions support an optional `description_nl` field; when it is filled in, Dutch visitors see that version while English visitors see `description`:
+Project data can also be edited directly in `captions.json`. Project descriptions support an optional `description_nl` field; when it is filled in, Dutch visitors see that saved version while English visitors see `description`. In `/admin`, the Dutch description can be auto-translated from English, then reviewed and edited before the project is saved:
 
 ```json
 {
@@ -42,9 +42,9 @@ Projects are ordered by date, newest first. Each has a server-rendered detail pa
 
 ### English and Dutch
 
-Public pages use the language saved in the `site_language` cookie, or fall back to the visitor's browser language preference. Dutch is selected when a Dutch preference is present; otherwise the site uses English. Visitors can switch languages using the EN/NL links. The site does not request location access.
+Public pages use the language saved in the `site_language` cookie, or fall back to the visitor's browser language preference. Dutch is selected when a Dutch preference is present; otherwise the site uses English. Visitors can switch languages using the EN/NL links without reloading the page. The site does not request location access.
 
-Interface copy and its English/Dutch variants are stored in `site-translations.json`. Use **Website translations** in `/admin` to search and edit either version, draft Dutch text with the auto-translate button, and publish reviewed changes. Project titles, project descriptions and metadata, marked names, emphasized or quoted text, and URLs are kept as entered and excluded from translation. Visitors only receive saved translations for eligible interface text; page views do not call a translation service. Auto-translation uses a free service limited to 5,000 characters per day, so larger batches may need to be retried after the daily limit resets. Third-party embeds remain controlled by their own providers.
+Interface copy and its English/Dutch variants are stored in `site-translations.json`. Use **Website translations** in `/admin` to search and edit either version, draft Dutch text with the auto-translate button, and publish reviewed changes. Project titles and metadata are not translated; project descriptions use their separately saved, editable `description_nl` field. Names in links, emphasized or quoted text, and URLs are preserved during project-description auto-translation. Visitors only receive saved translations for interface and project descriptions; page views do not call a translation service. Auto-translation uses a free service limited to 5,000 characters per day, so larger batches may need to be retried after the daily limit resets. Third-party embeds remain controlled by their own providers.
 
 ### Manage Projects
 

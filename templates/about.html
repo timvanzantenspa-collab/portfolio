@@ -222,8 +222,19 @@
             font-size: 13px;
         }
 
+        .language-switch .language-choice {
+            display: inline-flex;
+            flex: 0 0 36px;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            line-height: 1;
+            text-decoration: none;
+        }
+
         .language-choice[aria-current="page"] {
-            padding: 3px 6px;
             background: #0101FF;
             color: #fff;
         }
@@ -269,7 +280,7 @@
             justify-content: center;
             width: 100%;
             position: fixed;
-            bottom: 0;
+            bottom: 12px;
             left: 0;
             right: 0;
             padding: 0 40px;
@@ -622,6 +633,12 @@
                 white-space: nowrap;
             }
 
+            .language-switch .language-choice {
+                flex-basis: 30px;
+                width: 30px;
+                height: 30px;
+            }
+
             .hero-social-link {
                 font-size: 22px;
             }
@@ -677,7 +694,7 @@
                 overflow-y: hidden;
                 flex-wrap: nowrap;
                 -webkit-overflow-scrolling: touch;
-                bottom: 0;
+                bottom: 12px;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
                 justify-content: flex-start;

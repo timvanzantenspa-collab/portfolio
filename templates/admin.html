@@ -92,6 +92,9 @@
         .description-preview p + p { margin-top: .9em; }
         .description-preview a { color: var(--blue); }
         .description-preview pre, .description-preview code { white-space: pre-wrap; }
+        .description-translate { justify-self: start; padding: 8px 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 11px; font-weight: 700; }
+        .description-translate:hover { border-color: var(--blue); color: var(--blue); }
+        #descriptionNlTranslateStatus { font-size: 11px; }
         .field input:focus, .field select:focus, .field textarea:focus, .search:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
         .cover-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, .8fr); align-items: end; gap: 12px; }
         .upload-label { display: flex; min-height: 76px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 12px; border: 1px dashed #aeb2bb; background: #fff; color: var(--ink); text-align: center; cursor: pointer; transition: border-color .16s ease, background .16s ease; }
@@ -230,6 +233,8 @@
                         <div class="field full">
                             <label for="descriptionNl">Description (Dutch, optional)</label>
                             <textarea id="descriptionNl" name="description_nl" maxlength="12000" placeholder="Voer hier de Nederlandse projectbeschrijving in"></textarea>
+                            <button type="button" class="description-translate" id="translateDescription">Auto-translate from English</button>
+                            <span id="descriptionNlTranslateStatus" role="status" aria-live="polite"></span>
                             <span class="cover-help">Shown to visitors who choose Dutch. Leave blank to use the English description.</span>
                         </div>
                     </div>
@@ -283,6 +288,39 @@
         const form = document.getElementById('projectForm');
         const projectList = document.getElementById('projectList');
         const saveState = document.getElementById('saveState');
+        const translateDescriptionButton = document.getElementById('translateDescription');
+        const descriptionNlTranslateStatus = document.getElementById('descriptionNlTranslateStatus');
+
+        translateDescriptionButton.addEventListener('click', async () => {
+            const englishDescription = document.getElementById('description').value.trim();
+            const dutchDescription = document.getElementById('descriptionNl');
+            if (!englishDescription) {
+                descriptionNlTranslateStatus.textContent = 'Add an English description first.';
+                return;
+            }
+            if (dutchDescription.value.trim() && !window.confirm('Replace the current Dutch description?')) return;
+
+            translateDescriptionButton.disabled = true;
+            descriptionNlTranslateStatus.textContent = 'Translating…';
+            try {
+                const response = await fetch('/admin/api/translations/auto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                    body: JSON.stringify({ texts: [englishDescription] }),
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'The translation could not be completed.');
+                if (!Array.isArray(result.failed) || result.failed[0] || typeof result.translations?.[0] !== 'string') {
+                    throw new Error('The translation service could not translate this description. Try again later or enter Dutch manually.');
+                }
+                dutchDescription.value = result.translations[0];
+                descriptionNlTranslateStatus.textContent = 'Translation ready. Review and edit it before saving.';
+            } catch (error) {
+                descriptionNlTranslateStatus.textContent = error.message;
+            } finally {
+                translateDescriptionButton.disabled = false;
+            }
+        });
         const coverPicker = document.getElementById('coverPicker');
         const uploadControl = document.getElementById('uploadControl');
         let projects = [];

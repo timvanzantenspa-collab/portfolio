@@ -73,7 +73,7 @@ VOID_HTML_TAGS = {
     'param', 'source', 'track', 'wbr',
 }
 PROTECTED_TEXT_PATTERN = re.compile(
-    r'"[^"]+"|“[^”]+”|‘[^’]+’|«[^»]+»|「[^」]+」|(?:https?://|www\.)\S+',
+    r'"[^"]+"|(?<!\w)\'[^\r\n\']+\'(?!\w)|“[^”]+”|‘[^’]+’|«[^»]+»|「[^」]+」|(?:https?://|www\.)\S+',
     re.IGNORECASE,
 )
 DESCRIPTION_MARKDOWN_EXTENSIONS = ['extra', 'nl2br', 'sane_lists']
@@ -919,6 +919,18 @@ def public_site_translations():
     response.vary.add('Cookie')
     return response
 
+@app.route('/api/language/<language>', methods=['POST'])
+def update_site_language(language):
+    if language not in {'en', 'nl'}:
+        abort(404)
+    response = jsonify({'language': language})
+    response.set_cookie(
+        'site_language', language, max_age=60 * 60 * 24 * 365,
+        httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite='Lax',
+    )
+    response.headers['Cache-Control'] = 'no-store'
+    return response
+
 def downscale_image(filename):
     """Return an optimized image URL or the original video URL."""
     original_path = get_static_path(filename)
@@ -1172,6 +1184,37 @@ def admin_translations():
         source_strings=get_website_source_strings(),
     )
 
+PROJECT_DESCRIPTION_PROTECTED_PATTERN = re.compile(
+    r'\[[^\]]+\]\([^)]+\)|\*\*.+?\*\*|(?<!\*)\*[^*\r\n]+\*(?!\*)|'
+    r'__.+?__|(?<!_)_[^_\r\n]+_(?!_)|`[^`]+`|'
+    r'"[^"]+"|(?<!\w)\'[^\r\n\']+\'(?!\w)|“[^”]+”|‘[^’]+’|«[^»]+»|「[^」]+」|(?:https?://|www\.)\S+',
+    re.IGNORECASE,
+)
+
+def translate_project_descriptions(texts):
+    protected_texts = []
+    protected_fragments = []
+    for text in texts:
+        fragments = []
+
+        def replace_fragment(match):
+            token = f'ZXQPROTECTED{len(fragments)}XZQ'
+            fragments.append((token, match.group(0)))
+            return token
+
+        protected_texts.append(PROJECT_DESCRIPTION_PROTECTED_PATTERN.sub(replace_fragment, text))
+        protected_fragments.append(fragments)
+
+    translated, failed = translate_text_batch(protected_texts, 'nl')
+    for index, fragments in enumerate(protected_fragments):
+        if any(token not in translated[index] for token, _ in fragments):
+            translated[index] = texts[index]
+            failed[index] = True
+            continue
+        for token, fragment in fragments:
+            translated[index] = translated[index].replace(token, fragment)
+    return translated, failed
+
 @app.route('/admin/api/translations/auto', methods=['POST'])
 @admin_required
 def admin_auto_translate():
@@ -1187,7 +1230,7 @@ def admin_auto_translate():
     ):
         return jsonify({'error': 'Translate up to 40 text items and 12,000 characters at a time.'}), 400
     try:
-        translated, failed = translate_text_batch(texts, 'nl')
+        translated, failed = translate_project_descriptions(texts)
     except sqlite3.Error:
         app.logger.exception('Could not access the portfolio translation cache.')
         return jsonify({'error': 'Translation cache unavailable.'}), 503
@@ -2241,11 +2284,15 @@ def get_captions():
                 if preferred_site_language() == 'nl'
                 else caption.get('description', '')
             )
+            caption['description'] = description
             caption['description_html'] = render_markdown_description(description)
     for project in get_portfolio_projects():
         if project['filename'] in captions:
             captions[project['filename']]['project_url'] = url_for('project_detail', slug=project['slug'])
-    return jsonify(captions)
+    response = jsonify(captions)
+    response.headers['Cache-Control'] = 'no-store'
+    response.vary.add('Cookie')
+    return response
 
 @app.route('/api/carousel/<filename>')
 def get_carousel(filename):

@@ -5,6 +5,7 @@
         "type": "Album",
         "extra": "Collaborative Release",
         "description": "Composed, produced, mixed & mastered by Tim van Zanten.\r\nArtwork by [Frederik Haiber](https://freekhaiber.wixsite.com/portfolio) & me.\r\n\r\nFeaturing: [majentmusic](https://soundcloud.com/majentmusic), [whodoyoulistento](https://soundcloud.com/whodoyoulistento), [manifold home](https://soundcloud.com/manifoldhome), [ivy hollivana](https://soundcloud.com/ivyhollivana), [arcade blaster](https://soundcloud.com/arcade-blaster), [hatimpk](https://soundcloud.com/hatimpk).",
+        "description_nl": "Gecomponeerd, geproduceerd, gemixt en gemasterd door Tim van Zanten.\nArtwork van [Frederik Haiber](https://freekhaiber.wixsite.com/portfolio) en mij.\n\nMet bijdragen van: [majentmusic](https://soundcloud.com/majentmusic), [whodoyoulistento](https://soundcloud.com/whodoyoulistento), [manifold home](https://soundcloud.com/manifoldhome), [ivy hollivana](https://soundcloud.com/ivyhollivana), [arcade blaster](https://soundcloud.com/arcade-blaster) en [hatimpk](https://soundcloud.com/hatimpk).",
         "link": "https://open.spotify.com/album/7LRNYGPlZ0ToXf1GalHCF3"
     },
     "Best thing all week.webp": {
@@ -13,6 +14,7 @@
         "type": "Singles",
         "extra": "",
         "description": "SoundPatrol is one of my music projects, which I started on [SoundCloud](https://soundcloud.com/sound-patrol). Since then, I’ve produced and released music both independently and with other artists.\r\n\r\nI’ve worked on releases ranging from future bass to house-influenced tracks to more experimental and ambient music. One of my releases, **[CITY OF LOVE](https://soundcloud.com/sola-music/city-of-love)**, was made with [Alexander Grube](https://soundcloud.com/4-am-music), [Drew Southwell](https://soundcloud.com/listentotrove) and [Phatt Tran](https://soundcloud.com/callmepardion), and released on [Sola](https://soundcloud.com/solasounds). It reached more than one million streams within its first year.\r\n\r\nBesides producing the music, I’ve worked on the artwork, release preparation and presentation of the projects and played several live shows.",
+        "description_nl": "SoundPatrol is een van mijn muziekprojecten, dat ik begon op [SoundCloud](https://soundcloud.com/sound-patrol). Sindsdien heb ik zelfstandig en samen met andere artiesten muziek geproduceerd en uitgebracht.\n\nIk heb gewerkt aan releases die uiteenlopen van future bass en house-geïnspireerde tracks tot meer experimentele en ambient muziek. Een van mijn releases, **[CITY OF LOVE](https://soundcloud.com/sola-music/city-of-love)**, maakte ik samen met [Alexander Grube](https://soundcloud.com/4-am-music), [Drew Southwell](https://soundcloud.com/listentotrove) en [Phatt Tran](https://soundcloud.com/callmepardion), en verscheen op [Sola](https://soundcloud.com/solasounds). In het eerste jaar behaalde de track meer dan een miljoen streams.\n\nNaast het produceren van muziek heb ik gewerkt aan artwork, de voorbereiding en presentatie van releases, en heb ik meerdere keren live opgetreden.",
         "link": "https://open.spotify.com/album/4O38Vr2fW1CGDp2gH2RJVf",
         "published": true
     },
@@ -21,7 +23,8 @@
         "date": "2024",
         "type": "Creative Coding",
         "extra": "Generative",
-        "description": "Creative coding experiment. Infinite random flowers. \n\nMade with [canvas](https://canvasjs.com/) and javascript."
+        "description": "Creative coding experiment. Infinite random flowers. \n\nMade with [canvas](https://canvasjs.com/) and javascript.",
+        "description_nl": "Creative-codingexperiment. Oneindig veel willekeurige bloemen.\n\nGemaakt met [canvas](https://canvasjs.com/) en JavaScript."
     },
     "canvas.webp": {
         "title": "Canvas",
@@ -29,6 +32,7 @@
         "type": "Collaborative Art",
         "extra": "",
         "description": "Between 2014 and 2018, I carried a few small canvases with me wherever I went. Whenever I met an artist whose work I liked, I would ask them to draw or paint something on one of them.\r\n\r\nOver the years, this turned into a collection of small canvases by artists including [Gus Dapperton](https://open.spotify.com/artist/6sHCvZe1PHrOAuYlwTLNH4), [Tennyson](https://open.spotify.com/artist/3Nb8N20WChM0swo5qWTvm8), [Point Point](https://open.spotify.com/artist/5L67d6oZKOOmXcBcMMJdZZ), [Droeloe](https://open.spotify.com/artist/0u18Cq5stIQLUoIaULzDmA), [Metsä](https://open.spotify.com/artist/4e6vHsG1DOc9ei7zar3ds7) and [San Holo](https://open.spotify.com/artist/0jNDKefhfSbLR9sFvcPLHo), among many others.\r\n\r\nWhat started as a small habit became an archive of encounters, with each canvas tied to a particular artist, place and moment.",
+        "description_nl": "Tussen 2014 en 2018 nam ik overal waar ik kwam een paar kleine canvassen mee. Als ik een kunstenaar ontmoette wiens werk ik mooi vond, vroeg ik of die iets op een van de canvassen wilde tekenen of schilderen.\n\nZo ontstond een verzameling kleine canvassen van onder anderen [Gus Dapperton](https://open.spotify.com/artist/6sHCvZe1PHrOAuYlwTLNH4), [Tennyson](https://open.spotify.com/artist/3Nb8N20WChM0swo5qWTvm8), [Point Point](https://open.spotify.com/artist/5L67d6oZKOOmXcBcMMJdZZ), [Droeloe](https://open.spotify.com/artist/0u18Cq5stIQLUoIaULzDmA), [Metsä](https://open.spotify.com/artist/4e6vHsG1DOc9ei7zar3ds7) en [San Holo](https://open.spotify.com/artist/0jNDKefhfSbLR9sFvcPLHo).\n\nWat begon als een kleine gewoonte, werd een archief van ontmoetingen. Elk canvas is verbonden aan een bepaalde artiest, plek en moment.",
         "link": "",
         "published": true
     },
@@ -38,6 +42,7 @@
         "type": "Concert",
         "extra": "",
         "description": "In the summer of 2018, I played a one-hour set on the main stage at Summerland Festival near Liège, Belgium. It was my first big festival show after playing smaller venues for a few years, which was a big deal for me at the time.\r\n\r\nI played alongside friends and fellow producers [Droeloe](https://soundcloud.com/droeloemusic), [LIHO](https://soundcloud.com/itsliho), [Erkaï](https://soundcloud.com/bonjour_matisse) and [SVDKO](https://soundcloud.com/sadkomusic).",
+        "description_nl": "In de zomer van 2018 speelde ik een set van een uur op het hoofdpodium van Summerland Festival, vlak bij Luik in België. Na een paar jaar in kleinere zalen was dit mijn eerste grote festivaloptreden, wat destijds veel voor me betekende.\n\nIk speelde naast vrienden en producers [Droeloe](https://soundcloud.com/droeloemusic), [LIHO](https://soundcloud.com/itsliho), [Erkaï](https://soundcloud.com/bonjour_matisse) en [SVDKO](https://soundcloud.com/sadkomusic).",
         "link": "https://soundcloud.com/soundpatrolsdump/soundpatrol",
         "published": true
     },
@@ -47,6 +52,7 @@
         "type": "Album",
         "extra": "SoundPatrol",
         "description": "A 24(!!) track album. Some tracks have been in work since early 2021; others came together just weeks before release. I guess everybody is their own biggest critic; releasing music is scary, and I guess everyone, in some way or form, hates whatever they make… But I'm actually really proud of this project, and I'm stoked it's [out](https://open.spotify.com/album/2hudrCLFhjIqd4386OqzTG)!\r\n\r\nProduced, mixed and mastered + mixed media artwork by me. \r\n\r\n[Vinyl](https://www.discogs.com/release/38501265-SoundPatrol-Even-nostalgia-isnt-what-it-used-to-be) pressed in Austria.",
+        "description_nl": "Een album met 24(!!) tracks. Aan sommige nummers werkte ik al sinds begin 2021; andere ontstonden pas enkele weken voor de release. Volgens mij is iedereen zijn eigen grootste criticus. Muziek uitbrengen is spannend, en ik denk dat iedereen op de een of andere manier een hekel heeft aan wat die maakt… Maar ik ben echt trots op dit project en heel blij dat het [uit](https://open.spotify.com/album/2hudrCLFhjIqd4386OqzTG) is!\n\nGeproduceerd, gemixt en gemasterd, met mixed-media-artwork van mij.\n\n[Vinyl](https://www.discogs.com/release/38501265-SoundPatrol-Even-nostalgia-isnt-what-it-used-to-be) geperst in Oostenrijk.",
         "link": "https://open.spotify.com/album/2hudrCLFhjIqd4386OqzTG"
     },
     "Instant Art.webp": {
@@ -54,7 +60,8 @@
         "date": "2021",
         "type": "Creative Coding",
         "extra": "Generative",
-        "description": "Creative coding experiment. Infinite random scribbles. \n\nMade with [canvas](https://canvasjs.com/) and javascript."
+        "description": "Creative coding experiment. Infinite random scribbles. \n\nMade with [canvas](https://canvasjs.com/) and javascript.",
+        "description_nl": "Creative-codingexperiment. Oneindig veel willekeurige krabbels.\n\nGemaakt met [canvas](https://canvasjs.com/) en JavaScript."
     },
     "Luisterns webp.webp": {
         "title": "Luister'NS",
@@ -62,6 +69,7 @@
         "type": "Book",
         "extra": "Schoolproject CMD",
         "description": "I wrote and illustrated a book filled with conversations I overheard while taking the train. \n\nThe book is in Dutch, but the title translates to 'Listen'NS', which is a play on the Dutch word for 'listen' (luister) and the name of the Dutch railway company (NS). \nI want to thank NS for the materials and their juridical insights.\n\nThere is also a somewhat cringy interview with me about the book, which you can read [here](https://www.gelderlander.nl/mijndg/tim-observeerde-uren-en-uren-gesprekken-in-de-trein-heel-oppervlakkige-praatjes~ac2406d3/?slug_rd=1).",
+        "description_nl": "Ik schreef en illustreerde een boek vol gesprekken die ik opving terwijl ik met de trein reisde.\n\nHet boek is in het Nederlands, maar de titel vertaalt naar 'Listen'NS': een woordspeling op het Nederlandse woord 'listen' (luister) en de naam van de Nederlandse spoorwegmaatschappij (NS). Ik wil NS bedanken voor het materiaal en de juridische inzichten.\n\nEr is ook een enigszins cringe interview met mij over het boek, dat je [hier](https://www.gelderlander.nl/mijndg/tim-observeerde-uren-en-uren-gesprekken-in-de-trein-heel-oppervlakkige-praatjes~ac2406d3/?slug_rd=1) kunt lezen.",
         "link": "https://www.gelderlander.nl/mijndg/tim-observeerde-uren-en-uren-gesprekken-in-de-trein-heel-oppervlakkige-praatjes~ac2406d3/?slug_rd=1"
     },
     "Speld.webp": {
@@ -70,6 +78,7 @@
         "type": "Branded Content",
         "extra": "Internship CMD & Freelance Work",
         "description": "For several years, I worked on branded content for the Dutch satirical news website [De Speld](https://www.speld.nl/). The work involved developing editorial formats and stories that fit the tone and style of the publication while still meeting the goals of the brand or organisation behind them.\r\n\r\nI worked on campaigns for organisations including [IKEA](https://speld.nl/2020/08/28/leuke-keukenspullen-om-kwijt-te-raken-in-je-gezamenlijke-studentenkeuken/), [KPN](https://speld.nl/2020/03/04/man-durft-date-niet-mee-naar-huis-te-nemen-uit-schaamte-voor-zijn-slappe-wifi/), [Milieudefensie](https://speld.nl/category/campagne/milieudefensie/), [Trimbos](https://speld.nl/2020/11/17/hert-niet-enthousiast-over-xtc-trip/) and [Beefeater](https://speld.nl/2018/04/20/glas-gin-tonic-operatief-verwijderd-uit-hand-van-vrouw/).",
+        "description_nl": "Meerdere jaren werkte ik aan branded content voor de Nederlandse satirische nieuwssite [De Speld](https://www.speld.nl/). Het werk bestond uit het ontwikkelen van redactionele formats en verhalen die pasten bij de toon en stijl van de publicatie, en tegelijk aansloten op de doelen van het merk of de organisatie erachter.\n\nIk werkte aan campagnes voor onder andere [IKEA](https://speld.nl/2020/08/28/leuke-keukenspullen-om-kwijt-te-raken-in-je-gezamenlijke-studentenkeuken/), [KPN](https://speld.nl/2020/03/04/man-durft-date-niet-mee-naar-huis-te-nemen-uit-schaamte-voor-zijn-slappe-wifi/), [Milieudefensie](https://speld.nl/category/campagne/milieudefensie/), [Trimbos](https://speld.nl/2020/11/17/hert-niet-enthousiast-over-xtc-trip/) en [Beefeater](https://speld.nl/2018/04/20/glas-gin-tonic-operatief-verwijderd-uit-hand-van-vrouw/).",
         "link": "https://www.speld.nl/",
         "published": true
     },
@@ -79,6 +88,7 @@
         "type": "EP",
         "extra": "SoundPatrol",
         "description": "Composed, produced, mixed & mastered by Tim van Zanten. \n\nArt by Lisa Mombarg & Mattijs van der Laan",
+        "description_nl": "Gecomponeerd, geproduceerd, gemixt en gemasterd door Tim van Zanten.\n\nArtwork van Lisa Mombarg en Mattijs van der Laan.",
         "link": "https://open.spotify.com/album/62sfO9ZY0me326OtddaljX"
     },
     "nijntjesynth.webp": {
@@ -86,7 +96,8 @@
         "date": "2022",
         "type": "Illustrations",
         "extra": "Freelance work",
-        "description": "Postcards featuring Nijntje (Miffy) synths."
+        "description": "Postcards featuring Nijntje (Miffy) synths.",
+        "description_nl": "Ansichtkaarten met Nijntje-synthesizers."
     },
     "Paper Crane 3.webp": {
         "title": "Paper Crane",
@@ -94,6 +105,7 @@
         "type": "Music Collective",
         "extra": "Collaborative Art & Music",
         "description": "Paper Crane is a music collective founded in 2015 by [Kyle](https://soundcloud.com/madnap) and me. We met through SoundCloud and brought together artists from across the platform, including [Omniboi](https://soundcloud.com/omniboi), [Diamond Eyes](https://soundcloud.com/Iamdiamondeyes) and [DZZ](https://soundcloud.com/diamonds4alex).\r\n\r\nOver the following two years, we released four albums and worked on several collaborative projects, including [WWW](https://soundcloud.com/w3col). What started as a group of artists sharing music online eventually grew into a small community with its own releases, artwork and live events.\r\n\r\nIn the summer of 2017, I joined the collective for a handful of shows in New York and Los Angeles, with support from friends at [NON STOP POP](https://www.nts.live/shows/jack) and [Brownies & Lemonade](https://www.youtube.com/watch?v=3XgjiFz9o88).\r\n\r\nArtwork by [Princeling](https://princeling.net/).",
+        "description_nl": "Paper Crane is een muziekcollectief dat in 2015 is opgericht door [Kyle](https://soundcloud.com/madnap) en mij. We leerden elkaar kennen via SoundCloud en brachten artiesten van het platform samen, onder wie [Omniboi](https://soundcloud.com/omniboi), [Diamond Eyes](https://soundcloud.com/Iamdiamondeyes) en [DZZ](https://soundcloud.com/diamonds4alex).\n\nIn de twee jaar daarna brachten we vier albums uit en werkten we aan verschillende samenwerkingsprojecten, waaronder [WWW](https://soundcloud.com/w3col). Wat begon als een groep artiesten die online muziek deelden, groeide uit tot een kleine community met eigen releases, artwork en live-evenementen.\n\nIn de zomer van 2017 deed ik met het collectief een aantal optredens in New York en Los Angeles, met steun van vrienden van [NON STOP POP](https://www.nts.live/shows/jack) en [Brownies & Lemonade](https://www.youtube.com/watch?v=3XgjiFz9o88).\n\nArtwork door [Princeling](https://princeling.net/).",
         "link": "https://papercranecollective.bandcamp.com/",
         "published": true
     },
@@ -103,6 +115,7 @@
         "type": "MA Internship",
         "extra": "MA New Media & Digital Culture",
         "description": "I did my MA internship at [Democrazy](https://www.democrazy.be/), a concert venue and music organisation based in Ghent, Belgium. I worked on communication, social media and the weekly newsletter, while also looking at a bigger question: who actually makes up their audience?\r\n\r\nTo answer that, I combined Democrazy's ticketing data with Spotify data and built a tool that helps the team understand their audience and predict how well a new artist might fit. I also built a dashboard where the marketing and programming teams can explore the data and use the insights in their day-to-day work.\r\n\r\nThe tool uses several anonymised data points from the hundreds of ticket buyers each week to identify taste profiles and patterns within the audience. It combines this with data from Spotify's API to analyse listening trends and predict how well a particular artist might fit with Democrazy's audience. The same data is also used to automatically generate Democrazy's weekly [Spotify playlist](https://open.spotify.com/playlist/2I5aVCoFDLMBBw49gT0xhf).",
+        "description_nl": "Voor mijn MA-stage werkte ik bij [Democrazy](https://www.democrazy.be/), een concertzaal en muziekorganisatie in Gent, België. Ik hield me bezig met communicatie, sociale media en de wekelijkse nieuwsbrief, en onderzocht daarnaast een grotere vraag: wie is het publiek eigenlijk?\n\nOm dat uit te zoeken, combineerde ik ticketgegevens van Democrazy met data van Spotify en bouwde ik een tool waarmee het team het publiek beter kan begrijpen en kan voorspellen hoe goed een nieuwe artiest daarbij past. Ook bouwde ik een dashboard waarop de marketing- en programmeerteams de data kunnen verkennen en de inzichten in hun dagelijkse werk kunnen gebruiken.\n\nDe tool gebruikt verschillende geanonimiseerde gegevens van de honderden kaartkopers per week om smaakprofielen en patronen in het publiek te herkennen. De gegevens worden gecombineerd met data uit de API van Spotify om luistertrends te analyseren en te voorspellen hoe goed een artiest bij het publiek van Democrazy past. Dezelfde data wordt ook gebruikt om automatisch de wekelijkse [Spotify-afspeellijst](https://open.spotify.com/playlist/2I5aVCoFDLMBBw49gT0xhf) van Democrazy samen te stellen.",
         "link": "https://www.democrazy.be/"
     },
     "Tote_Bag_Mockup_1.webp": {
@@ -111,6 +124,7 @@
         "type": "Communication",
         "extra": "Promo materials",
         "description": "For Frisse Gedachtes, a student oranization for student wellbeing, I created a lot of promotional materials for their events and campaigns. This includes posters, social media posts, flyers, etc. \n\nThe materials are often humorous and lighthearted, but they also aim to raise awareness about important issues such as mental health and wellbeing. \n\nWe once got invited by [Stichting MIND](https://mindus.nl/) to an event to speak with several university and college presidents and other policymakers, and even the queen of the Netherlands, about the importance of student wellbeing and mental health. I was responsible for creating a presentation for this event, which was well received and led to some fruitful discussions. [NRC](https://www.nrc.nl/nieuws/2022/05/20/voor-studenten-komt-de-druk-van-alle-kanten-en-drank-en-drugs-ook-a4125091) wrote a not-so well-informed article on this wich I just [had to comment on](https://www.linkedin.com/posts/timzv_voor-studenten-komt-de-druk-van-alle-kanten-activity-6933552690501197824-IRlY?utm_source=share&utm_medium=member_desktop&rcm=ACoAACsrL-IBSgsaWHoqoKV6ZAL9AbWcqFuHhk0).",
+        "description_nl": "Voor Frisse Gedachtes, een studentenorganisatie voor studentenwelzijn, maakte ik veel promotiemateriaal voor evenementen en campagnes. Dit bestond onder meer uit posters, berichten voor sociale media en flyers.\n\nHet materiaal is vaak humoristisch en luchtig, maar vraagt ook aandacht voor belangrijke onderwerpen zoals mentale gezondheid en welzijn.\n\nWe werden ooit door [Stichting MIND](https://mindus.nl/) uitgenodigd voor een bijeenkomst over het belang van studentenwelzijn en mentale gezondheid. Daar spraken we met verschillende universiteits- en hogeschoolbestuurders, andere beleidsmakers en zelfs de koningin van Nederland. Ik maakte de presentatie voor deze bijeenkomst; die werd goed ontvangen en leidde tot waardevolle gesprekken. [NRC](https://www.nrc.nl/nieuws/2022/05/20/voor-studenten-komt-de-druk-van-alle-kanten-en-drank-en-drugs-ook-a4125091) schreef hierover een artikel dat niet zo goed geïnformeerd was, waar ik [wel op moest reageren](https://www.linkedin.com/posts/timzv_voor-studenten-komt-de-druk-van-alle-kanten-activity-6933552690501197824-IRlY?utm_source=share&utm_medium=member_desktop&rcm=ACoAACsrL-IBSgsaWHoqoKV6ZAL9AbWcqFuHhk0).",
         "link": "https://frissegedachtes.substack.com/"
     },
     "The color of GIF.webp": {
@@ -118,6 +132,7 @@
         "date": "2024",
         "type": "MA Thesis",
         "description": "My MA thesis is about the mythical term 'vibes' and how Spotify turns vague concepts like “vibes” and “mood” into something measurable and marketable. By combining cultural analysis with data from Spotify’s API, I show how mood-based playlists are constructed through both language and algorithmic patterns. \n\nIt argues that these playlists don’t just reflect emotions, but actively shape them, turning user feelings into data that can be categorized, predicted, and monetized. In doing so, Spotify positions itself as both a tastemaker and a system that subtly structures how we experience music and mood.",
+        "description_nl": "Mijn MA-scriptie gaat over de mythische term 'vibes' en hoe Spotify vage concepten als “vibes” en “mood” omzet in iets meetbaars en verhandelbaars. Door culturele analyse te combineren met data uit Spotify's API, laat ik zien hoe afspeellijsten op basis van stemming worden samengesteld aan de hand van taal en algoritmische patronen.\n\nDe scriptie stelt dat deze afspeellijsten emoties niet alleen weerspiegelen, maar ze ook actief vormgeven: gevoelens van gebruikers worden omgezet in data die kan worden gecategoriseerd, voorspeld en gemonetariseerd. Zo positioneert Spotify zich zowel als smaakmaker als een systeem dat subtiel bepaalt hoe we muziek en stemming ervaren.",
         "link": "https://studenttheses.uu.nl/handle/20.500.12932/46458"
     },
     "Timeline 1.webp": {
@@ -125,14 +140,16 @@
         "date": "2021",
         "type": "Creative Coding",
         "extra": "Generative",
-        "description": "Random shapes that grow and shrink. \n\nMade with [canvas](https://canvasjs.com/) and javascript."
+        "description": "Random shapes that grow and shrink. \n\nMade with [canvas](https://canvasjs.com/) and javascript.",
+        "description_nl": "Willekeurige vormen die groter en kleiner worden.\n\nGemaakt met [canvas](https://canvasjs.com/) en JavaScript."
     },
     "Tomaten.webp": {
         "title": "Tomaten",
         "date": "2024",
         "type": "Creative Coding",
         "extra": "Generative",
-        "description": "Tomatoes! \n\nMade with [canvas](https://canvasjs.com/) and javascript."
+        "description": "Tomatoes! \n\nMade with [canvas](https://canvasjs.com/) and javascript.",
+        "description_nl": "Tomaten!\n\nGemaakt met [canvas](https://canvasjs.com/) en JavaScript."
     },
     "Gifje_logo.webp": {
         "title": "De Speld - MARK",
@@ -140,6 +157,7 @@
         "type": "BA Graduation Project",
         "extra": "Rebranding of De Speld en Partners",
         "description": "For my graduation project at HU Communication & Multimedia Design, I reimagined **De Speld en Partners**, the commercial arm of [De Speld](https://www.speld.nl/). The starting point was a simple question: what if they stopped selling the reach of De Speld and started selling what they were actually good at?\r\n\r\nAt the time, De Speld and Partners mainly created branded content that was published through De Speld's own channels. I researched the organisation, its audience and the advertising landscape, and spoke with people from creative and media agencies to explore a different direction. The opportunity was to move closer to the creative process itself: helping brands and agencies develop campaigns with the humour, writing and social awareness that De Speld had built its reputation on.\r\n\r\nI developed **Mark**, a new name and identity for this proposed whitelabel service. Mark would work behind the scenes, joining creative teams to develop campaign concepts and copy without necessarily putting the De Speld name on the finished work.\r\n\r\nI created the positioning, name, visual identity, website and a series of example campaigns. The result was a complete brand concept built around one proposition:\r\n\r\n**De inhaakspecialist. De beste schrijvers voor humor en maatschappelijke scherpte.**\r\n\r\nThe project was my graduation project and combined research, strategy, copywriting, branding, web design and campaign development.",
+        "description_nl": "Voor mijn afstudeerproject aan de opleiding Communication & Multimedia Design van de HU gaf ik **De Speld en Partners**, de commerciële tak van [De Speld](https://www.speld.nl/), een nieuwe invulling. Het uitgangspunt was een simpele vraag: wat als ze niet langer het bereik van De Speld verkochten, maar juist datgene waar ze echt goed in waren?\n\nDestijds maakte De Speld en Partners vooral branded content die via de eigen kanalen van De Speld werd gepubliceerd. Ik onderzocht de organisatie, het publiek en het reclamelandschap, en sprak met mensen van creatieve en mediabureaus over een andere richting. De kans lag dichter bij het creatieve proces: merken en bureaus helpen campagnes te ontwikkelen met de humor, schrijfstijl en maatschappelijke betrokkenheid waarop De Speld haar reputatie had gebouwd.\n\nIk ontwikkelde **Mark**, een nieuwe naam en identiteit voor deze voorgestelde whitelabeldienst. Mark zou achter de schermen met creatieve teams werken aan campagneconcepten en teksten, zonder dat de naam De Speld per se op het eindresultaat hoefde te staan.\n\nIk ontwikkelde de positionering, naam, visuele identiteit, website en een reeks voorbeeldcampagnes. Het resultaat was een compleet merkconcept rond één belofte:\n\n**De inhaakspecialist. De beste schrijvers voor humor en maatschappelijke scherpte.**\n\nHet project was mijn afstudeerproject en combineerde onderzoek, strategie, copywriting, branding, webdesign en campagneontwikkeling.",
         "link": "https://www.adformatie.nl/marketing/customer-experience/de-speld-maakt-satirische-reclame-voor-sapjesmerk-innocent",
         "published": true
     },
@@ -149,6 +167,7 @@
         "type": "DJ Alias",
         "extra": "",
         "description": "Who doesn't know [Manny Moore](https://soundcloud.com/mannymooretunes)?\r\nDJ alias, together with my friend Mattijs van der Laan. We are at the end of every flyer. Ever.",
+        "description_nl": "Wie kent [Manny Moore](https://soundcloud.com/mannymooretunes) niet?\nDJ-alias, samen met mijn vriend Mattijs van der Laan. We staan altijd helemaal onderaan de flyer. Echt altijd.",
         "link": "https://soundcloud.com/mannymooretunes"
     },
     "Synth.webp": {
@@ -157,6 +176,7 @@
         "type": "Synthesizer",
         "extra": "end-project HKU Music & Technology",
         "description": "For my graduation project at HKU Music & Technology, I built a synthesiser and MIDI controller completely from scratch. I designed and built the body, electronics and software myself, turning a collection of knobs, faders and buttons into a working instrument.\r\n\r\nThe controller runs on a Teensy 4.1 microcontroller and communicates with a computer over MIDI. I wrote the code to handle the controls and built the electronics around the controller, including multiplexers to read the different inputs.\r\n\r\nThe design is inspired by the work of [Love Hultén](https://www.lovehulten.com/), particularly his approach to combining functional electronics with carefully made physical objects.",
+        "description_nl": "Voor mijn afstudeerproject aan HKU Music & Technology bouwde ik helemaal zelf een synthesizer en MIDI-controller. Ik ontwierp en bouwde de behuizing, elektronica en software, en maakte zo van een verzameling knoppen, faders en toetsen een werkend instrument.\n\nDe controller draait op een Teensy 4.1-microcontroller en communiceert via MIDI met een computer. Ik schreef de code voor de bedieningselementen en bouwde de elektronica rond de controller, waaronder multiplexers om de verschillende ingangen uit te lezen.\n\nHet ontwerp is geïnspireerd op het werk van [Love Hultén](https://www.lovehulten.com/), en vooral op zijn manier om functionele elektronica te combineren met zorgvuldig gemaakte fysieke objecten.",
         "link": ""
     },
     "birdpack3.webp": {
@@ -174,6 +194,7 @@
         "type": "Interactive Travel Guide",
         "extra": "Passion Project",
         "description": "**Makrail helps you find campsites you can reach by train.** It is an interactive map for finding campsites near train stations across Europe. Alongside campsites and railway stations, it shows useful places nearby, from supermarkets and bakeries to cafés, pubs, swimming spots, viewpoints and other places worth stopping for.\r\n\r\nI built Makrail to make spontaneous, low-car camping trips easier to plan. Instead of starting with a destination and figuring out how to get there, you can start with the railway network and see what is waiting around each station. The map lets you explore different regions, compare places and find campsites that are actually reachable by public transport.\r\n\r\nUnderneath the simple interface is a fairly large geospatial data project. Makrail collects and processes data from OpenStreetMap, combines railway infrastructure with campsites, amenities and points of interest, and uses this data to calculate what is within a useful distance of each station. I built the backend, data processing and map interface myself using Python, Flask, OpenStreetMap and Leaflet.\r\n\r\nFeedback and suggestions on this project are always welcome, as it's still a work in progress. You can [send an email](mailto:contact@makrail.nl) or follow updates on [Instagram](https://instagram.com/makrailmap).",
+        "description_nl": "**Makrail helps you find campsites you can reach by train.** Het is een interactieve kaart waarop je campings bij treinstations in heel Europa kunt vinden. Naast campings en stations toont de kaart handige plekken in de buurt, van supermarkten en bakkerijen tot cafés, pubs, zwemplekken, uitzichtpunten en andere plekken die een tussenstop waard zijn.\n\nIk bouwde Makrail om spontane kampeertrips met weinig autogebruik makkelijker te plannen. In plaats van met een bestemming te beginnen en daarna uit te zoeken hoe je er komt, kun je beginnen bij het spoorwegnetwerk en ontdekken wat er rond elk station te vinden is. Op de kaart kun je verschillende regio's verkennen, plekken vergelijken en campings vinden die daadwerkelijk met het openbaar vervoer bereikbaar zijn.\n\nAchter de eenvoudige interface zit een omvangrijk georuimtelijk dataproject. Makrail verzamelt en verwerkt gegevens van OpenStreetMap, combineert spoorweginfrastructuur met campings, voorzieningen en interessante locaties, en berekent daarmee wat er op een bruikbare afstand van elk station ligt. Ik bouwde zelf de backend, gegevensverwerking en kaartinterface met Python, Flask, OpenStreetMap en Leaflet.\n\nFeedback en suggesties zijn welkom; het project is nog in ontwikkeling. Je kunt [een e-mail sturen](mailto:contact@makrail.nl) of updates volgen op [Instagram](https://instagram.com/makrailmap).",
         "link": "https://makrail.com"
     },
     "Luisterns gif.webp": {
@@ -182,6 +203,7 @@
         "type": "Book",
         "extra": "BA CMD Project in collaboration with NS",
         "description": "**How much can you learn about people by listening to conversations that aren't meant for you?**\r\n\r\nFor *Luister'ns*, I spent hours listening to conversations on trains. I wrote down the things people said around me: small talk between strangers, conversations between friends, phone calls, complaints, plans for the weekend, and all the other ordinary things people talk about when they happen to share a carriage.\r\n\r\nThe result is a collection of observations about everyday conversations and the people behind them. Most of the conversations are mundane, sometimes funny, sometimes uncomfortable and often surprisingly revealing. Taken together, they become a portrait of life in the Dutch train.\r\n\r\n\r\nThe project started as an experiment in listening and observing. Rather than looking for extraordinary stories, I was interested in the things people say without thinking much about them. *Luister'ns* turns those fleeting moments into something you can read back and look at from a distance.\r\n\r\n\r\nThe book had a small public run in collaboration with the NS while I was studying at HU and was also featured by *[De Gelderlander](https://www.gelderlander.nl/mijndg/tim-observeerde-uren-en-uren-gesprekken-in-de-trein-heel-oppervlakkige-praatjes~ac2406d3/?referrer=https%3A%2F%2Fwww.google.com%2F&cb=badfda9d-0760-4591-b58c-77e52eccb76d&auth_rd=1)* in an article about the project.",
+        "description_nl": "**How much can you learn about people by listening to conversations that aren't meant for you?**\n\nVoor *Luister'ns* luisterde ik urenlang naar gesprekken in de trein. Ik schreef op wat mensen om me heen zeiden: praatjes tussen onbekenden, gesprekken tussen vrienden, telefoontjes, klachten, weekendplannen en alle andere alledaagse dingen die mensen bespreken wanneer ze toevallig een coupé delen.\n\nHet resultaat is een verzameling observaties over alledaagse gesprekken en de mensen erachter. De meeste gesprekken zijn alledaags, soms grappig, soms ongemakkelijk en vaak verrassend onthullend. Samen vormen ze een portret van het leven in de Nederlandse trein.\n\nHet project begon als een experiment in luisteren en observeren. Ik zocht niet naar bijzondere verhalen, maar was juist geïnteresseerd in de dingen die mensen zeggen zonder er veel bij na te denken. *Luister'ns* maakt van die vluchtige momenten iets wat je kunt teruglezen en van een afstand kunt bekijken.\n\nHet boek verscheen in een kleine oplage in samenwerking met NS, tijdens mijn studie aan de HU, en werd ook uitgelicht door *[De Gelderlander](https://www.gelderlander.nl/mijndg/tim-observeerde-uren-en-uren-gesprekken-in-de-trein-heel-oppervlakkige-praatjes~ac2406d3/?referrer=https%3A%2F%2Fwww.google.com%2F&cb=badfda9d-0760-4591-b58c-77e52eccb76d&auth_rd=1)* in een artikel over het project.",
         "link": "https://www.gelderlander.nl/mijndg/tim-observeerde-uren-en-uren-gesprekken-in-de-trein-heel-oppervlakkige-praatjes~ac2406d3/?referrer=https%3A%2F%2Fwww.google.com%2F&cb=badfda9d-0760-4591-b58c-77e52eccb76d&auth_rd=1",
         "published": true
     },
@@ -191,6 +213,7 @@
         "type": "New media exhibition",
         "extra": "Popkraft",
         "description": "For eight days, Bibliotheek Neude became a space for stories that move beyond the screen. Storyspace, part of the Nederlands Film Festival, brought together VR and XR experiences, interactive installations and live performances by Dutch digital makers. Visitors could step into unfamiliar worlds, interact with new forms of storytelling or simply stumble upon something unexpected between film screenings.\r\n\r\nWorking with POPKRAFT, I was responsible for the day-to-day management of the exhibition space. From coordinating volunteers and overseeing logistics to facilitating live performances and supporting the participating makers, I helped keep the space running throughout the festival.\r\n\r\nThe 2026 programme featured eleven works, including Finn Stevenhagen's *Graves' End*, awarded the Golden Calf for Best Digital Culture Production.",
+        "description_nl": "Acht dagen lang was Bibliotheek Neude een plek voor verhalen die verder reiken dan het scherm. Storyspace, onderdeel van het Nederlands Film Festival, bracht VR- en XR-ervaringen, interactieve installaties en liveoptredens van Nederlandse digitale makers samen. Bezoekers konden onbekende werelden betreden, kennismaken met nieuwe vormen van storytelling of tussen filmvertoningen door iets onverwachts ontdekken.\n\nSamen met POPKRAFT was ik verantwoordelijk voor het dagelijks beheer van de expositieruimte. Van het coördineren van vrijwilligers en het bewaken van de logistiek tot het begeleiden van liveoptredens en ondersteunen van de deelnemende makers: ik hielp de ruimte het hele festival draaiende te houden.\n\nHet programma van 2026 omvatte elf werken, waaronder *Graves' End* van Finn Stevenhagen, winnaar van het Gouden Kalf voor Beste Digitale Cultuurproductie.",
         "link": "https://www.filmfestival.nl/storyspace",
         "embeds": [
             "https://www.instagram.com/reels/DeZg0HvCATG/"
@@ -203,6 +226,7 @@
         "type": "New media exhibition",
         "extra": "Popkraft",
         "description": "Where documentary meets technology, art and experimentation. IDFA DocLab brings together interactive and immersive works that explore new ways of experiencing and understanding the world. From virtual reality and experimental games to installations and live performances, the programme invites visitors to engage with stories that often reach beyond the traditional documentary format.\r\n\r\nThe exhibition brought together works exploring subjects ranging from the war in Ukraine and the lives of Palestinians to identity, sexuality and digital culture. Among them was Lesbian Simulator by Iris van der Meule, which premiered at IDFA, alongside immersive works that offered different perspectives on conflict, representation and everyday life.\r\n\r\nWorking with POPKRAFT, I was involved in the production and logistical coordination of the exhibition. My responsibilities included supporting the installation and day-to-day operation of the exhibition, coordinating practical arrangements and assisting artists and the international delegation throughout the festival.",
+        "description_nl": "Waar documentaire, technologie, kunst en experiment samenkomen. IDFA DocLab brengt interactieve en immersieve werken samen die nieuwe manieren verkennen om de wereld te ervaren en te begrijpen. Van virtual reality en experimentele games tot installaties en liveoptredens: het programma nodigt bezoekers uit om verhalen te beleven die vaak verder reiken dan de traditionele documentairevorm.\n\nDe tentoonstelling bracht werken samen over uiteenlopende onderwerpen, van de oorlog in Oekraïne en het leven van Palestijnen tot identiteit, seksualiteit en digitale cultuur. Een van de werken was Lesbian Simulator van Iris van der Meule, dat tijdens IDFA in première ging. Daarnaast waren er immersieve werken die verschillende perspectieven boden op conflict, representatie en het dagelijks leven.\n\nSamen met POPKRAFT was ik betrokken bij de productie en logistieke coördinatie van de tentoonstelling. Mijn werkzaamheden bestonden onder meer uit ondersteuning bij de opbouw en dagelijkse uitvoering, het coördineren van praktische zaken en het begeleiden van kunstenaars en de internationale delegatie gedurende het festival.",
         "link": "https://festival.idfa.nl/doclab/",
         "embeds": [],
         "published": true
@@ -213,6 +237,7 @@
         "type": "New media exhibition",
         "extra": "Popkraft",
         "description": "What happens when the line between reality and simulation starts to blur? Under the title *This Is Not a Simulation*, IDFA DocLab 2024 explored the changing relationship between technology and human experience. Across two exhibition locations, de Brakke Grond and @droog, visitors encountered immersive installations, VR and AR experiences, AI-driven artworks and live performances. From speculative futures and artificial intelligence to our relationship with nature and our own bodies, the programme approached technology from a range of unexpected perspectives.\r\n\r\nWorking with POPKRAFT, I supported the production and logistical coordination of the exhibition. My responsibilities included assisting with exhibition operations, coordinating practical arrangements and supporting the international delegation, including visiting French makers and professionals.",
+        "description_nl": "Wat gebeurt er wanneer de grens tussen werkelijkheid en simulatie begint te vervagen? Onder de titel *This Is Not a Simulation* onderzocht IDFA DocLab 2024 de veranderende relatie tussen technologie en menselijke ervaring. Op twee tentoonstellingslocaties, de Brakke Grond en @droog, ontdekten bezoekers immersieve installaties, VR- en AR-ervaringen, AI-kunstwerken en liveoptredens. Van speculatieve toekomsten en kunstmatige intelligentie tot onze relatie met de natuur en ons eigen lichaam: het programma benaderde technologie vanuit uiteenlopende, onverwachte perspectieven.\n\nSamen met POPKRAFT ondersteunde ik de productie en logistieke coördinatie van de tentoonstelling. Mijn werkzaamheden bestonden onder meer uit ondersteuning bij de tentoonstellingsactiviteiten, het coördineren van praktische zaken en het begeleiden van de internationale delegatie, waaronder bezoekende Franse makers en professionals.",
         "link": "https://festival.idfa.nl/doclab/",
         "embeds": [],
         "published": true
@@ -223,6 +248,7 @@
         "type": "New media exhibition",
         "extra": "Popkraft",
         "description": "What does the future look like, and who gets to imagine it? Storyspace 2025 brought together digital works exploring the intersections of technology, society and storytelling. From AI-generated worlds and alternative histories to climate futures and personal memories, the exhibition transformed Bibliotheek Neude into a place for interactive encounters, immersive experiences and unexpected perspectives.\r\n\r\nWorking with POPKRAFT, I was involved in the production and day-to-day management of the exhibition. My responsibilities included managing the exhibition space, coordinating volunteers, overseeing logistics and supporting the installation and presentation of the works. I also helped coordinate live performances and assisted makers and visitors throughout the festival.",
+        "description_nl": "Hoe ziet de toekomst eruit, en wie mag die verbeelden? Storyspace 2025 bracht digitale werken samen die de raakvlakken tussen technologie, samenleving en storytelling verkenden. Van door AI gegenereerde werelden en alternatieve geschiedenissen tot klimaatvisies en persoonlijke herinneringen: de tentoonstelling veranderde Bibliotheek Neude in een plek voor interactieve ontmoetingen, immersieve ervaringen en onverwachte perspectieven.\n\nSamen met POPKRAFT was ik betrokken bij de productie en het dagelijks beheer van de tentoonstelling. Ik beheerde de expositieruimte, coördineerde vrijwilligers, hield toezicht op de logistiek en ondersteunde de opbouw en presentatie van de werken. Ook hielp ik met het coördineren van liveoptredens en ondersteunde ik makers en bezoekers gedurende het festival.",
         "link": "https://www.filmfestival.nl/storyspace",
         "embeds": [],
         "published": true
