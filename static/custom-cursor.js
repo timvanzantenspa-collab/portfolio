@@ -50,7 +50,7 @@
 
     const interactiveSelectors = [
         'a', 'button', 'input', 'textarea', 'select',
-        '[role="button"]', '.title-word', '.hero-social-link',
+        '[role="button"]', '.title-word', '.project-title-word', '.hero-social-link',
         '.modal-close', '.nav-link'
     ];
     const scrollableElements = [

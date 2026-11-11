@@ -31,6 +31,7 @@
     <link rel="canonical" href="{{ canonical_url }}">
     <title data-no-translate>{{ project.title }} | Tim van Zanten</title>
     <script src="/static/language.js" defer></script>
+    <script src="/static/custom-cursor.js" defer></script>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
     <script type="application/ld+json">{{ project_schema | tojson }}</script>
     <style>
@@ -44,6 +45,81 @@
             overflow-x: clip;
             overscroll-behavior: none;
             background: #fff;
+            scrollbar-color: #0101FF transparent;
+            scrollbar-width: thin;
+        }
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #0101FF;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0000cc;
+        }
+        :root {
+            --cursor-blue: #0101FF;
+            --cursor-black: #000000;
+            --cursor-white: #ffffff;
+        }
+        * {
+            cursor: none !important;
+        }
+        .cursor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 24px;
+            height: 24px;
+            pointer-events: none;
+            z-index: 10000;
+            will-change: transform;
+            opacity: 1;
+            transition: opacity 0.2s ease;
+        }
+        .cursor-dot {
+            width: 100%;
+            height: 100%;
+            background: var(--cursor-blue) !important;
+            border-radius: 50%;
+            will-change: transform;
+            box-shadow: 0 0 10px rgba(1, 1, 255, 0.4);
+            transition: background 0.15s ease, box-shadow 0.15s ease;
+        }
+        .cursor-container.cursor-interactive-state .cursor-dot {
+            box-shadow: 0 0 14px rgba(0, 0, 0, 0.5);
+        }
+        .cursor-container[data-interactive="#ffffff"] .cursor-dot {
+            background: #ffffff !important;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.6), inset 0 0 0 1.5px rgba(0, 0, 0, 0.3);
+        }
+        .cursor-container[data-interactive="#000000"] .cursor-dot {
+            background: #000000 !important;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6), inset 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+        }
+        .cursor-container.cursor-scrollbar-state .cursor-dot {
+            background: var(--cursor-black) !important;
+            box-shadow: none !important;
+        }
+        @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+            ::-webkit-scrollbar,
+            ::-webkit-scrollbar-thumb,
+            ::-webkit-scrollbar-track,
+            ::-webkit-scrollbar-corner {
+                cursor: none !important;
+            }
+        }
+        @media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+            * {
+                cursor: revert !important;
+            }
+            .cursor-container {
+                display: none;
+            }
         }
         body {
             margin: 0;
@@ -83,7 +159,7 @@
         }
         .project-title-word.state-1 { background: #0101ff; color: #fff; font-weight: 700; text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
         .project-title-word.state-2 { background: #000; color: #fff; font-weight: 700; }
-        .project-title-word.state-3 { background: #000; color: #7777ff; font-weight: 700; text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
+        .project-title-word.state-3 { background: #000; color: #0101ff; font-weight: 700; text-decoration: underline; text-decoration-thickness: 3px; text-underline-offset: 6px; }
         .project-title-word.state-4 { background: transparent; color: #000; font-weight: 700; }
         .project-title-word.state-5, .project-title-word.state-6 { background: #ccc; color: #000; font-weight: 700; }
         .project-title-word:focus-visible { outline: 2px solid #0101ff; outline-offset: 3px; }
@@ -105,13 +181,14 @@
         }
         .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
         .gallery img, .gallery video { display: block; width: 100%; height: auto; }
-        .embeds { display: grid; gap: 28px; margin-top: 48px; }
-        .embed { margin: 0; }
-        .embed h2 { margin: 0 0 10px; font-size: 16px; }
-        .embed-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; background: #f2f2f2; }
-        .embed-instagram .embed-frame { width: min(100%, 350px); aspect-ratio: 4 / 5; }
-        .embed-vertical .embed-frame { width: min(100%, 460px); aspect-ratio: 9 / 16; }
-        .embed-webpage .embed-frame { aspect-ratio: 16 / 10; }
+        .gallery-embed { min-width: 0; margin: 0; }
+        .gallery-embed iframe { display: block; width: 100%; aspect-ratio: 16 / 9; border: 0; background: #f2f2f2; }
+        .gallery-embed-instagram iframe { height: 760px; }
+        .gallery-embed-vertical iframe { width: min(100%, 460px); aspect-ratio: 9 / 16; }
+        .gallery-embed-webpage iframe { aspect-ratio: 16 / 10; }
+        @media (min-width: 769px) {
+            .gallery-embed-instagram iframe { height: 860px; }
+        }
         .external-link { display: inline-block; margin: 36px 0; font-weight: 700; }
         .skip-link { position: absolute; top: -50px; left: 12px; padding: 10px; background: #0101ff; color: #fff; }
         .skip-link:focus { top: 12px; }
@@ -125,6 +202,9 @@
     </style>
 </head>
 <body>
+    <div class="cursor-container" aria-hidden="true">
+        <div class="cursor-dot"></div>
+    </div>
     <a class="skip-link" href="#project-content">Skip to project</a>
     <main class="page" id="project-content">
         <nav class="top-nav" aria-label="Main navigation">
@@ -155,7 +235,19 @@
             <h2 class="visually-hidden" id="galleryTitle">Project images and video</h2>
             <div class="gallery" data-no-translate>
                 {% for media in gallery %}
-                    {% if media.media_type == 'video' %}
+                    {% if media.media_type == 'embed' %}
+                    <figure class="gallery-embed gallery-embed-{{ media.kind }}{% if media.vertical %} gallery-embed-vertical{% endif %}">
+                        <iframe
+                            src="{{ media.src }}"
+                            title="{{ project.title }} — {{ media.title }}"
+                            loading="lazy"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            sandbox="{{ media.sandbox }}"
+                            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                            allowfullscreen
+                        ></iframe>
+                    </figure>
+                    {% elif media.media_type == 'video' %}
                     <video controls muted loop playsinline preload="none" aria-label="{{ project.title }} video {{ loop.index }}">
                         <source src="{{ media.url }}">
                     </video>
@@ -164,26 +256,6 @@
                     {% endif %}
                 {% endfor %}
             </div>
-            </section>
-            {% endif %}
-            {% if embeds %}
-            <section class="embeds" aria-label="Embedded project content">
-                {% for embed in embeds %}
-                <figure class="embed embed-{{ embed.kind }}{% if embed.vertical %} embed-vertical{% endif %}" data-no-translate>
-                    <figcaption><h2>{{ embed.title }}</h2></figcaption>
-                    <iframe
-                        class="embed-frame"
-                        src="{{ embed.src }}"
-                        title="{{ project.title }} — {{ embed.title }}"
-                        loading="lazy"
-                        referrerpolicy="strict-origin-when-cross-origin"
-                        sandbox="{{ embed.sandbox }}"
-                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                        allowfullscreen
-                    ></iframe>
-                    <p><a href="{{ embed.url }}" target="_blank" rel="noopener noreferrer">Open on {{ embed.title.split(' ')[0] }} ↗</a></p>
-                </figure>
-                {% endfor %}
             </section>
             {% endif %}
         </article>

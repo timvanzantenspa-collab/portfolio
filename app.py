@@ -619,10 +619,11 @@ def describe_project_embed(url):
         shortcode = path_parts[1]
         if not re.fullmatch(r'[A-Za-z0-9_-]+', shortcode):
             raise ValueError('That Instagram post or reel URL is invalid.')
+        is_reel = path_parts[0] in {'reel', 'reels'}
         return {
             'kind': 'instagram',
-            'title': 'Instagram post',
-            'src': f'https://www.instagram.com/p/{quote(shortcode, safe="")}/embed/',
+            'title': 'Instagram reel' if is_reel else 'Instagram post',
+            'src': f'https://www.instagram.com/{"reel" if is_reel else "p"}/{quote(shortcode, safe="")}/embed/',
             'sandbox': 'allow-scripts allow-same-origin allow-presentation',
             'autoplay': False,
         }
@@ -1145,6 +1146,7 @@ def project_detail(slug):
         {**describe_project_embed(url), 'url': url}
         for url in normalize_project_embeds(project['embeds'])
     ]
+    gallery.extend({'media_type': 'embed', **embed} for embed in embeds)
     project_image = next((media['url'] for media in gallery if media['media_type'] == 'image'), None)
     project_year, project_month = parse_date(project['date'])
     project_schema = {
@@ -1174,7 +1176,6 @@ def project_detail(slug):
         project=project,
         language=preferred_site_language(),
         gallery=gallery,
-        embeds=embeds,
         project_schema=project_schema,
         description_html=render_markdown_description(description),
         meta_description=(
