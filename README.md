@@ -40,9 +40,11 @@ Project data can also be edited directly in `captions.json`:
 
 Projects are ordered by date, newest first. Each has a server-rendered detail page with its description and gallery.
 
-### Automatic language
+### English and Dutch
 
-Public pages use the visitor's browser language preference: Dutch when a Dutch preference is present, and English otherwise. The site does not request location access. Text is translated in the browser through MyMemory's free translation API and cached in a local SQLite file; if translation is unavailable or its anonymous limit is reached, the original text remains and the page displays a notice. MyMemory documents an anonymous limit of 5,000 characters per day and a 500-byte maximum per request, so full translation is best-effort. Public page text is sent to MyMemory for translation; third-party embeds remain controlled by their own providers.
+Public pages use the language saved in the `site_language` cookie, or fall back to the visitor's browser language preference. Dutch is selected when a Dutch preference is present; otherwise the site uses English. Visitors can switch languages using the EN/NL links. The site does not request location access.
+
+Interface copy and its English/Dutch variants are stored in `site-translations.json`. Use **Website translations** in `/admin` to search and edit either version, draft Dutch text with the auto-translate button, and publish reviewed changes. Project titles, project descriptions and metadata, marked names, emphasized or quoted text, and URLs are kept as entered and excluded from translation. Visitors only receive saved translations for eligible interface text; page views do not call a translation service. Auto-translation uses a free service limited to 5,000 characters per day, so larger batches may need to be retried after the daily limit resets. Third-party embeds remain controlled by their own providers.
 
 ### Manage Projects
 
@@ -75,7 +77,7 @@ Then open: http://127.0.0.1:5005
 - **Searchable Project Pages**: Each published project has a server-rendered page linked from the homepage and sitemap
 - **Project Editor**: Manage project details and media at `/admin`
 - **About Page**: Read about Tim and access resume links at `/about`
-- **Automatic language**: Public page language follows the browser's Dutch or English preference, with best-effort cached translation
+- **English and Dutch**: Public pages display saved, editable translations selected by the visitor's language preference
 
 ## Tips
 

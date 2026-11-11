@@ -177,6 +177,7 @@
         <a class="brand" href="/" target="_blank" rel="noreferrer"><span class="brand-mark">T</span><span>Tim van Zanten</span></a>
         <div class="top-actions">
             <a class="portfolio-link" href="/" target="_blank" rel="noreferrer">View portfolio</a>
+            <a href="{{ url_for('admin_translations') }}">Website translations</a>
             <a class="tool-link" href="{{ url_for('gif_maker') }}">GIF maker</a>
             <form method="post" action="{{ url_for('admin_logout') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

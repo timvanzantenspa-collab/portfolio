@@ -30,7 +30,7 @@
         .page { width: min(1100px, calc(100% - 40px)); margin: 0 auto; padding: 28px 0 64px; }
         .topbar { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
         .wordmark { color: var(--blue); font-size: 13px; font-weight: 750; letter-spacing: 0.06em; text-decoration: none; }
-        .back-link { font-size: 13px; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+        .back-link { display: flex; gap: 14px; align-items: center; font-size: 13px; text-decoration-thickness: 1px; text-underline-offset: 4px; }
         main { padding-top: 48px; }
         .eyebrow { margin: 0 0 12px; color: var(--blue); font-size: 12px; font-weight: 750; letter-spacing: 0.13em; text-transform: uppercase; }
         h1 { margin: 0; font-size: 52px; line-height: 1.02; font-weight: 300; letter-spacing: 0; }
@@ -84,7 +84,11 @@
     <div class="page">
         <header class="topbar">
             <a class="wordmark" href="/">TIM VAN ZANTEN</a>
-            <a class="back-link" href="/">Back to portfolio</a>
+            <nav class="back-link" aria-label="Page links">
+                <a href="/">Back to portfolio</a>
+                <a href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en">EN</a>
+                <a href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl">NL</a>
+            </nav>
         </header>
         <main>
             <p class="eyebrow">A small studio tool</p>

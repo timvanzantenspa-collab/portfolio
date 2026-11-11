@@ -110,14 +110,16 @@
             position: absolute;
             top: 130px;
             left: 160px;
+            height: 45px;
             opacity: 0;
-            transition: opacity 0.3s ease-out;
+            transition: opacity 0.3s ease-out, height 0.2s ease-out;
             pointer-events: none;
             z-index: 11;
         }
 
         .hero.scrolling #scrollLiggen {
             opacity: 1;
+            height: 32px !important;
         }
 
         .hero-title {
@@ -192,6 +194,15 @@
             width: 105%;
         }
 
+        .language-switch {
+            display: flex;
+            gap: 10px;
+        }
+
+        .language-switch .nav-link {
+            font-size: 13px;
+        }
+
         .nav-link {
             display: inline-block;
             font-size: clamp(16px, 4vw, 18px);
@@ -254,7 +265,7 @@
             justify-content: center;
             width: 100%;
             position: absolute;
-            bottom: 20px;
+            bottom: 0;
             left: 0;
             right: 0;
             padding: 0 40px;
@@ -372,8 +383,9 @@
             text-align: inherit;
             animation: fadeIn 0.3s ease-out;
             display: flex;
-            justify-content: center;
-            align-items: flex-start;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
             margin-top: var(--random-offset-v, 0px);
             margin-left: var(--random-offset-h, 0px);
             cursor: pointer;
@@ -537,28 +549,24 @@
 
         /* Image Tooltip */
         .image-tooltip {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-8px);
+            display: none;
+            width: fit-content;
+            max-width: min(200px, 100%);
+            margin: 8px auto 0;
             background: rgba(0, 0, 0, 0.9);
             color: white;
             padding: 8px 12px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: 500;
-            white-space: nowrap;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 50;
-            max-width: 200px;
             white-space: normal;
             text-align: center;
         }
 
-        .image-item:hover .image-tooltip {
-            opacity: 1;
+        .image-item:hover .image-tooltip,
+        .image-item:focus-visible .image-tooltip {
+            display: block;
         }
 
         @keyframes fadeIn {
@@ -1415,6 +1423,10 @@
                 height: 30px !important;
             }
 
+            .hero.scrolling #scrollLiggen {
+                height: 24px !important;
+            }
+
             .carousel-nav-btn {
                 width: 44px !important;
                 height: 44px !important;
@@ -1464,7 +1476,7 @@
                 overflow-y: hidden;
                 flex-wrap: nowrap;
                 -webkit-overflow-scrolling: touch;
-                bottom: 15px;
+                bottom: 0;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
                 justify-content: flex-start;
@@ -1641,7 +1653,7 @@
     <!-- Hero Section -->
     <header class="hero" id="hero">
         <div class="hero-content">
-            <h1 class="hero-title" id="heroTitle">
+            <h1 class="hero-title" id="heroTitle" data-no-translate>
                 <span class="title-word" data-word="0">TIM</span>
                 <span class="title-word" data-word="1">VAN</span>
                 <span class="title-word" data-word="2">ZANTEN</span>
@@ -1650,15 +1662,19 @@
                 <a href="/" class="nav-link active" id="portfolioLink">PORTFOLIO</a>
                 <a href="/about" class="nav-link" id="aboutLink">ABOUT</a>
                 <button type="button" class="nav-link" id="searchLink" onclick="openSearch()">SEARCH</button>
+                <span class="language-switch" aria-label="Choose language">
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English">EN</a>
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands">NL</a>
+                </span>
             </nav>
         </div>
-        <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen" style="height: 45px;">
+        <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen">
         <nav class="hero-socials" id="heroSocials" aria-label="Social profiles">
-            <a href="http://instagram.com/timzv" class="hero-social-link" target="_blank" title="Instagram">Instagram</a>
-            <a href="https://www.linkedin.com/in/tim-van-zanten-602672182/" class="hero-social-link" target="_blank" title="LinkedIn">LinkedIn</a>
+            <a href="http://instagram.com/timzv" class="hero-social-link" target="_blank" title="Instagram" data-no-translate>Instagram</a>
+            <a href="https://www.linkedin.com/in/tim-van-zanten-602672182/" class="hero-social-link" target="_blank" title="LinkedIn" data-no-translate>LinkedIn</a>
             <a href="mailto:timvanzanten6@gmail.com" class="hero-social-link" title="Email">Email</a>
-            <a href="https://soundcloud.com/sound-patrol" class="hero-social-link" target="_blank" title="SoundCloud">SoundCloud</a>
-            <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="hero-social-link" target="_blank" title="Spotify">Spotify</a>
+            <a href="https://soundcloud.com/sound-patrol" class="hero-social-link" target="_blank" title="SoundCloud" data-no-translate>SoundCloud</a>
+            <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="hero-social-link" target="_blank" title="Spotify" data-no-translate>Spotify</a>
         </nav>
     </header>
 
@@ -1678,8 +1694,8 @@
                 {% for project in projects %}
                 <li>
                     <a class="project-index-link" href="{{ url_for('project_detail', slug=project.slug) }}">
-                        {{ project.title }}
-                        <span class="project-index-meta">{{ project.type }}{% if project.type and project.date %} · {% endif %}{{ project.date }}</span>
+                        <span data-no-translate>{{ project.title }}</span>
+                        <span class="project-index-meta" data-no-translate>{{ project.type }}{% if project.type and project.date %} · {% endif %}{{ project.date }}</span>
                     </a>
                 </li>
                 {% endfor %}
@@ -1707,10 +1723,10 @@
                 <button class="modal-close" onclick="closeModal()" aria-label="Close project preview">&times;</button>
                 <div class="modal-text">
                     <a id="modalTitleLink" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit;">
-                        <h2 id="modalTitle" style="cursor: pointer;"></h2>
+                        <h2 id="modalTitle" style="cursor: pointer;" data-no-translate></h2>
                     </a>
-                    <p id="modalMetadata" class="modal-metadata"></p>
-                    <div id="modalDescription" class="modal-description"></div>
+                    <p id="modalMetadata" class="modal-metadata" data-no-translate></p>
+                    <div id="modalDescription" class="modal-description" data-no-translate></div>
                 </div>
                 <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">View project</button>
                 <a class="project-detail-link" id="projectDetailLink" hidden>Project details, images & embeds</a>
@@ -1877,6 +1893,7 @@
                 const itemDiv = document.createElement('button');
                 itemDiv.className = 'image-item';
                 itemDiv.type = 'button';
+                itemDiv.setAttribute('data-no-translate', '');
                 if (isVideo) itemDiv.classList.add('is-video');
                 const caption = imageCaptions[imageData.filename] || {};
                 const projectTitle = caption.title || imageData.filename;
@@ -1889,8 +1906,8 @@
 
                 // Only apply random offset on desktop (>768px)
                 if (!isMobile) {
-                    // Vertical offset: -100 to 100px
-                    const randomOffsetV = Math.random() * 200 - 100;
+                    // Keep the gallery clear of the introduction and neighboring rows.
+                    const randomOffsetV = Math.random() * 40;
                     itemDiv.style.setProperty('--random-offset-v', `${randomOffsetV}px`);
                     
                     // Horizontal offset: -40 to 40px (enough variation without overflow)

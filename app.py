@@ -19,6 +19,7 @@ import threading
 import time
 import re
 import html
+from html.parser import HTMLParser
 import xml.etree.ElementTree as ET
 from functools import wraps
 from io import BytesIO
@@ -41,6 +42,7 @@ app.config.update(
 STATIC_FOLDER = Path(__file__).parent / 'static'
 CACHE_FOLDER = Path(__file__).parent / 'static' / '.cache'
 CAPTIONS_FILE = Path(__file__).parent / 'captions.json'
+SITE_TRANSLATIONS_FILE = Path(__file__).parent / 'site-translations.json'
 CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 PROJECT_GALLERIES_FILE = Path(__file__).parent / 'project_galleries.json'
 IMAGE_LINKS_FILE = Path(__file__).parent / 'image_links.json'
@@ -66,6 +68,14 @@ ADMIN_LOGIN_FAILURE_LIMIT = 5
 ADMIN_LOGIN_FAILURE_WINDOW = 15 * 60
 TRANSLATION_TEXT_LIMIT = 12_000
 TRANSLATION_BATCH_LIMIT = 40
+VOID_HTML_TAGS = {
+    'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta',
+    'param', 'source', 'track', 'wbr',
+}
+PROTECTED_TEXT_PATTERN = re.compile(
+    r'"[^"]+"|“[^”]+”|‘[^’]+’|«[^»]+»|「[^」]+」|(?:https?://|www\.)\S+',
+    re.IGNORECASE,
+)
 DESCRIPTION_MARKDOWN_EXTENSIONS = ['extra', 'nl2br', 'sane_lists']
 DESCRIPTION_ALLOWED_TAGS = {
     'a', 'blockquote', 'br', 'code', 'del', 'em', 'h1', 'h2', 'h3', 'h4',
@@ -73,6 +83,31 @@ DESCRIPTION_ALLOWED_TAGS = {
     'tbody', 'td', 'th', 'thead', 'tr', 'ul',
 }
 DESCRIPTION_ALLOWED_ATTRIBUTES = {'a': {'href', 'title'}}
+SITE_TEXT_PRIORITY = (
+    'Cultural production, education and digital projects.',
+    'Based in Utrecht. Working across festivals, public programmes, digital culture and independent projects.',
+    'PORTFOLIO',
+    'ABOUT',
+    'SEARCH',
+    'Selected projects',
+    'Skip to portfolio',
+    'Skip to about content',
+    'Skip to project',
+    'All projects',
+    'Visit project ↗',
+    'Project images and video',
+    'Embedded project content',
+    'View project',
+    'Project details, images & embeds',
+    'Instagram post',
+    'YouTube video',
+    'A small studio tool',
+    'Frame by',
+    'Back to portfolio',
+)
+
+def contains_protected_text(value):
+    return bool(PROTECTED_TEXT_PATTERN.search(value))
 
 def open_translation_cache():
     connection = sqlite3.connect(TRANSLATION_CACHE_FILE, timeout=5)
@@ -87,6 +122,196 @@ def open_translation_cache():
     )
     connection.commit()
     return connection
+
+def load_site_translations():
+    if not SITE_TRANSLATIONS_FILE.exists():
+        return {}
+    try:
+        with SITE_TRANSLATIONS_FILE.open('r', encoding='utf-8') as data_file:
+            translations = json.load(data_file)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        app.logger.exception('Could not load website translations from %s', SITE_TRANSLATIONS_FILE)
+        return {}
+    if not isinstance(translations, dict):
+        app.logger.error('Website translations in %s must be a JSON object.', SITE_TRANSLATIONS_FILE)
+        return {}
+    return {
+        source: entry for source, entry in translations.items()
+        if isinstance(source, str) and isinstance(entry, dict)
+        and isinstance(entry.get('en'), str) and isinstance(entry.get('nl'), str)
+    }
+
+def clean_template_text(value):
+    cleaned = re.sub(r'\{\{.*?\}\}|\{%.*?%\}|\{#.*?#\}', ' ', value, flags=re.DOTALL).strip()
+    return re.sub(r'\s+', ' ', cleaned)
+
+class WebsiteTextCollector(HTMLParser):
+    ignored_tags = {
+        'script', 'style', 'noscript', 'textarea', 'code', 'pre', 'em', 'strong',
+        'b', 'i', 'q', 'blockquote', 'cite',
+    }
+
+    def __init__(self):
+        super().__init__()
+        self.strings = set()
+        self.ignored_depth = 0
+        self.tag_stack = []
+
+    @staticmethod
+    def is_translatable_attribute(tag, name, attrs):
+        if name in {'alt', 'aria-label', 'placeholder', 'title'}:
+            return True
+        if tag != 'meta' or name != 'content':
+            return False
+        metadata = dict(attrs)
+        return metadata.get('name') in {'description', 'twitter:title', 'twitter:description'} or metadata.get('property') in {
+            'og:title', 'og:description', 'og:image:alt',
+        }
+
+    def add_string(self, value):
+        value = clean_template_text(value)
+        if value and not contains_protected_text(value) and any(character.isalpha() for character in value):
+            self.strings.add(value)
+
+    def handle_starttag(self, tag, attrs):
+        inherited_suppression = self.ignored_depth > 0
+        suppress_tag = tag in self.ignored_tags or any(name == 'data-no-translate' for name, _ in attrs)
+        if tag not in VOID_HTML_TAGS:
+            adds_suppression = not inherited_suppression and suppress_tag
+            self.tag_stack.append((tag, adds_suppression))
+            if adds_suppression:
+                self.ignored_depth += 1
+        if inherited_suppression or suppress_tag:
+            return
+        for name, value in attrs:
+            if self.is_translatable_attribute(tag, name, attrs) and value:
+                self.add_string(value)
+
+    def handle_endtag(self, tag):
+        for index in range(len(self.tag_stack) - 1, -1, -1):
+            if self.tag_stack[index][0] == tag:
+                removed_count = sum(adds_suppression for _, adds_suppression in self.tag_stack[index:])
+                del self.tag_stack[index:]
+                self.ignored_depth = max(0, self.ignored_depth - removed_count)
+                break
+
+    def handle_data(self, data):
+        if not self.ignored_depth and not contains_protected_text(data):
+            self.add_string(data)
+
+class WebsiteHTMLLocalizer(HTMLParser):
+    ignored_tags = WebsiteTextCollector.ignored_tags
+
+    def __init__(self, translations, language):
+        super().__init__(convert_charrefs=False)
+        self.translations = translations
+        self.language = language
+        self.parts = []
+        self.ignored_depth = 0
+        self.tag_stack = []
+
+    @staticmethod
+    def is_translatable_attribute(tag, name, attrs):
+        return WebsiteTextCollector.is_translatable_attribute(tag, name, attrs)
+
+    def translate(self, value):
+        source = clean_template_text(value)
+        entry = self.translations.get(source)
+        if not entry:
+            return value
+        return entry.get(self.language, '') or entry.get('en', '') or value
+
+    def handle_starttag(self, tag, attrs):
+        inherited_suppression = self.ignored_depth > 0
+        suppress_tag = tag in self.ignored_tags or any(name == 'data-no-translate' for name, _ in attrs)
+        if tag not in VOID_HTML_TAGS:
+            adds_suppression = not inherited_suppression and suppress_tag
+            self.tag_stack.append((tag, adds_suppression))
+            if adds_suppression:
+                self.ignored_depth += 1
+        if inherited_suppression or suppress_tag:
+            self.parts.append(self.get_starttag_text())
+            return
+        localized_attrs = []
+        changed = False
+        for name, value in attrs:
+            if value is not None and self.is_translatable_attribute(tag, name, attrs):
+                translated = self.translate(value)
+                changed |= translated != value
+                value = translated
+            localized_attrs.append((name, value))
+        if changed:
+            self.parts.append(
+                '<' + tag + ''.join(
+                    f' {name}="{html.escape(value, quote=True)}"' if value is not None else f' {name}'
+                    for name, value in localized_attrs
+                ) + '>'
+            )
+        else:
+            self.parts.append(self.get_starttag_text())
+
+    def handle_startendtag(self, tag, attrs):
+        stack_size = len(self.tag_stack)
+        self.handle_starttag(tag, attrs)
+        if len(self.tag_stack) > stack_size:
+            _, adds_suppression = self.tag_stack.pop()
+            if adds_suppression:
+                self.ignored_depth = max(0, self.ignored_depth - 1)
+        self.parts[-1] = self.parts[-1][:-1] + '/>'
+
+    def handle_endtag(self, tag):
+        self.parts.append(f'</{tag}>')
+        for index in range(len(self.tag_stack) - 1, -1, -1):
+            if self.tag_stack[index][0] == tag:
+                removed_count = sum(adds_suppression for _, adds_suppression in self.tag_stack[index:])
+                del self.tag_stack[index:]
+                self.ignored_depth = max(0, self.ignored_depth - removed_count)
+                break
+
+    def handle_data(self, data):
+        if self.ignored_depth or not data.strip() or contains_protected_text(data):
+            self.parts.append(data)
+            return
+        leading = data[:len(data) - len(data.lstrip())]
+        trailing = data[len(data.rstrip()):]
+        self.parts.append(f'{leading}{html.escape(self.translate(data.strip()), quote=False)}{trailing}')
+
+    def handle_entityref(self, name):
+        self.parts.append(f'&{name};')
+
+    def handle_charref(self, name):
+        self.parts.append(f'&#{name};')
+
+    def handle_comment(self, data):
+        self.parts.append(f'<!--{data}-->')
+
+    def handle_decl(self, decl):
+        self.parts.append(f'<!{decl}>')
+
+    def unknown_decl(self, data):
+        self.parts.append(f'<![{data}]>')
+
+def get_website_source_strings():
+    strings = set()
+    collector = WebsiteTextCollector()
+    for template_path in (Path(__file__).parent / 'templates').glob('*.html'):
+        collector.feed(template_path.read_text(encoding='utf-8'))
+    strings.update(collector.strings)
+
+    strings.update({
+        'Loading!', 'Image not found', 'View project', 'Previous image', 'Next image',
+        'Close project preview', 'Search portfolio', 'Project details, images & embeds',
+        'Type to search...', 'No projects found', 'Portfolio projects',
+    })
+    priority = [value for value in SITE_TEXT_PRIORITY if value in strings]
+    return priority + sorted(strings - set(priority), key=str.casefold)
+
+def load_active_site_translations():
+    active_sources = set(get_website_source_strings())
+    return {
+        source: entry for source, entry in load_site_translations().items()
+        if source in active_sources
+    }
 
 def split_translation_text(value, byte_limit=320):
     if len(value.encode('utf-8')) <= byte_limit:
@@ -653,17 +878,37 @@ def render_homepage():
     )
 
 def preferred_site_language():
+    cookie_language = request.cookies.get('site_language')
+    if cookie_language in {'en', 'nl'}:
+        return cookie_language
     return request.accept_languages.best_match(['nl', 'en']) or 'en'
 
 @app.after_request
 def vary_html_by_preferred_language(response):
     if response.mimetype == 'text/html':
         response.vary.add('Accept-Language')
+        response.vary.add('Cookie')
+        localizer = WebsiteHTMLLocalizer(load_active_site_translations(), preferred_site_language())
+        localizer.feed(response.get_data(as_text=True))
+        response.set_data(''.join(localizer.parts))
     return response
 
 @app.context_processor
 def inject_preferred_site_language():
     return {'language': preferred_site_language()}
+
+@app.route('/api/translations')
+def public_site_translations():
+    language = preferred_site_language()
+    translations = {
+        source: entry.get(language, '') or entry.get('en', '') or source
+        for source, entry in load_active_site_translations().items()
+    }
+    response = jsonify({'language': language, 'translations': translations})
+    response.headers['Cache-Control'] = 'public, max-age=300'
+    response.vary.add('Accept-Language')
+    response.vary.add('Cookie')
+    return response
 
 def downscale_image(filename):
     """Return an optimized image URL or the original video URL."""
@@ -803,6 +1048,21 @@ def downscale_image(filename):
 def index():
     return render_homepage()
 
+@app.route('/language/<language>')
+def set_site_language(language):
+    if language not in {'en', 'nl'}:
+        abort(404)
+    next_url = request.args.get('next', '/')
+    parsed_next = urlsplit(next_url)
+    if parsed_next.scheme or parsed_next.netloc or not next_url.startswith('/') or next_url.startswith('//'):
+        next_url = '/'
+    response = redirect(next_url)
+    response.set_cookie(
+        'site_language', language, max_age=60 * 60 * 24 * 365,
+        httponly=True, secure=app.config['SESSION_COOKIE_SECURE'], samesite='Lax',
+    )
+    return response
+
 @app.route('/projects/<slug>')
 def project_detail(slug):
     project = next((item for item in get_portfolio_projects() if item['slug'] == slug), None)
@@ -872,34 +1132,6 @@ def about():
         language=preferred_site_language(),
     )
 
-@app.route('/api/translate', methods=['POST'])
-def translate_public_text():
-    data = request.get_json(silent=True)
-    if not isinstance(data, dict):
-        return jsonify({'error': 'Send translation text as JSON.'}), 400
-    target = data.get('target')
-    texts = data.get('texts')
-    if not isinstance(target, str) or target not in {'en', 'nl'}:
-        return jsonify({'error': 'Only English and Dutch translations are supported.'}), 400
-    if (
-        not isinstance(texts, list)
-        or not 1 <= len(texts) <= TRANSLATION_BATCH_LIMIT
-        or any(not isinstance(text, str) or len(text) > TRANSLATION_TEXT_LIMIT for text in texts)
-        or sum(len(text) for text in texts) > TRANSLATION_TEXT_LIMIT
-    ):
-        return jsonify({'error': 'Send up to 40 text items and 12,000 characters per request.'}), 400
-
-    try:
-        translations, failed = translate_text_batch(texts, target)
-    except sqlite3.Error:
-        app.logger.exception('Could not access the portfolio translation cache.')
-        return jsonify({'error': 'Translation cache unavailable.'}), 503
-    return jsonify({
-        'translations': translations,
-        'failed': failed,
-        'target': target,
-    })
-
 def admin_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -911,6 +1143,108 @@ def admin_required(view):
             return redirect(url_for('admin_login'))
         return view(*args, **kwargs)
     return wrapped
+
+@app.route('/admin/translations')
+@admin_required
+def admin_translations():
+    return render_template(
+        'admin_translations.html',
+        csrf_token=admin_csrf_token(),
+        translations=load_active_site_translations(),
+        source_strings=get_website_source_strings(),
+    )
+
+@app.route('/admin/api/translations/auto', methods=['POST'])
+@admin_required
+def admin_auto_translate():
+    if not valid_admin_csrf():
+        return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+    data = request.get_json(silent=True) or {}
+    texts = data.get('texts')
+    if (
+        not isinstance(texts, list)
+        or not 1 <= len(texts) <= TRANSLATION_BATCH_LIMIT
+        or any(not isinstance(text, str) or len(text) > TRANSLATION_TEXT_LIMIT for text in texts)
+        or sum(len(text) for text in texts) > TRANSLATION_TEXT_LIMIT
+    ):
+        return jsonify({'error': 'Translate up to 40 text items and 12,000 characters at a time.'}), 400
+    try:
+        translated, failed = translate_text_batch(texts, 'nl')
+    except sqlite3.Error:
+        app.logger.exception('Could not access the portfolio translation cache.')
+        return jsonify({'error': 'Translation cache unavailable.'}), 503
+    return jsonify({'translations': translated, 'failed': failed})
+
+@app.route('/admin/api/translations', methods=['GET', 'POST'])
+@admin_required
+def admin_site_translations():
+    if request.method == 'GET':
+        translations = load_active_site_translations()
+        return jsonify({
+            'entries': [
+                {
+                    'key': source,
+                    'en': translations.get(source, {}).get('en', source),
+                    'nl': translations.get(source, {}).get('nl', ''),
+                }
+                for source in get_website_source_strings()
+            ],
+        })
+    if not valid_admin_csrf():
+        return jsonify({'error': 'Your session expired. Refresh and try again.'}), 400
+
+    data = request.get_json(silent=True)
+    entries = data.get('entries') if isinstance(data, dict) else None
+    if not isinstance(entries, list) or not 1 <= len(entries) <= 1000:
+        return jsonify({'error': 'Save between 1 and 1,000 translation entries at a time.'}), 400
+    allowed_sources = set(get_website_source_strings())
+    translations = load_active_site_translations()
+    seen = set()
+    total_characters = 0
+    for entry in entries:
+        if not isinstance(entry, dict):
+            return jsonify({'error': 'A translation entry is invalid.'}), 400
+        source = entry.get('key')
+        english = entry.get('en')
+        dutch = entry.get('nl')
+        if (
+            not isinstance(source, str) or source not in allowed_sources
+            or source in seen
+            or not isinstance(english, str) or not isinstance(dutch, str)
+            or len(english) > TRANSLATION_TEXT_LIMIT or len(dutch) > TRANSLATION_TEXT_LIMIT
+        ):
+            return jsonify({'error': 'Translation text is invalid or too long.'}), 400
+        total_characters += len(english) + len(dutch)
+        if total_characters > 500_000:
+            return jsonify({'error': 'The translation update is too large to save at once.'}), 413
+        seen.add(source)
+        translations[source] = {'en': english, 'nl': dutch}
+
+    file_updates = {
+        'site-translations.json': serialize_admin_json(translations),
+    }
+    if SITE_TRANSLATIONS_FILE.exists() and SITE_TRANSLATIONS_FILE.read_bytes() == file_updates['site-translations.json']:
+        return jsonify({'saved': True, 'commit': None, 'count': len(entries)})
+
+    saved_locally = False
+    try:
+        with ADMIN_WRITE_LOCK:
+            ensure_git_push_ready()
+            if github_api_publishing_enabled():
+                result = commit_and_push_portfolio(
+                    title='Update website translations',
+                    file_updates=file_updates,
+                )
+                persist_admin_updates(file_updates)
+            else:
+                persist_admin_updates(file_updates)
+                result = commit_and_push_portfolio(title='Update website translations')
+            saved_locally = True
+    except GitPushUnavailable as error:
+        return jsonify({'error': str(error), 'saved': saved_locally, 'shipped': False}), 502 if saved_locally else 503
+    except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+        return jsonify({'error': f'Could not save website translations: {error}', 'saved': saved_locally}), 502
+    return jsonify({**result, 'count': len(entries)})
 
 @app.route('/gif-maker')
 @admin_required
@@ -1423,7 +1757,10 @@ def commit_and_push_portfolio(uploaded_assets=None, title='', file_updates=None)
     branch = git_push_branch()
     push_env = git_push_environment()
     branch_ref = f'refs/heads/{branch}'
-    paths = ['captions.json', 'carousels.json', 'image_links.json', 'project_galleries.json']
+    paths = [
+        'captions.json', 'carousels.json', 'image_links.json',
+        'project_galleries.json', 'site-translations.json',
+    ]
     uploaded_assets = uploaded_assets or []
     if uploaded_assets:
         paths.extend(uploaded_assets)

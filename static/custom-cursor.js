@@ -113,7 +113,7 @@
         const transformScaleY = scaleY * focusScale;
 
         cursorDot.style.transform = `rotate(${angle}deg) scale(${transformScaleX}, ${transformScaleY})`;
-        cursorContainer.style.transform = `translate3d(${currentX - 12}px, ${currentY - 12}px, 0)`;
+        cursorContainer.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
 
         lastX = currentX;
         lastY = currentY;

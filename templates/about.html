@@ -125,14 +125,16 @@
             position: absolute;
             top: 130px;
             left: 160px;
+            height: 45px;
             opacity: 0;
-            transition: opacity 0.3s ease-out;
+            transition: opacity 0.3s ease-out, height 0.2s ease-out;
             pointer-events: none;
             z-index: 11;
         }
 
         .hero.scrolling #scrollLiggen {
             opacity: 1;
+            height: 32px !important;
         }
 
         .hero-title {
@@ -207,6 +209,15 @@
             width: 105%;
         }
 
+        .language-switch {
+            display: flex;
+            gap: 10px;
+        }
+
+        .language-switch .nav-link {
+            font-size: 13px;
+        }
+
         .nav-link {
             display: inline-block;
             font-size: clamp(16px, 4vw, 18px);
@@ -248,7 +259,7 @@
             justify-content: center;
             width: 100%;
             position: absolute;
-            bottom: 20px;
+            bottom: 0;
             left: 0;
             right: 0;
             padding: 0 40px;
@@ -595,6 +606,10 @@
                 height: 30px !important;
             }
 
+            .hero.scrolling #scrollLiggen {
+                height: 24px !important;
+            }
+
             .hero-content {
                 top: 8px;
                 left: 15px !important;
@@ -623,7 +638,7 @@
                 overflow-y: hidden;
                 flex-wrap: nowrap;
                 -webkit-overflow-scrolling: touch;
-                bottom: 15px;
+                bottom: 0;
                 scrollbar-width: none;
                 -ms-overflow-style: none;
                 justify-content: flex-start;
@@ -748,7 +763,7 @@
     <!-- Hero Section -->
     <div class="hero" id="hero">
         <div class="hero-content">
-            <h1 class="hero-title" id="heroTitle">
+            <h1 class="hero-title" id="heroTitle" data-no-translate>
                 <span class="title-word" data-word="0">TIM</span>
                 <span class="title-word" data-word="1">VAN</span>
                 <span class="title-word" data-word="2">ZANTEN</span>
@@ -757,15 +772,19 @@
                 <a href="/" class="nav-link" id="portfolioLink">PORTFOLIO</a>
                 <a href="/about" class="nav-link active" id="aboutLink">ABOUT</a>
                 <a href="javascript:void(0);" class="nav-link" id="searchLink" onclick="openSearch()" style="cursor: pointer;">SEARCH</a>
+                <span class="language-switch" aria-label="Choose language">
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English">EN</a>
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands">NL</a>
+                </span>
             </div>
         </div>
-        <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen" style="height: 45px;">
+        <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen">
         <div class="hero-socials" id="heroSocials">
-            <a href="http://instagram.com/timzv" class="hero-social-link" target="_blank" title="Instagram">Instagram</a>
-            <a href="https://www.linkedin.com/in/tim-van-zanten-602672182/" class="hero-social-link" target="_blank" title="LinkedIn">LinkedIn</a>
+            <a href="http://instagram.com/timzv" class="hero-social-link" target="_blank" title="Instagram" data-no-translate>Instagram</a>
+            <a href="https://www.linkedin.com/in/tim-van-zanten-602672182/" class="hero-social-link" target="_blank" title="LinkedIn" data-no-translate>LinkedIn</a>
             <a href="mailto:contact@timvanzanten.nl" class="hero-social-link" title="Email">Email</a>
-            <a href="https://soundcloud.com/sound-patrol" class="hero-social-link" target="_blank" title="SoundCloud">SoundCloud</a>
-            <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="hero-social-link" target="_blank" title="Spotify">Spotify</a>
+            <a href="https://soundcloud.com/sound-patrol" class="hero-social-link" target="_blank" title="SoundCloud" data-no-translate>SoundCloud</a>
+            <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="hero-social-link" target="_blank" title="Spotify" data-no-translate>Spotify</a>
         </div>
     </div>
 
@@ -779,7 +798,7 @@
                 I work in cultural production and education. I organize festivals and public programs, teach high school students about AI and digital culture, and do audience research. The goal is always the same: making things clearer, more inclusive, and more beautiful.
             </p>
             <p>
-                I've worked at <a href="https://www.intothegreatwideopen.nl/">Into The Great Wide Open (ITGWO)</a>, <a href="https://www.nederlandsfilmfestival.nl/">Nederlands Film Festival (NFF)</a>, <a href="https://www.kaboomfestival.nl/nl/">Kaboom Animation Festival</a>, <a href="https://www.insciencefestival.nl/">InScience Film Festival</a>, <a href="https://www.brainwashfestival.nl/">Brainwash Festival</a>, and others. If you have a project or idea you want to discuss, <a href="mailto:timvanzanten6@gmail.com">send me an email</a>.
+                I've worked at <a href="https://www.intothegreatwideopen.nl/" data-no-translate>Into The Great Wide Open (ITGWO)</a>, <a href="https://www.nederlandsfilmfestival.nl/" data-no-translate>Nederlands Film Festival (NFF)</a>, <a href="https://www.kaboomfestival.nl/nl/" data-no-translate>Kaboom Animation Festival</a>, <a href="https://www.insciencefestival.nl/" data-no-translate>InScience Film Festival</a>, <a href="https://www.brainwashfestival.nl/" data-no-translate>Brainwash Festival</a>, and others. If you have a project or idea you want to discuss, <a href="mailto:timvanzanten6@gmail.com">send me an email</a>.
             </p>
         </div>
     </div>

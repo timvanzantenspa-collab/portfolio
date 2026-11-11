@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Website translations | Tim van Zanten</title>
+    <script src="/static/language.js" defer></script>
+    <style>
+        @media (min-width: 769px) { html { zoom: 0.9; } }
+        :root { color-scheme: light; --ink: #111; --muted: #60636a; --line: #dedede; --blue: #0101ff; --green: #236344; --red: #a23228; --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        * { box-sizing: border-box; }
+        body { margin: 0; color: var(--ink); background: #fff; font-family: var(--sans); }
+        button, input, textarea { font: inherit; }
+        .topbar { display: flex; min-height: 64px; align-items: center; justify-content: space-between; gap: 20px; padding: 10px 30px; border-bottom: 1px solid var(--line); }
+        .brand { color: var(--blue); font-size: 13px; font-weight: 750; letter-spacing: .06em; text-decoration: none; text-transform: uppercase; }
+        .top-actions { display: flex; align-items: center; gap: 18px; }
+        .top-actions a, .logout { color: var(--muted); font-size: 12px; text-decoration: none; }
+        .logout { padding: 8px 0; border: 0; background: none; cursor: pointer; }
+        main { width: min(100% - 40px, 1050px); margin: 0 auto; padding: 40px 0 80px; }
+        .heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+        .eyebrow { margin: 0 0 9px; color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; }
+        h1 { margin: 0; font-size: clamp(28px, 4vw, 38px); font-weight: 350; }
+        .intro { max-width: 680px; margin: 12px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+        .actions { display: flex; flex-wrap: wrap; gap: 10px; margin: 24px 0 16px; }
+        .actions button, .translate-one { min-height: 38px; padding: 0 13px; border: 1px solid var(--blue); background: #fff; color: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; }
+        .actions .primary { background: var(--blue); color: #fff; }
+        button:hover:not(:disabled) { box-shadow: 0 0 0 3px #0101ff1a; }
+        button:disabled { cursor: wait; opacity: .6; }
+        .toolbar { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 14px; padding: 12px 0; background: #fff; }
+        .search { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--line); font-size: 13px; }
+        .count, .hint { color: var(--muted); font-size: 11px; }
+        .status { min-height: 42px; margin: 10px 0 18px; padding: 11px 13px; border-left: 2px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.5; }
+        .status.success { border-color: var(--green); color: var(--green); }
+        .status.error { border-color: var(--red); color: var(--red); }
+        .translation-list { display: grid; gap: 12px; }
+        .translation-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; padding: 16px; border: 1px solid var(--line); }
+        .translation-row[hidden] { display: none; }
+        .row-heading { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .row-heading h2 { margin: 0; font-size: 11px; font-weight: 700; }
+        .field { display: grid; gap: 6px; min-width: 0; }
+        .field label { color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+        .field textarea { width: 100%; min-height: 76px; resize: vertical; padding: 9px; border: 1px solid var(--line); font-size: 13px; line-height: 1.5; }
+        .field textarea:focus, .search:focus { border-color: var(--blue); outline: 2px solid #0101ff1a; }
+        .field textarea[lang="nl"] { min-height: 76px; }
+        @media (max-width: 680px) {
+            .topbar { align-items: flex-start; padding: 14px 18px; }
+            .top-actions { flex-wrap: wrap; justify-content: flex-end; gap: 8px 14px; }
+            main { width: min(100% - 32px, 1050px); padding-top: 28px; }
+            .heading { display: block; }
+            .translation-row { grid-template-columns: 1fr; }
+            .row-heading { grid-column: 1; align-items: flex-start; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="/">Tim van Zanten</a>
+        <nav class="top-actions" aria-label="Admin navigation">
+            <a href="{{ url_for('admin') }}">Project editor</a>
+            <a href="/">View portfolio</a>
+            <form method="post" action="{{ url_for('admin_logout') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <button class="logout" type="submit">Sign out</button>
+            </form>
+        </nav>
+    </header>
+    <main>
+        <div class="heading">
+            <div>
+                <p class="eyebrow">Portfolio / Language editor</p>
+                <h1>Website translations</h1>
+                <p class="intro">Edit the English and Dutch text shown across the site. Auto-translation creates a draft you can change. Saved text is stored with the portfolio, so visitors do not trigger translation requests.</p>
+            </div>
+        </div>
+        <div class="actions">
+            <button type="button" id="translateMissing">Auto-translate missing Dutch</button>
+            <button type="button" class="primary" id="saveTranslations">Save and publish changes</button>
+        </div>
+        <div class="toolbar">
+            <input class="search" id="searchTranslations" type="search" placeholder="Search text to edit" aria-label="Search website text">
+            <span class="count"><span id="visibleCount">{{ source_strings|length }}</span> / {{ source_strings|length }}</span>
+        </div>
+        <p class="status" id="translationStatus" role="status" aria-live="polite">English is the source text. Search for text to edit its English and Dutch versions.</p>
+        <section class="translation-list" id="translationList" aria-label="Editable website translations">
+            {% for source in source_strings %}
+            {% set entry = translations.get(source, {}) %}
+            <article class="translation-row" data-key="{{ source }}">
+                <div class="row-heading">
+                    <h2>{{ source }}</h2>
+                    <button class="translate-one" type="button">Auto-translate to Dutch</button>
+                </div>
+                <div class="field">
+                    <label>English</label>
+                    <textarea class="english-text" lang="en" maxlength="12000">{{ entry.get('en', source) }}</textarea>
+                </div>
+                <div class="field">
+                    <label>Dutch</label>
+                    <textarea class="dutch-text" lang="nl" maxlength="12000">{{ entry.get('nl', '') }}</textarea>
+                </div>
+            </article>
+            {% endfor %}
+        </section>
+    </main>
+    <script>
+        const csrfToken = {{ csrf_token|tojson }};
+        const dirtyRows = new Set();
+        const rows = [...document.querySelectorAll('.translation-row')];
+        const status = document.getElementById('translationStatus');
+        const buttons = [...document.querySelectorAll('.actions button, .translate-one')];
+
+        function setStatus(message, kind = '') {
+            status.textContent = message;
+            status.className = `status${kind ? ` ${kind}` : ''}`;
+        }
+
+        function setBusy(busy) {
+            buttons.forEach(button => { button.disabled = busy; });
+        }
+
+        function markDirty(row) {
+            dirtyRows.add(row);
+            row.style.borderColor = 'var(--blue)';
+            setStatus(`${dirtyRows.size} text item${dirtyRows.size === 1 ? '' : 's'} changed. Save to publish the edits.`);
+        }
+
+        async function postJson(url, payload) {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+                body: JSON.stringify(payload),
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'The request could not be completed.');
+            return result;
+        }
+
+        async function autoTranslate(row) {
+            const english = row.querySelector('.english-text').value;
+            if (!english.trim()) {
+                setStatus('Add English text before translating it.', 'error');
+                return;
+            }
+            setBusy(true);
+            setStatus('Creating a Dutch draft…');
+            try {
+                const result = await postJson('/admin/api/translations/auto', { texts: [english] });
+                if (result.failed[0]) {
+                    throw new Error('The translation service could not translate this text. Try again later or enter Dutch manually.');
+                }
+                row.querySelector('.dutch-text').value = result.translations[0];
+                markDirty(row);
+                setStatus('Dutch draft ready. Review or edit it, then save to publish.', 'success');
+            } catch (error) {
+                setStatus(error.message, 'error');
+            } finally {
+                setBusy(false);
+            }
+        }
+
+        rows.forEach(row => {
+            row.querySelectorAll('textarea').forEach(field => field.addEventListener('input', () => markDirty(row)));
+            row.querySelector('.translate-one').addEventListener('click', () => autoTranslate(row));
+        });
+
+        document.getElementById('searchTranslations').addEventListener('input', event => {
+            const query = event.target.value.trim().toLocaleLowerCase();
+            let visible = 0;
+            rows.forEach(row => {
+                const matches = !query || `${row.dataset.key} ${row.querySelector('.english-text').value} ${row.querySelector('.dutch-text').value}`.toLocaleLowerCase().includes(query);
+                row.hidden = !matches;
+                if (matches) visible += 1;
+            });
+            document.getElementById('visibleCount').textContent = visible;
+        });
+
+        document.getElementById('translateMissing').addEventListener('click', async () => {
+            const missing = rows.filter(row => !row.querySelector('.dutch-text').value.trim() && row.querySelector('.english-text').value.trim());
+            if (!missing.length) {
+                setStatus('All currently listed text has a Dutch translation.', 'success');
+                return;
+            }
+            setBusy(true);
+            let completed = 0;
+            let failedCount = 0;
+            try {
+                for (let offset = 0; offset < missing.length; offset += 40) {
+                    const batch = missing.slice(offset, offset + 40);
+                    const result = await postJson('/admin/api/translations/auto', {
+                        texts: batch.map(row => row.querySelector('.english-text').value),
+                    });
+                    result.translations.forEach((translation, index) => {
+                        if (result.failed[index]) {
+                            failedCount += 1;
+                            return;
+                        }
+                        batch[index].querySelector('.dutch-text').value = translation;
+                        markDirty(batch[index]);
+                        completed += 1;
+                    });
+                    setStatus(`Drafted ${completed} of ${missing.length} missing Dutch translations…`);
+                    if (result.failed.some(Boolean)) break;
+                }
+                setStatus(
+                    failedCount
+                        ? `Created ${completed} drafts. ${failedCount} could not be translated; the free service may be unavailable or at its daily limit.`
+                        : `Created ${completed} Dutch drafts. Review them, then save to publish.`,
+                    failedCount ? 'error' : 'success',
+                );
+            } catch (error) {
+                setStatus(error.message, 'error');
+            } finally {
+                setBusy(false);
+            }
+        });
+
+        document.getElementById('saveTranslations').addEventListener('click', async () => {
+            const changed = [...dirtyRows];
+            if (!changed.length) {
+                setStatus('There are no unsaved translation changes.');
+                return;
+            }
+            setBusy(true);
+            setStatus('Saving translation edits and publishing them to Git…');
+            try {
+                const entries = changed.map(row => ({
+                    key: row.dataset.key,
+                    en: row.querySelector('.english-text').value,
+                    nl: row.querySelector('.dutch-text').value,
+                }));
+                const result = await postJson('/admin/api/translations', { entries });
+                dirtyRows.clear();
+                changed.forEach(row => { row.style.borderColor = 'var(--line)'; });
+                setStatus(
+                    result.commit
+                        ? `Saved and published ${result.count} text items · ${result.commit}`
+                        : `Saved ${result.count} text items. No new Git commit was needed.`,
+                    'success',
+                );
+            } catch (error) {
+                setStatus(error.message, 'error');
+            } finally {
+                setBusy(false);
+            }
+        });
+    </script>
+</body>
+</html>
