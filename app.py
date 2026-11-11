@@ -9,6 +9,7 @@ import os
 import shutil
 from pathlib import Path
 import json
+import sqlite3
 import base64
 import hashlib
 import hmac
@@ -22,7 +23,7 @@ import xml.etree.ElementTree as ET
 from functools import wraps
 from io import BytesIO
 from urllib.error import HTTPError, URLError
-from urllib.parse import quote, urlsplit
+from urllib.parse import quote, urlencode, urlsplit
 from urllib.parse import parse_qs
 from urllib.request import Request, urlopen
 from werkzeug.utils import secure_filename
@@ -44,6 +45,11 @@ CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 PROJECT_GALLERIES_FILE = Path(__file__).parent / 'project_galleries.json'
 IMAGE_LINKS_FILE = Path(__file__).parent / 'image_links.json'
 CACHE_FOLDER.mkdir(exist_ok=True)
+TRANSLATION_CACHE_FILE = Path(__file__).parent / '.translation-cache.sqlite3'
+TRANSLATION_CACHE_LOCK = threading.Lock()
+TRANSLATION_API_URL = 'https://api.mymemory.translated.net/get'
+TRANSLATION_DAILY_LIMIT = 5000
+TRANSLATION_SEGMENT_MARKER = '\n[[TVZ-SEGMENT-8D4F]]\n'
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '')
 GITHUB_REPOSITORY = os.environ.get('GITHUB_REPOSITORY', 'timvanzantenspa-collab/portfolio')
 ADMIN_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
@@ -58,6 +64,8 @@ ADMIN_LOGIN_LOCK = threading.Lock()
 ADMIN_LOGIN_FAILURES = {}
 ADMIN_LOGIN_FAILURE_LIMIT = 5
 ADMIN_LOGIN_FAILURE_WINDOW = 15 * 60
+TRANSLATION_TEXT_LIMIT = 12_000
+TRANSLATION_BATCH_LIMIT = 40
 DESCRIPTION_MARKDOWN_EXTENSIONS = ['extra', 'nl2br', 'sane_lists']
 DESCRIPTION_ALLOWED_TAGS = {
     'a', 'blockquote', 'br', 'code', 'del', 'em', 'h1', 'h2', 'h3', 'h4',
@@ -65,6 +73,181 @@ DESCRIPTION_ALLOWED_TAGS = {
     'tbody', 'td', 'th', 'thead', 'tr', 'ul',
 }
 DESCRIPTION_ALLOWED_ATTRIBUTES = {'a': {'href', 'title'}}
+
+def open_translation_cache():
+    connection = sqlite3.connect(TRANSLATION_CACHE_FILE, timeout=5)
+    connection.execute(
+        'CREATE TABLE IF NOT EXISTS translations ('
+        'source TEXT NOT NULL, target TEXT NOT NULL, original TEXT NOT NULL, translated TEXT NOT NULL, '
+        'PRIMARY KEY (source, target, original))'
+    )
+    connection.execute(
+        'CREATE TABLE IF NOT EXISTS translation_usage ('
+        'day TEXT PRIMARY KEY, characters INTEGER NOT NULL)'
+    )
+    connection.commit()
+    return connection
+
+def split_translation_text(value, byte_limit=320):
+    if len(value.encode('utf-8')) <= byte_limit:
+        return [value]
+
+    chunks = []
+    current = ''
+    for token in re.findall(r'\s+|\S+', value):
+        if current and len((current + token).encode('utf-8')) > byte_limit:
+            chunks.append(current)
+            current = ''
+        if len(token.encode('utf-8')) > byte_limit:
+            for character in token:
+                if current and len((current + character).encode('utf-8')) > byte_limit:
+                    chunks.append(current)
+                    current = ''
+                current += character
+        else:
+            current += token
+    if current:
+        chunks.append(current)
+    return chunks
+
+def translate_text_segment(connection, text, target):
+    cached = connection.execute(
+        'SELECT translated FROM translations WHERE source = ? AND target = ? AND original = ?',
+        ('autodetect', target, text),
+    ).fetchone()
+    if cached:
+        return cached[0]
+
+    today = time.strftime('%Y-%m-%d', time.gmtime())
+    used = connection.execute(
+        'SELECT characters FROM translation_usage WHERE day = ?', (today,),
+    ).fetchone()
+    used_characters = used[0] if used else 0
+    if used_characters + len(text) > TRANSLATION_DAILY_LIMIT:
+        raise RuntimeError('The free translation service daily quota has been reached.')
+    connection.execute(
+        'INSERT INTO translation_usage(day, characters) VALUES (?, ?) '
+        'ON CONFLICT(day) DO UPDATE SET characters = characters + excluded.characters',
+        (today, len(text)),
+    )
+    connection.commit()
+
+    query = urlencode({'q': text, 'langpair': f'autodetect|{target}'})
+    request_object = Request(
+        f'{TRANSLATION_API_URL}?{query}',
+        headers={'User-Agent': 'TimVanZantenPortfolio/1.0'},
+    )
+    with urlopen(request_object, timeout=5) as response:
+        result = json.loads(response.read().decode('utf-8'))
+    if not isinstance(result, dict):
+        raise RuntimeError('The translation service returned an invalid response.')
+    response_data = result.get('responseData')
+    if not isinstance(response_data, dict):
+        raise RuntimeError('The translation service returned an invalid response.')
+    translated = response_data.get('translatedText')
+    if result.get('responseStatus') != 200:
+        raise RuntimeError(
+            f"The translation service rejected the request (status {result.get('responseStatus')})."
+        )
+    if not isinstance(translated, str) or not translated:
+        raise ValueError('The translation service did not return translated text.')
+    translated = html.unescape(translated)
+    connection.execute(
+        'INSERT OR REPLACE INTO translations(source, target, original, translated) VALUES (?, ?, ?, ?)',
+        ('autodetect', target, text, translated),
+    )
+    connection.commit()
+    return translated
+
+def translate_text_batch(values, target):
+    connection = open_translation_cache()
+    translations = [None] * len(values)
+    failed_items = set()
+    service_unavailable = False
+    try:
+        with TRANSLATION_CACHE_LOCK:
+            references = []
+            translated_chunks = [None] * len(values)
+            for index, value in enumerate(values):
+                if not value.strip():
+                    translations[index] = value
+                    continue
+                cached = connection.execute(
+                    'SELECT translated FROM translations WHERE source = ? AND target = ? AND original = ?',
+                    ('autodetect', target, value),
+                ).fetchone()
+                if cached:
+                    translations[index] = cached[0]
+                    continue
+                chunks = split_translation_text(value)
+                translated_chunks[index] = [None] * len(chunks)
+                references.extend((index, chunk_index, chunk) for chunk_index, chunk in enumerate(chunks))
+
+            request_groups = []
+            current_group = []
+            for reference in references:
+                candidate = [*current_group, reference]
+                candidate_text = TRANSLATION_SEGMENT_MARKER.join(item[2] for item in candidate)
+                if current_group and len(candidate_text.encode('utf-8')) > 450:
+                    request_groups.append(current_group)
+                    current_group = [reference]
+                else:
+                    current_group = candidate
+            if current_group:
+                request_groups.append(current_group)
+
+            for group in request_groups:
+                group_indexes = {reference[0] for reference in group}
+                if service_unavailable:
+                    failed_items.update(group_indexes)
+                    continue
+                combined_text = TRANSLATION_SEGMENT_MARKER.join(reference[2] for reference in group)
+                try:
+                    result = translate_text_segment(connection, combined_text, target)
+                    group_translations = result.split(TRANSLATION_SEGMENT_MARKER)
+                    if len(group_translations) != len(group):
+                        raise ValueError('The translation service changed the segment boundaries.')
+                    for reference, translated in zip(group, group_translations):
+                        index, chunk_index, _ = reference
+                        translated_chunks[index][chunk_index] = translated
+                except (HTTPError, URLError, TimeoutError, RuntimeError) as error:
+                    app.logger.warning('Portfolio text translation failed: %s', error)
+                    failed_items.update(group_indexes)
+                    service_unavailable = True
+                except ValueError as error:
+                    app.logger.warning('A portfolio text group could not be translated: %s', error)
+                    for index, chunk_index, chunk in group:
+                        try:
+                            translated = translate_text_segment(connection, chunk, target)
+                        except (HTTPError, URLError, TimeoutError, RuntimeError) as fallback_error:
+                            app.logger.warning('Portfolio text translation failed: %s', fallback_error)
+                            failed_items.update(group_indexes)
+                            service_unavailable = True
+                            break
+                        except ValueError as fallback_error:
+                            app.logger.warning('A portfolio text item could not be translated: %s', fallback_error)
+                            failed_items.add(index)
+                        else:
+                            translated_chunks[index][chunk_index] = translated
+
+            for index, value in enumerate(values):
+                if translations[index] is not None:
+                    continue
+                chunks = translated_chunks[index]
+                if index in failed_items or not chunks or any(chunk is None for chunk in chunks):
+                    translations[index] = value
+                    failed_items.add(index)
+                    continue
+                translated = ''.join(chunks)
+                translations[index] = translated
+                connection.execute(
+                    'INSERT OR REPLACE INTO translations(source, target, original, translated) VALUES (?, ?, ?, ?)',
+                    ('autodetect', target, value, translated),
+                )
+            connection.commit()
+        return translations, [index in failed_items for index in range(len(values))]
+    finally:
+        connection.close()
 
 class GitPushUnavailable(RuntimeError):
     pass
@@ -466,7 +649,21 @@ def render_homepage():
         jsonld_scripts=homepage_scripts,
         projects=projects,
         project_list_schema=get_project_list_schema(projects),
+        language=preferred_site_language(),
     )
+
+def preferred_site_language():
+    return request.accept_languages.best_match(['nl', 'en']) or 'en'
+
+@app.after_request
+def vary_html_by_preferred_language(response):
+    if response.mimetype == 'text/html':
+        response.vary.add('Accept-Language')
+    return response
+
+@app.context_processor
+def inject_preferred_site_language():
+    return {'language': preferred_site_language()}
 
 def downscale_image(filename):
     """Return an optimized image URL or the original video URL."""
@@ -655,6 +852,7 @@ def project_detail(slug):
     return render_template(
         'project.html',
         project=project,
+        language=preferred_site_language(),
         gallery=gallery,
         embeds=embeds,
         project_schema=project_schema,
@@ -668,7 +866,39 @@ def project_detail(slug):
 
 @app.route('/about')
 def about():
-    return render_template('about.html', jsonld_scripts=about_page_scripts)
+    return render_template(
+        'about.html',
+        jsonld_scripts=about_page_scripts,
+        language=preferred_site_language(),
+    )
+
+@app.route('/api/translate', methods=['POST'])
+def translate_public_text():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({'error': 'Send translation text as JSON.'}), 400
+    target = data.get('target')
+    texts = data.get('texts')
+    if not isinstance(target, str) or target not in {'en', 'nl'}:
+        return jsonify({'error': 'Only English and Dutch translations are supported.'}), 400
+    if (
+        not isinstance(texts, list)
+        or not 1 <= len(texts) <= TRANSLATION_BATCH_LIMIT
+        or any(not isinstance(text, str) or len(text) > TRANSLATION_TEXT_LIMIT for text in texts)
+        or sum(len(text) for text in texts) > TRANSLATION_TEXT_LIMIT
+    ):
+        return jsonify({'error': 'Send up to 40 text items and 12,000 characters per request.'}), 400
+
+    try:
+        translations, failed = translate_text_batch(texts, target)
+    except sqlite3.Error:
+        app.logger.exception('Could not access the portfolio translation cache.')
+        return jsonify({'error': 'Translation cache unavailable.'}), 503
+    return jsonify({
+        'translations': translations,
+        'failed': failed,
+        'target': target,
+    })
 
 def admin_required(view):
     @wraps(view)
@@ -1650,46 +1880,52 @@ def get_captions():
 
 @app.route('/api/carousel/<filename>')
 def get_carousel(filename):
-    """API endpoint to get carousel images for a specific image with WebP URLs"""
+    """Return a project's image, video, and embed slides for the portfolio carousel."""
     caption = load_captions().get(filename, {})
     if isinstance(caption, dict) and caption.get('published') is False:
         return jsonify({'primary': filename, 'images': []})
     project_galleries = load_project_galleries()
     image_links = load_image_links()
     gallery_images = project_galleries.get(filename)
-    
-    if gallery_images is None:
-        # If image has no carousel, return just that image with its URL
-        image_path = get_static_path(filename)
-        if image_path is not None and image_path.is_file():
-            url = downscale_image(filename)
-            media_type = 'video' if is_video_filename(filename) else 'image'
-            return jsonify({'primary': filename, 'images': [{
-                'filename': filename,
-                'url': url,
-                'media_type': media_type,
-                'link': image_links.get(filename, ''),
-            }]})
-        return jsonify({'primary': filename, 'images': []})
-    
-    carousel_images = [filename, *gallery_images]
     primary_image = filename
-    
-    # Return carousel images with their WebP URLs in the order they appear in carousels.json
-    # Only include images that actually exist in the static folder
+
+    if gallery_images is None:
+        primary_image = next(
+            (cover for cover, images in project_galleries.items() if filename in images),
+            filename,
+        )
+        gallery_images = project_galleries.get(primary_image, [])
+
+    image_path = get_static_path(filename)
+    if image_path is None or not image_path.is_file():
+        return jsonify({'primary': primary_image, 'images': []})
+
     carousel_data = []
-    for img in carousel_images:
+    for img in [primary_image, *gallery_images]:
         image_path = get_static_path(img)
         if image_path is not None and image_path.is_file():
-            url = downscale_image(img)
-            media_type = 'video' if is_video_filename(img) else 'image'
             carousel_data.append({
                 'filename': img,
-                'url': url,
-                'media_type': media_type,
+                'url': downscale_image(img),
+                'media_type': 'video' if is_video_filename(img) else 'image',
                 'link': image_links.get(img, ''),
             })
-    
+
+    project_caption = load_captions().get(primary_image, {})
+    if isinstance(project_caption, dict):
+        for index, url in enumerate(normalize_project_embeds(project_caption.get('embeds')), 1):
+            embed = describe_project_embed(url)
+            carousel_data.append({
+                'filename': f'embed-{index}',
+                'media_type': 'embed',
+                'embed_src': embed['src'],
+                'embed_kind': embed['kind'],
+                'embed_title': embed['title'],
+                'embed_sandbox': embed['sandbox'],
+                'embed_vertical': embed.get('vertical', False),
+                'link': url,
+            })
+
     return jsonify({'primary': primary_image, 'images': carousel_data})
 
 @app.errorhandler(404)

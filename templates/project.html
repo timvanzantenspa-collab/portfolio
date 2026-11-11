@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,9 +30,13 @@
     {% endif %}
     <link rel="canonical" href="{{ canonical_url }}">
     <title>{{ project.title }} | Tim van Zanten</title>
+    <script src="/static/language.js" defer></script>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
     <script type="application/ld+json">{{ project_schema | tojson }}</script>
     <style>
+        @media (min-width: 769px) {
+            html { zoom: 0.9; }
+        }
         * { box-sizing: border-box; }
         body {
             margin: 0;
@@ -68,7 +72,7 @@
         .embed { margin: 0; }
         .embed h2 { margin: 0 0 10px; font-size: 16px; }
         .embed-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; background: #f2f2f2; }
-        .embed-instagram .embed-frame { aspect-ratio: 4 / 5; }
+        .embed-instagram .embed-frame { width: min(100%, 350px); aspect-ratio: 4 / 5; }
         .embed-vertical .embed-frame { width: min(100%, 460px); aspect-ratio: 9 / 16; }
         .embed-webpage .embed-frame { aspect-ratio: 16 / 10; }
         .external-link { display: inline-block; margin: 36px 0; font-weight: 700; }

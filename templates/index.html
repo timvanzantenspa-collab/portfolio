@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +19,7 @@
     <meta name="author" content="Tim van Zanten">
     <link rel="canonical" href="https://timvanzanten.com">
     <title>Tim van Zanten - Cultural Production, Education & Digital Projects</title>
+    <script src="/static/language.js" defer></script>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
     <link rel="apple-touch-icon" href="/static/Favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/Favicon/favicon-32x32.png">
@@ -35,6 +36,12 @@
         :root {
             scrollbar-color: #0101FF transparent;
             scrollbar-width: thin;
+        }
+
+        @media (min-width: 769px) {
+            html {
+                zoom: 0.9;
+            }
         }
 
         ::-webkit-scrollbar {
@@ -290,7 +297,7 @@
         }
 
         .portfolio-intro h2 {
-            font-size: clamp(24px, 4vw, 38px);
+            font-size: clamp(22px, 3vw, 30px);
             line-height: 1.15;
             font-weight: 500;
             letter-spacing: -0.04em;
@@ -298,7 +305,7 @@
 
         .portfolio-intro p {
             margin-top: 16px;
-            font-size: clamp(16px, 2vw, 20px);
+            font-size: clamp(15px, 1.5vw, 16px);
             line-height: 1.5;
             color: #4f4e4e;
         }
@@ -959,7 +966,25 @@
             height: 100%;
         }
 
-        .modal-image > a[hidden], .modal-image > video[hidden] { display: none; }
+        .modal-image > a[hidden], .modal-image > video[hidden], .modal-image > iframe[hidden] { display: none; }
+        .modal-image > iframe.carousel-embed {
+            position: relative;
+            z-index: 1;
+            width: min(640px, calc(100% - 88px));
+            aspect-ratio: 16 / 9;
+            max-height: calc(100% - 48px);
+            border: 0;
+            background: #fff;
+        }
+        .modal-image > iframe.carousel-embed-instagram {
+            width: min(350px, calc(100% - 88px));
+            aspect-ratio: 4 / 5;
+        }
+        .modal-image > iframe.carousel-embed-vertical {
+            width: min(320px, calc(100% - 88px));
+            aspect-ratio: 9 / 16;
+        }
+        .modal-image > iframe.carousel-embed-webpage { aspect-ratio: 16 / 10; }
 
         .modal-image-background {
             position: absolute;
@@ -1671,6 +1696,7 @@
                     <img id="modalImage" src="" alt="" style="cursor: pointer;">
                 </a>
                 <video id="modalVideo" controls muted loop autoplay playsinline preload="metadata" hidden aria-label="Project video"></video>
+                <iframe id="modalEmbed" title="" hidden></iframe>
                 <div class="carousel-controls" id="carouselControls">
                     <button class="carousel-nav-btn" id="prevBtn" onclick="navigateCarousel(-1)" aria-label="Previous image">←</button>
                     <button class="carousel-nav-btn" id="nextBtn" onclick="navigateCarousel(1)" aria-label="Next image">→</button>
@@ -2067,12 +2093,14 @@
             const filename = carouselItem.filename;
             const imageUrl = carouselItem.url;
             const isVideo = isVideoMedia(carouselItem);
+            const isEmbed = carouselItem.media_type === 'embed';
             // Use primary image's caption for all images in carousel
             const captionFilename = carouselPrimaryFilename || filename;
             const caption = imageCaptions[captionFilename] || {};
             
             const img = document.getElementById('modalImage');
             const video = document.getElementById('modalVideo');
+            const embedFrame = document.getElementById('modalEmbed');
             const imageLinkElement = document.getElementById('modalImageLink');
             resetModalImageTilt();
             
@@ -2082,7 +2110,25 @@
             // Trigger reflow to ensure animation restarts
             void img.offsetWidth;
             
-            if (isVideo) {
+            embedFrame.hidden = true;
+            embedFrame.removeAttribute('src');
+            embedFrame.className = '';
+
+            if (isEmbed) {
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                video.hidden = true;
+                img.removeAttribute('src');
+                imageLinkElement.hidden = true;
+                embedFrame.className = `carousel-embed carousel-embed-${carouselItem.embed_kind || 'webpage'}${carouselItem.embed_vertical ? ' carousel-embed-vertical' : ''}`;
+                embedFrame.title = carouselItem.embed_title || 'Embedded project content';
+                embedFrame.setAttribute('sandbox', carouselItem.embed_sandbox || 'allow-scripts');
+                embedFrame.src = carouselItem.embed_src;
+                embedFrame.hidden = false;
+                document.getElementById('modalImageBackground').style.backgroundImage = 'none';
+            } else if (isVideo) {
+                embedFrame.removeAttribute('sandbox');
                 img.removeAttribute('src');
                 img.classList.remove('animate');
                 imageLinkElement.hidden = true;
@@ -2097,6 +2143,7 @@
                 if (playback) playback.catch(() => {});
                 document.getElementById('modalImageBackground').style.backgroundImage = 'none';
             } else {
+                embedFrame.removeAttribute('sandbox');
                 video.pause();
                 video.removeAttribute('src');
                 video.load();
@@ -2113,7 +2160,9 @@
             
             // Set title with word-by-word styling for hover effect
             const titleElement = document.getElementById('modalTitle');
-            const titleText = caption.title || filename;
+            const titleText = isEmbed
+                ? `${caption.title || 'Project'} — ${carouselItem.embed_title || 'Embedded content'}`
+                : caption.title || filename;
             const words = titleText.split(' ');
             titleElement.innerHTML = words.map((word, idx) => 
                 `<span class="title-word" data-word="${idx}">${word}</span>`

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +19,7 @@
     <meta name="author" content="Tim van Zanten">
     <link rel="canonical" href="https://timvanzanten.com/about">
     <title>About | Tim van Zanten - Creative Portfolio</title>
+    <script src="/static/language.js" defer></script>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
     <link rel="apple-touch-icon" href="/static/Favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/Favicon/favicon-32x32.png">
@@ -50,6 +51,12 @@
         :root {
             scrollbar-color: #0101FF transparent;
             scrollbar-width: thin;
+        }
+
+        @media (min-width: 769px) {
+            html {
+                zoom: 0.9;
+            }
         }
 
         ::-webkit-scrollbar {

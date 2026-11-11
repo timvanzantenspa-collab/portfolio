@@ -40,6 +40,10 @@ Project data can also be edited directly in `captions.json`:
 
 Projects are ordered by date, newest first. Each has a server-rendered detail page with its description and gallery.
 
+### Automatic language
+
+Public pages use the visitor's browser language preference: Dutch when a Dutch preference is present, and English otherwise. The site does not request location access. Text is translated in the browser through MyMemory's free translation API and cached in a local SQLite file; if translation is unavailable or its anonymous limit is reached, the original text remains and the page displays a notice. MyMemory documents an anonymous limit of 5,000 characters per day and a 500-byte maximum per request, so full translation is best-effort. Public page text is sent to MyMemory for translation; third-party embeds remain controlled by their own providers.
+
 ### Manage Projects
 
 Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. Project descriptions support Markdown links, bold, italic, lists, and a live preview. Add Instagram, YouTube, or webpage embed URLs in the project's embedded-content field, one per line; arbitrary HTML is not accepted. YouTube videos attempt muted autoplay, but Instagram controls playback and browsers may require user interaction. Other sites must permit iframe embedding. The editor accepts up to eight gallery files per save: images are optimized to WebP, while MP4/WebM files remain videos and autoplay muted inline in the portfolio and carousel. Each selected image or video can have its own destination URL; leave it blank to use the project URL. Images are limited to 16 MB each, videos to 50 MB each, and a save to 60 MB total. Saving commits the data and media assets and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
@@ -71,6 +75,7 @@ Then open: http://127.0.0.1:5005
 - **Searchable Project Pages**: Each published project has a server-rendered page linked from the homepage and sitemap
 - **Project Editor**: Manage project details and media at `/admin`
 - **About Page**: Read about Tim and access resume links at `/about`
+- **Automatic language**: Public page language follows the browser's Dutch or English preference, with best-effort cached translation
 
 ## Tips
 
@@ -88,6 +93,7 @@ Portfolio/
 ├── captions.json       # Image titles and descriptions
 ├── requirements.txt    # Python dependencies
 ├── static/             # Your images go here
+│   ├── language.js     # Browser language selection and page translation
 │   └── .cache/         # Auto-generated optimized images (ignore this)
 └── templates/
     ├── index.html      # Portfolio homepage

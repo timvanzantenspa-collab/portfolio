@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>Project editor | Tim van Zanten</title>
+    <script src="/static/language.js" defer></script>
     <style>
+        @media (min-width: 769px) { html { zoom: 0.9; } }
         :root { color-scheme: light; --ink: #000; --muted: #555; --paper: #fff; --panel: #fff; --line: #dedede; --blue: #0101FF; --green: #236344; --red: #a23b2e; --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; }
         * { box-sizing: border-box; }
         body { margin: 0; min-height: 100vh; background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif; }
@@ -43,6 +45,8 @@
         .empty-list { padding: 18px 8px; color: var(--muted); font-size: 13px; line-height: 1.5; }
         .editor { width: min(100%, 940px); min-width: 0; padding: 42px clamp(22px, 5vw, 68px) 60px; }
         .editor-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 30px; }
+        .editor-intro { margin: -14px 0 24px; padding: 12px 14px; border-left: 2px solid var(--blue); background: #f7f8ff; color: var(--muted); font-size: 12px; line-height: 1.55; }
+        .editor-intro strong { color: var(--ink); }
         .eyebrow { margin: 0 0 9px; color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: 1.3px; text-transform: uppercase; }
         h1 { margin: 0; font: 300 35px/1.1 var(--sans); letter-spacing: 0; }
         .save-state { max-width: 300px; padding: 9px 11px; border-left: 2px solid var(--line); color: var(--muted); font-size: 12px; line-height: 1.45; }
@@ -56,7 +60,14 @@
         .field { display: grid; gap: 7px; min-width: 0; }
         .field.full { grid-column: 1 / -1; }
         .field label { color: #454b46; font-size: 11px; font-weight: 700; }
-        .field input, .field select, .field textarea { width: 100%; min-height: 41px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font-size: 13px; }
+        .field input, .field select, .field textarea { width: 100%; min-height: 41px; padding: 10px 11px; border: 1px solid var(--line); border-radius: 0; background: #fff; color: var(--ink); font-size: 13px; transition: border-color .16s ease, box-shadow .16s ease; }
+        .field input:hover, .field select:hover, .field textarea:hover, .search:hover, .sort-field select:hover { border-color: #9da3b0; }
+        .field input:focus, .field select:focus, .field textarea:focus, .search:focus, .sort-field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #0101ff1a; outline: none; }
+        .field select, .sort-field select { appearance: none; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='m2 4 4 4 4-4' fill='none' stroke='%23555' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
+        .field select { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .field select option, .sort-field select option { padding: 8px; }
+        .cover-search { margin-bottom: 8px; }
+        .cover-help { color: var(--muted); font-size: 11px; line-height: 1.45; }
         .publish-toggle { display: flex; align-items: center; gap: 11px; min-height: 44px; padding: 9px 11px; border: 1px solid var(--line); cursor: pointer; }
         .publish-toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
         .publish-switch { position: relative; flex: 0 0 38px; width: 38px; height: 22px; background: #a6a6a6; transition: background .16s ease; }
@@ -83,13 +94,14 @@
         .description-preview pre, .description-preview code { white-space: pre-wrap; }
         .field input:focus, .field select:focus, .field textarea:focus, .search:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
         .cover-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(190px, .8fr); align-items: end; gap: 12px; }
-        .upload-label { display: flex; min-height: 76px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 12px; border: 1px dashed #aeb2bb; background: #fff; color: var(--ink); text-align: center; cursor: pointer; }
+        .upload-label { display: flex; min-height: 76px; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 12px; border: 1px dashed #aeb2bb; background: #fff; color: var(--ink); text-align: center; cursor: pointer; transition: border-color .16s ease, background .16s ease; }
         .upload-label:hover, .upload-label.dragging { border-color: var(--blue); background: #f4f5ff; }
         .upload-label:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
         .upload-label strong { font-size: 12px; }
         .upload-label span { color: var(--muted); font-size: 11px; font-weight: 400; }
         .upload-label input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
-        .upload-name { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; }
+        .upload-name { grid-column: 1 / -1; min-height: 16px; color: var(--muted); font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+        .upload-name.has-selection { color: var(--green); font-weight: 600; }
         .gallery-upload-tools { display: grid; gap: 8px; margin-bottom: 12px; }
         .gallery-upload-tools .upload-name { min-height: auto; }
         .media-order-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 18px 0 8px; }
@@ -112,7 +124,7 @@
         .asset-browser-tools { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
         .asset-browser-tools .search { margin: 0; }
         .sort-field { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
-        .sort-field select { min-height: 38px; padding: 0 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); font-size: 12px; }
+        .sort-field select { min-height: 38px; padding: 0 32px 0 10px; border: 1px solid var(--line); background-color: #fff; color: var(--ink); font-size: 12px; transition: border-color .16s ease, box-shadow .16s ease; }
         .asset-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; max-height: 250px; overflow: auto; padding: 2px; }
         .asset-option { position: relative; min-width: 0; }
         .asset-option input { position: absolute; top: 7px; left: 7px; z-index: 1; width: 17px; height: 17px; accent-color: var(--blue); }
@@ -184,10 +196,11 @@
                 <div><p class="eyebrow">Portfolio / Project editor</p><h1 id="pageTitle">Project details</h1></div>
                 <div class="save-state" id="saveState" role="status" aria-live="polite">Changes are committed and pushed to Git when saved.</div>
             </div>
+            <p class="editor-intro"><strong>Creating a project?</strong> Add its details, choose or upload a cover, then select and arrange any extra media. Your changes go live when you choose <strong>Save and push to Git</strong>.</p>
             <form id="projectForm">
                 <input type="hidden" id="projectId" name="project_id">
                 <section class="section">
-                    <div class="section-title"><h2>Project information</h2></div>
+                    <div class="section-title"><h2>Project information</h2><p>Start with a clear title; add details as you go.</p></div>
                     <div class="fields">
                         <div class="field full"><label for="title">Project title</label><input id="title" name="title" maxlength="160" required></div>
                         <div class="field"><label for="date">Date or date range</label><input id="date" name="date" maxlength="80" placeholder="e.g. May 2024"></div>
@@ -218,9 +231,14 @@
                 <section class="section">
                     <div class="section-title"><h2>Cover image</h2><p>Shown first in the portfolio grid</p></div>
                     <div class="cover-tools">
-                        <div class="field" id="coverPicker"><label for="filename">Choose an image</label><select id="filename" name="filename"></select></div>
-                        <label class="upload-label" id="uploadControl" for="coverImage"><strong>Drop cover media</strong><span>or browse for one file</span><input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm"></label>
-                        <div class="upload-name" id="uploadName"></div>
+                        <div class="field" id="coverPicker">
+                            <label for="filename">Choose an existing cover</label>
+                            <input class="search cover-search" id="coverSearch" type="search" placeholder="Search by filename" aria-label="Search cover images">
+                            <select id="filename" name="filename" aria-describedby="coverHelp"></select>
+                            <span class="cover-help" id="coverHelp">Recently uploaded files appear first.</span>
+                        </div>
+                        <label class="upload-label" id="uploadControl" for="coverImage"><strong>Upload a new cover</strong><span>Drop or browse for one image or video</span><input id="coverImage" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,.mp4,.webm"></label>
+                        <div class="upload-name" id="uploadName">Images up to 16 MB; MP4/WebM videos up to 50 MB.</div>
                     </div>
                 </section>
                 <section class="section">
@@ -342,9 +360,32 @@
             updateInputFiles(input, supportedFiles, true);
         }
 
+        function updateCoverUploadState(file = null) {
+            const label = document.getElementById('uploadControl');
+            const uploadName = document.getElementById('uploadName');
+            const heading = label.querySelector('strong');
+            const help = label.querySelector('span');
+            if (file) {
+                heading.textContent = file.name;
+                help.textContent = 'Selected as the new cover · click to replace';
+                uploadName.textContent = `Selected cover: ${file.name} · ${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                uploadName.classList.add('has-selection');
+                return;
+            }
+            heading.textContent = 'Upload a new cover';
+            help.textContent = 'Drop or browse for one image or video';
+            uploadName.textContent = document.getElementById('projectId').value
+                ? 'Cover uploads are available when creating a new project.'
+                : 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
+            uploadName.classList.remove('has-selection');
+        }
+
         function validateUploadSelection(changedInput) {
             const coverInput = document.getElementById('coverImage');
             const galleryInput = document.getElementById('galleryUploads');
+            if (changedInput === coverInput && coverInput.files.length) {
+                document.getElementById('filename').value = '';
+            }
             const galleryFiles = [...galleryInput.files];
             if (galleryFiles.length > 8) {
                 galleryInput.value = '';
@@ -360,18 +401,20 @@
                 if (oversized === coverFile) coverInput.value = '';
                 else galleryInput.value = '';
                 syncGalleryUploadOrder();
+                updateCoverUploadState(coverInput.files[0] || null);
                 setStatus(`${oversized.name} exceeds its ${isVideoAsset(oversized.name) ? '50 MB video' : '16 MB image'} limit.`, 'error');
                 return;
             }
             if (files.reduce((total, file) => total + file.size, 0) > 60 * 1024 * 1024) {
                 changedInput.value = '';
                 syncGalleryUploadOrder();
+                updateCoverUploadState(coverInput.files[0] || null);
                 setStatus('Uploads must total 60 MB or less per save.', 'error');
                 return;
             }
 
             syncGalleryUploadOrder();
-            document.getElementById('uploadName').textContent = coverFile?.name || 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
+            updateCoverUploadState(coverFile);
             document.getElementById('galleryUploadName').textContent = galleryFiles.length
                 ? galleryFiles.map(file => file.name).join(', ')
                 : 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
@@ -607,7 +650,7 @@
         }
 
         function markUnsavedChanges(event) {
-            if (event.target.id === 'imageSearch' || event.target.id === 'assetSort' || event.target.id === 'galleryUploads' || isSaving) return;
+            if (event.target.id === 'imageSearch' || event.target.id === 'coverSearch' || event.target.id === 'assetSort' || event.target.id === 'galleryUploads' || isSaving) return;
             hasUnsavedChanges = true;
             setEditorStatus('Unsaved changes. Save and push to publish.');
         }
@@ -676,7 +719,11 @@
 
         function renderProjectList(filter = '') {
             projectList.replaceChildren();
-            const visible = projects.filter(project => project.title.toLowerCase().includes(filter.toLowerCase()));
+            const normalizedFilter = filter.trim().toLowerCase();
+            const visible = projects
+                .filter(project => `${project.title} ${project.filename}`.toLowerCase().includes(normalizedFilter))
+                .sort((first, second) => (assetModified[second.filename] || 0) - (assetModified[first.filename] || 0)
+                    || first.title.localeCompare(second.title));
             document.getElementById('projectCount').textContent = `${projects.length}`;
             if (!visible.length) {
                 const empty = document.createElement('div');
@@ -780,16 +827,40 @@
         function renderCoverOptions(selected = '') {
             const select = document.getElementById('filename');
             const currentProject = document.getElementById('projectId').value;
+            const filter = document.getElementById('coverSearch').value.trim().toLowerCase();
             select.replaceChildren();
-            assets.forEach(filename => {
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = assets.length ? 'Select an existing cover…' : 'No existing media available';
+            select.append(placeholder);
+            const sortedAssets = [...assets].sort((first, second) =>
+                (assetModified[second] || 0) - (assetModified[first] || 0)
+                || first.localeCompare(second));
+            const availableAssets = sortedAssets.filter(filename => {
                 const owner = assetOwners[filename];
-                if (owner && owner !== currentProject) return;
+                if (owner && owner !== currentProject) return false;
+                return !filter || filename.toLowerCase().includes(filter);
+            });
+            if (selected && assets.includes(selected) && !availableAssets.includes(selected)) {
+                const currentOption = document.createElement('option');
+                currentOption.value = selected;
+                currentOption.textContent = `Current cover · ${selected}`;
+                select.append(currentOption);
+            }
+            availableAssets.forEach(filename => {
                 const option = document.createElement('option');
                 option.value = filename;
                 option.textContent = filename;
                 select.append(option);
             });
-            if (selected && assets.includes(selected)) select.value = selected;
+            select.value = selected && assets.includes(selected) ? selected : '';
+            if (filter && !availableAssets.length) {
+                const noMatches = document.createElement('option');
+                noMatches.value = '';
+                noMatches.textContent = 'No covers match that search';
+                noMatches.disabled = true;
+                select.append(noMatches);
+            }
         }
 
         function editProject(project) {
@@ -814,8 +885,8 @@
             document.getElementById('deleteButton').hidden = false;
             coverPicker.classList.remove('disabled');
             uploadControl.classList.add('disabled');
-            document.getElementById('uploadName').textContent = 'Cover uploads are available when creating a new project.';
             document.getElementById('coverImage').value = '';
+            updateCoverUploadState();
             renderCoverOptions(project.filename);
             renderAssets(project.images.filter(image => image !== project.filename), project.filename);
             renderProjectList(document.getElementById('searchProjects').value);
@@ -836,7 +907,7 @@
             document.getElementById('deleteButton').hidden = true;
             coverPicker.classList.remove('disabled');
             uploadControl.classList.remove('disabled');
-            document.getElementById('uploadName').textContent = 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
+            updateCoverUploadState();
             document.getElementById('galleryUploadName').textContent = 'Images up to 16 MB; MP4/WebM videos up to 50 MB.';
             renderCoverOptions();
             renderAssets([], currentCoverAsset());
@@ -873,6 +944,13 @@
 
         form.addEventListener('submit', async event => {
             event.preventDefault();
+            if (!document.getElementById('projectId').value
+                && !document.getElementById('coverImage').files.length
+                && !document.getElementById('filename').value) {
+                setEditorStatus('Choose a cover from your media or upload a new one to create this project.', 'error');
+                document.getElementById('filename').focus();
+                return;
+            }
             if (!gitPushConfigured) {
                 setEditorStatus('Git publishing is not configured. Add GITHUB_TOKEN in Render before saving.', 'error');
                 return;
@@ -967,9 +1045,17 @@
         document.getElementById('imageSearch').addEventListener('input', () => {
             renderAssets(null, currentCoverAsset());
         });
+        document.getElementById('coverSearch').addEventListener('input', () => {
+            renderCoverOptions(document.getElementById('filename').value);
+        });
         document.getElementById('assetSort').addEventListener('change', () => renderAssets(null, currentCoverAsset()));
         document.getElementById('filename').addEventListener('change', () => {
             const selectedCover = document.getElementById('filename').value;
+            const coverInput = document.getElementById('coverImage');
+            if (coverInput.files.length) {
+                coverInput.value = '';
+                updateCoverUploadState();
+            }
             if (selectedGalleryImages.has(selectedCover)) {
                 selectedGalleryImages.delete(selectedCover);
                 galleryOrder = galleryOrder.filter(item => item.kind !== 'asset' || item.filename !== selectedCover);
@@ -977,7 +1063,10 @@
             renderAssets(null, currentCoverAsset());
             renderSelectedMedia();
         });
-        document.getElementById('coverImage').addEventListener('change', event => validateUploadSelection(event.target));
+        document.getElementById('coverImage').addEventListener('change', event => {
+            validateUploadSelection(event.target);
+            renderAssets(null, currentCoverAsset());
+        });
         document.getElementById('galleryUploads').addEventListener('change', event => validateUploadSelection(event.target));
         document.querySelectorAll('.upload-label').forEach(zone => {
             const input = zone.querySelector('input[type="file"]');
