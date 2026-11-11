@@ -98,7 +98,6 @@ SITE_TEXT_PRIORITY = (
     'Project images and video',
     'Embedded project content',
     'View project',
-    'Project details, images & embeds',
     'Instagram post',
     'YouTube video',
     'A small studio tool',
@@ -300,8 +299,8 @@ def get_website_source_strings():
 
     strings.update({
         'Loading!', 'Image not found', 'View project', 'Previous image', 'Next image',
-        'Close project preview', 'Search portfolio', 'Project details, images & embeds',
-        'Type to search...', 'No projects found', 'Portfolio projects',
+        'Close project preview', 'Search portfolio', 'Type to search...',
+        'No projects found', 'Portfolio projects',
     })
     priority = [value for value in SITE_TEXT_PRIORITY if value in strings]
     return priority + sorted(strings - set(priority), key=str.casefold)
@@ -825,12 +824,13 @@ def get_portfolio_projects():
     captions = load_captions()
     projects = []
     used_slugs = set()
+    used_legacy_slugs = set()
     for filename in get_image_files():
         caption = captions.get(filename, {})
         if not isinstance(caption, dict):
             caption = {}
         title = str(caption.get('title') or Path(filename).stem)
-        base_slug = slugify_project_title(Path(filename).stem) or 'project'
+        base_slug = slugify_project_title(title) or 'project'
         slug = base_slug
         suffix = 2
         unique_slug = slug
@@ -838,14 +838,23 @@ def get_portfolio_projects():
             unique_slug = f'{slug}-{suffix}'
             suffix += 1
         used_slugs.add(unique_slug)
+        legacy_base_slug = slugify_project_title(Path(filename).stem) or 'project'
+        legacy_slug = legacy_base_slug
+        suffix = 2
+        while legacy_slug in used_legacy_slugs:
+            legacy_slug = f'{legacy_base_slug}-{suffix}'
+            suffix += 1
+        used_legacy_slugs.add(legacy_slug)
         projects.append({
             'filename': filename,
             'slug': unique_slug,
+            'legacy_slug': legacy_slug,
             'title': title,
             'date': str(caption.get('date', '')),
             'type': str(caption.get('type', '')),
             'extra': str(caption.get('extra', '')),
             'description': str(caption.get('description', '')),
+            'description_nl': str(caption.get('description_nl', '')),
             'link': str(caption.get('link', '')),
             'embeds': caption.get('embeds', []),
         })
@@ -1065,10 +1074,19 @@ def set_site_language(language):
 
 @app.route('/projects/<slug>')
 def project_detail(slug):
-    project = next((item for item in get_portfolio_projects() if item['slug'] == slug), None)
+    projects = get_portfolio_projects()
+    project = next((item for item in projects if item['slug'] == slug), None)
     if project is None:
-        abort(404)
+        legacy_project = next((item for item in projects if item['legacy_slug'] == slug), None)
+        if legacy_project is None:
+            abort(404)
+        return redirect(url_for('project_detail', slug=legacy_project['slug']), code=301)
 
+    description = (
+        project['description_nl']
+        if preferred_site_language() == 'nl' and project['description_nl']
+        else project['description']
+    )
     gallery_filenames = [
         filename for filename in [project['filename'], *load_project_galleries().get(project['filename'], [])]
         if (path := get_static_path(filename)) is not None and path.is_file()
@@ -1092,7 +1110,7 @@ def project_detail(slug):
         '@type': 'CreativeWork',
         'name': project['title'],
         'url': f"https://timvanzanten.com/projects/{project['slug']}",
-        'description': plain_text_description(project['description']),
+        'description': plain_text_description(description),
         'image': f"https://timvanzanten.com{project_image}" if project_image else None,
         'dateCreated': f'{project_year:04d}-{project_month:02d}-01' if project_year else None,
         'genre': project['type'] or None,
@@ -1116,9 +1134,9 @@ def project_detail(slug):
         gallery=gallery,
         embeds=embeds,
         project_schema=project_schema,
-        description_html=render_markdown_description(project['description']),
+        description_html=render_markdown_description(description),
         meta_description=(
-            plain_text_description(project['description'])
+            plain_text_description(description)
             or f"Explore {project['title']}, a project by Tim van Zanten."
         )[:250],
         canonical_url=f"https://timvanzanten.com/projects/{project['slug']}",
@@ -1521,6 +1539,7 @@ def admin_project_records():
             'type': caption.get('type', ''),
             'extra': caption.get('extra', ''),
             'description': caption.get('description', ''),
+            'description_nl': caption.get('description_nl', ''),
             'link': caption.get('link', ''),
             'embeds': '\n'.join(caption.get('embeds', [])) if isinstance(caption.get('embeds', []), list) else '',
             'published': caption.get('published') is not False,
@@ -1893,13 +1912,17 @@ def admin_projects():
         'type': str(data.get('type', '')).strip(),
         'extra': str(data.get('extra', '')).strip(),
         'description': str(data.get('description', '')).strip(),
+        'description_nl': str(data.get('description_nl', '')).strip(),
         'link': str(data.get('link', '')).strip(),
     }
     try:
         fields['embeds'] = normalize_project_embeds(data.get('embeds', ''))
     except ValueError as error:
         return jsonify({'error': str(error)}), 400
-    limits = {'title': 160, 'date': 80, 'type': 100, 'extra': 160, 'description': 12000, 'link': 2048}
+    limits = {
+        'title': 160, 'date': 80, 'type': 100, 'extra': 160,
+        'description': 12000, 'description_nl': 12000, 'link': 2048,
+    }
     if not title:
         return jsonify({'error': 'Add a project title before saving.'}), 400
     if any(len(fields[key]) > limit for key, limit in limits.items()):
@@ -1916,6 +1939,10 @@ def admin_projects():
             carousels = read_admin_json(CAROUSELS_FILE)
             image_links = load_image_links()
             project_galleries = load_project_galleries()
+            if 'description_nl' not in data:
+                existing_caption = captions.get(project_id or filename, {})
+                if isinstance(existing_caption, dict):
+                    fields['description_nl'] = str(existing_caption.get('description_nl', ''))
             if published is None:
                 existing_caption = captions.get(project_id or filename, {})
                 published = not isinstance(existing_caption, dict) or existing_caption.get('published') is not False
@@ -2209,7 +2236,12 @@ def get_captions():
     }
     for caption in captions.values():
         if isinstance(caption, dict):
-            caption['description_html'] = render_markdown_description(caption.get('description', ''))
+            description = (
+                caption.get('description_nl') or caption.get('description', '')
+                if preferred_site_language() == 'nl'
+                else caption.get('description', '')
+            )
+            caption['description_html'] = render_markdown_description(description)
     for project in get_portfolio_projects():
         if project['filename'] in captions:
             captions[project['filename']]['project_url'] = url_for('project_detail', slug=project['slug'])

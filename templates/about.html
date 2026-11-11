@@ -111,6 +111,7 @@
             position: absolute;
             top: 20px;
             left: 40px;
+            right: 40px;
             pointer-events: auto;
             display: flex;
             flex-direction: column;
@@ -125,16 +126,15 @@
             position: absolute;
             top: 130px;
             left: 160px;
-            height: 45px;
+            height: 32px;
             opacity: 0;
-            transition: opacity 0.3s ease-out, height 0.2s ease-out;
+            transition: opacity 0.3s ease-out;
             pointer-events: none;
             z-index: 11;
         }
 
         .hero.scrolling #scrollLiggen {
             opacity: 1;
-            height: 32px !important;
         }
 
         .hero-title {
@@ -205,17 +205,27 @@
             display: flex;
             gap: 42px;
             margin-top: 12px;
-            justify-content: center;
-            width: 105%;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
         }
 
         .language-switch {
             display: flex;
             gap: 10px;
+            align-items: center;
+            margin-left: auto;
+            margin-right: -10px;
         }
 
         .language-switch .nav-link {
             font-size: 13px;
+        }
+
+        .language-choice[aria-current="page"] {
+            padding: 3px 6px;
+            background: #0101FF;
+            color: #fff;
         }
 
         .nav-link {
@@ -258,7 +268,7 @@
             transition: opacity 1.0s ease-out;
             justify-content: center;
             width: 100%;
-            position: absolute;
+            position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
@@ -603,6 +613,8 @@
             .language-switch {
                 flex: 0 0 auto;
                 gap: 6px;
+                margin-left: 0;
+                margin-right: 0;
             }
 
             .language-switch .nav-link {
@@ -632,10 +644,6 @@
                 top: 10% !important;
                 left: 50% !important;
                 transform: translate(-50%, -50%) !important;
-                height: 30px !important;
-            }
-
-            .hero.scrolling #scrollLiggen {
                 height: 24px !important;
             }
 
@@ -804,8 +812,8 @@
                 <a href="/about" class="nav-link active" id="aboutLink">ABOUT</a>
                 <a href="javascript:void(0);" class="nav-link" id="searchLink" onclick="openSearch()" style="cursor: pointer;">SEARCH</a>
                 <span class="language-switch" aria-label="Choose language">
-                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English">EN</a>
-                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands">NL</a>
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands"{% if language == 'nl' %} aria-current="page"{% endif %}>NL</a>
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English"{% if language == 'en' %} aria-current="page"{% endif %}>EN</a>
                 </span>
             </div>
         </div>

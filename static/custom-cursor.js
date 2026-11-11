@@ -27,9 +27,25 @@
     let cursorVisible = false;
     let isPointerPressed = false;
     let lastTimestamp = performance.now();
+    let coordinateScale = 1;
+
+    function measureCoordinateScale() {
+        const calibrationDistance = 100;
+        const originalTransform = cursorContainer.style.transform;
+
+        cursorContainer.style.transform = 'translate3d(0px, 0px, 0) translate(-50%, -50%)';
+        const originX = cursorContainer.getBoundingClientRect().left;
+        cursorContainer.style.transform = `translate3d(${calibrationDistance}px, 0px, 0) translate(-50%, -50%)`;
+        const movedX = cursorContainer.getBoundingClientRect().left;
+        cursorContainer.style.transform = originalTransform;
+
+        const scale = (movedX - originX) / calibrationDistance;
+        return Number.isFinite(scale) && scale > 0 ? scale : 1;
+    }
 
     cursorContainer.style.opacity = '0';
     cursorContainer.style.transform = 'translate3d(-9999px, -9999px, 0)';
+    coordinateScale = measureCoordinateScale();
 
     const interactiveSelectors = [
         'a', 'button', 'input', 'textarea', 'select',
@@ -113,7 +129,7 @@
         const transformScaleY = scaleY * focusScale;
 
         cursorDot.style.transform = `rotate(${angle}deg) scale(${transformScaleX}, ${transformScaleY})`;
-        cursorContainer.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`;
+        cursorContainer.style.transform = `translate3d(${currentX / coordinateScale}px, ${currentY / coordinateScale}px, 0) translate(-50%, -50%)`;
 
         lastX = currentX;
         lastY = currentY;
@@ -129,6 +145,10 @@
             cursorVisible = true;
             cursorContainer.style.opacity = '1';
         }
+    });
+
+    window.addEventListener('resize', () => {
+        coordinateScale = measureCoordinateScale();
     });
 
     document.addEventListener('mousedown', () => {

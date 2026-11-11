@@ -96,6 +96,7 @@
             position: absolute;
             top: 20px;
             left: 40px;
+            right: 40px;
             pointer-events: auto;
             display: flex;
             flex-direction: column;
@@ -110,16 +111,15 @@
             position: absolute;
             top: 130px;
             left: 160px;
-            height: 45px;
+            height: 32px;
             opacity: 0;
-            transition: opacity 0.3s ease-out, height 0.2s ease-out;
+            transition: opacity 0.3s ease-out;
             pointer-events: none;
             z-index: 11;
         }
 
         .hero.scrolling #scrollLiggen {
             opacity: 1;
-            height: 32px !important;
         }
 
         .hero-title {
@@ -190,17 +190,27 @@
             display: flex;
             gap: 42px;
             margin-top: 12px;
-            justify-content: center;
-            width: 105%;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
         }
 
         .language-switch {
             display: flex;
             gap: 10px;
+            align-items: center;
+            margin-left: auto;
+            margin-right: -10px;
         }
 
         .language-switch .nav-link {
             font-size: 13px;
+        }
+
+        .language-choice[aria-current="page"] {
+            padding: 3px 6px;
+            background: #0101FF;
+            color: #fff;
         }
 
         .nav-link {
@@ -264,7 +274,7 @@
             transition: opacity 1.0s ease-out;
             justify-content: center;
             width: 100%;
-            position: absolute;
+            position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
@@ -364,8 +374,8 @@
 
         .image-grid {
             display: grid;
-            grid-template-columns: 280px 280px;
-            gap: 140px 60px;
+            grid-template-columns: repeat(2, minmax(0, 280px));
+            gap: 140px 100px;
             margin-bottom: 80px;
             justify-content: center;
         }
@@ -387,7 +397,6 @@
             justify-content: flex-start;
             align-items: center;
             margin-top: var(--random-offset-v, 0px);
-            margin-left: var(--random-offset-h, 0px);
             cursor: pointer;
         }
 
@@ -1167,20 +1176,6 @@
             align-self: flex-start;
         }
 
-        .project-detail-link {
-            display: inline-block;
-            margin-top: 12px;
-            color: #0101FF;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: underline;
-            text-underline-offset: 3px;
-        }
-
-        .project-detail-link[hidden] {
-            display: none;
-        }
-
         .modal-link-button:hover:not(:disabled) {
             background-color: #0000cc;
         }
@@ -1352,6 +1347,8 @@
             .language-switch {
                 flex: 0 0 auto;
                 gap: 6px;
+                margin-left: 0;
+                margin-right: 0;
             }
 
             .language-switch .nav-link {
@@ -1449,10 +1446,6 @@
                 top: 14% !important;
                 left: 50% !important;
                 transform: translate(-50%, -50%) !important;
-                height: 30px !important;
-            }
-
-            .hero.scrolling #scrollLiggen {
                 height: 24px !important;
             }
 
@@ -1694,8 +1687,8 @@
                 <a href="/about" class="nav-link" id="aboutLink">ABOUT</a>
                 <button type="button" class="nav-link" id="searchLink" onclick="openSearch()">SEARCH</button>
                 <span class="language-switch" aria-label="Choose language">
-                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English">EN</a>
-                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands">NL</a>
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands"{% if language == 'nl' %} aria-current="page"{% endif %}>NL</a>
+                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English"{% if language == 'en' %} aria-current="page"{% endif %}>EN</a>
                 </span>
             </nav>
         </div>
@@ -1760,7 +1753,6 @@
                     <div id="modalDescription" class="modal-description" data-no-translate></div>
                 </div>
                 <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">View project</button>
-                <a class="project-detail-link" id="projectDetailLink" hidden>Project details, images & embeds</a>
             </div>
         </div>
     </div>
@@ -1941,12 +1933,8 @@
                     const randomOffsetV = Math.random() * 40;
                     itemDiv.style.setProperty('--random-offset-v', `${randomOffsetV}px`);
                     
-                    // Horizontal offset: -40 to 40px (enough variation without overflow)
-                    const randomOffsetH = Math.random() * 80 - 40;
-                    itemDiv.style.setProperty('--random-offset-h', `${randomOffsetH}px`);
                 } else {
                     itemDiv.style.setProperty('--random-offset-v', '0px');
-                    itemDiv.style.setProperty('--random-offset-h', '0px');
                 }
 
                 const mediaElement = document.createElement(isVideo ? 'video' : 'img');
@@ -2245,9 +2233,6 @@
             const imageLink = document.getElementById('modalImageLink');
             const titleLink = document.getElementById('modalTitleLink');
             const linkButton = document.getElementById('modalLinkButton');
-            const projectDetailLink = document.getElementById('projectDetailLink');
-            projectDetailLink.href = caption.project_url || '#';
-            projectDetailLink.hidden = !caption.project_url;
             
             if (linkUrl !== '#') {
                 imageLink.href = linkUrl;

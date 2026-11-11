@@ -217,7 +217,7 @@
                             </label>
                         </div>
                         <div class="field full description-field">
-                            <label for="description">Description</label>
+                            <label for="description">Description (English)</label>
                             <div class="markdown-toolbar" role="toolbar" aria-label="Description formatting">
                                 <button id="descriptionBold" type="button" aria-label="Bold" title="Bold"><strong>B</strong></button>
                                 <button id="descriptionItalic" type="button" aria-label="Italic" title="Italic"><em>I</em></button>
@@ -226,6 +226,11 @@
                             <textarea id="description" name="description" maxlength="12000" placeholder="Write the project description"></textarea>
                             <div class="preview-label">Preview</div>
                             <div class="description-preview" id="descriptionPreview" aria-live="polite">Nothing to preview yet.</div>
+                        </div>
+                        <div class="field full">
+                            <label for="descriptionNl">Description (Dutch, optional)</label>
+                            <textarea id="descriptionNl" name="description_nl" maxlength="12000" placeholder="Voer hier de Nederlandse projectbeschrijving in"></textarea>
+                            <span class="cover-help">Shown to visitors who choose Dutch. Leave blank to use the English description.</span>
                         </div>
                     </div>
                 </section>
@@ -879,6 +884,7 @@
             document.getElementById('type').value = project.type;
             document.getElementById('extra').value = project.extra;
             document.getElementById('description').value = project.description;
+            document.getElementById('descriptionNl').value = project.description_nl || '';
             document.getElementById('embeds').value = project.embeds || '';
             updateDescriptionPreview();
             document.getElementById('link').value = project.link;

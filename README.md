@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 The easiest way to add and manage projects is through `/admin`. The editor can upload a cover image and gallery media, edit project details, and publish changes to GitHub. See [Manage Projects](#manage-projects) for the required environment variables.
 
-Project data can also be edited directly in `captions.json`:
+Project data can also be edited directly in `captions.json`. Project descriptions support an optional `description_nl` field; when it is filled in, Dutch visitors see that version while English visitors see `description`:
 
 ```json
 {
