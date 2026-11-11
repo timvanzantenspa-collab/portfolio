@@ -54,6 +54,8 @@
         .settings { display: flex; justify-content: space-between; gap: 20px; align-items: center; padding: 18px 0; border-top: 1px solid var(--line); }
         .setting-label { font-size: 14px; font-weight: 700; }
         .setting-value { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 400; }
+        .title-setting { padding: 18px 0; border-top: 1px solid var(--line); }
+        .title-input { width: 100%; min-height: 42px; margin-top: 10px; border: 1px solid #aeb2bb; padding: 0 11px; color: var(--ink); background: white; font: inherit; font-size: 14px; }
         .duration-control { width: min(210px, 48%); accent-color: #356bff; }
         .make-button { width: 100%; min-height: 48px; background: var(--ink); color: white; }
         .make-button:disabled { opacity: 0.55; cursor: wait; }
@@ -97,6 +99,13 @@
                         </div>
                     </div>
                     <ol class="file-list" id="file-list" aria-label="Animation frames"></ol>
+                    <div class="title-setting">
+                        <label class="setting-label" for="animation-title">
+                            Animation title
+                            <span class="setting-value" id="filename-preview">Filename: NFF 2026_frame-animation.gif</span>
+                        </label>
+                        <input class="title-input" id="animation-title" type="text" maxlength="80" placeholder="NFF 2026" autocomplete="off" aria-describedby="filename-preview">
+                    </div>
                     <div class="settings">
                         <label class="setting-label" for="duration">
                             Frame duration
@@ -125,6 +134,8 @@
         const input = document.getElementById('image-input');
         const fileList = document.getElementById('file-list');
         const dropzone = document.getElementById('dropzone');
+        const titleInput = document.getElementById('animation-title');
+        const filenamePreview = document.getElementById('filename-preview');
         const durationInput = document.getElementById('duration');
         const durationValue = document.getElementById('duration-value');
         const makeButton = document.getElementById('make-button');
@@ -136,6 +147,19 @@
         let files = [];
         let previewUrl = '';
         let thumbnailUrls = [];
+
+        function getOutputFilename() {
+            const safeTitle = titleInput.value
+                .replace(/[<>:"/\\|?*\u0000-\u001f]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .replace(/^[. ]+|[. ]+$/g, '');
+            return `${safeTitle || 'title'}_frame-animation.gif`;
+        }
+
+        function updateFilenamePreview() {
+            filenamePreview.textContent = `Filename: ${getOutputFilename()}`;
+        }
 
         function updateDuration() {
             const milliseconds = Number(durationInput.value);
@@ -196,6 +220,7 @@
             addFiles(event.target.files);
             input.value = '';
         });
+        titleInput.addEventListener('input', updateFilenamePreview);
         durationInput.addEventListener('input', updateDuration);
         ['dragenter', 'dragover'].forEach(type => dropzone.addEventListener(type, event => {
             event.preventDefault();
@@ -209,6 +234,11 @@
 
         makeButton.addEventListener('click', async () => {
             if (files.length < 2) return;
+            if (!titleInput.value.trim()) {
+                message.textContent = 'Enter a title for the animation.';
+                titleInput.focus();
+                return;
+            }
             const oversizedImage = files.some(file => file.size > 16 * 1024 * 1024);
             const totalSize = files.reduce((size, file) => size + file.size, 0);
             if (oversizedImage || totalSize > 48 * 1024 * 1024) {
@@ -222,6 +252,7 @@
             message.textContent = '';
             const form = new FormData();
             files.forEach(file => form.append('images', file, file.name));
+            form.append('title', titleInput.value);
             form.append('duration', durationInput.value);
             try {
                 const response = await fetch('/admin/api/gif-maker', { method: 'POST', body: form });
@@ -241,6 +272,7 @@
                 preview.hidden = false;
                 emptyPreview.hidden = true;
                 downloadButton.href = previewUrl;
+                downloadButton.download = getOutputFilename();
                 downloadButton.hidden = false;
                 resultMeta.hidden = false;
                 document.getElementById('result-size').textContent = `${(blob.size / 1024 / 1024).toFixed(2)} MB`;
@@ -254,6 +286,7 @@
                 makeButton.textContent = 'Make looping GIF';
             }
         });
+        updateFilenamePreview();
         updateDuration();
         renderFiles();
     </script>

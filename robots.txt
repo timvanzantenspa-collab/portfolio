@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /static/.cache/
 Disallow: /api/
 
 Sitemap: https://timvanzanten.com/sitemap.xml

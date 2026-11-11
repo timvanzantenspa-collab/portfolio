@@ -68,6 +68,8 @@
         .publish-copy strong { font-size: 12px; }
         .publish-copy small { color: var(--muted); font-size: 11px; font-weight: 400; }
         .field textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
+        #embeds { min-height: 100px; }
+        .embed-help { color: var(--muted); font-size: 11px; line-height: 1.5; }
         .markdown-toolbar { display: flex; gap: 4px; padding: 5px; border: 1px solid var(--line); border-bottom: 0; background: #f7f7f7; }
         .markdown-toolbar button { min-width: 32px; height: 30px; padding: 0 8px; border: 1px solid transparent; background: transparent; color: var(--ink); font-size: 12px; }
         .markdown-toolbar button:hover, .markdown-toolbar button:focus-visible { border-color: var(--line); background: #fff; outline: none; }
@@ -236,6 +238,14 @@
                         </label>
                     </div>
                     <div class="asset-grid" id="assetGrid"></div>
+                </section>
+                <section class="section">
+                    <div class="section-title"><h2>Embedded content</h2><p>One public URL per line</p></div>
+                    <div class="field full">
+                        <label for="embeds">Instagram, YouTube or webpage URLs</label>
+                        <textarea id="embeds" name="embeds" maxlength="20480" placeholder="https://www.instagram.com/reels/DeZg0HvCATG/&#10;https://www.youtube.com/watch?v=..."></textarea>
+                        <small class="embed-help">YouTube videos attempt muted autoplay. Instagram controls autoplay itself, and browsers may require a visitor to start playback. Other webpages appear only if their host permits embedding.</small>
+                    </div>
                 </section>
                 <div class="form-actions">
                     <button class="save-button" id="saveButton" type="submit" disabled>Save and push to Git</button>
@@ -797,6 +807,7 @@
             document.getElementById('type').value = project.type;
             document.getElementById('extra').value = project.extra;
             document.getElementById('description').value = project.description;
+            document.getElementById('embeds').value = project.embeds || '';
             updateDescriptionPreview();
             document.getElementById('link').value = project.link;
             document.getElementById('pageTitle').textContent = project.title || 'Project details';
@@ -818,6 +829,7 @@
             hasUnsavedChanges = false;
             editedImageLinks = {};
             document.getElementById('projectId').value = '';
+            document.getElementById('embeds').value = '';
             document.getElementById('publishProject').checked = true;
             updatePublishControl();
             document.getElementById('pageTitle').textContent = 'New project';

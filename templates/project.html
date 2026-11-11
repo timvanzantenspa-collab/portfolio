@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ meta_description }}">
+    <meta name="theme-color" content="#0101FF">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="{{ project.title }} | Tim van Zanten">
+    <meta property="og:site_name" content="Tim van Zanten">
+    <meta property="og:description" content="{{ meta_description }}">
+    {% set social_image = gallery | selectattr('media_type', 'equalto', 'image') | first %}
+    {% if social_image %}
+    <meta property="og:image" content="https://timvanzanten.com{{ social_image.url }}">
+    <meta property="og:image:alt" content="{{ project.title }} project image">
+    {% else %}
+    <meta property="og:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
+    <meta property="og:image:alt" content="Blue Liggen mark on a transparent background">
+    {% endif %}
+    <meta property="og:url" content="{{ canonical_url }}">
+    <meta name="twitter:card" content="{% if social_image %}summary_large_image{% else %}summary{% endif %}">
+    <meta name="twitter:title" content="{{ project.title }} | Tim van Zanten">
+    <meta name="twitter:description" content="{{ meta_description }}">
+    {% if social_image %}
+    <meta name="twitter:image" content="https://timvanzanten.com{{ social_image.url }}">
+    <meta name="twitter:image:alt" content="{{ project.title }} project image">
+    {% else %}
+    <meta name="twitter:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
+    <meta name="twitter:image:alt" content="Blue Liggen mark on a transparent background">
+    {% endif %}
+    <link rel="canonical" href="{{ canonical_url }}">
+    <title>{{ project.title }} | Tim van Zanten</title>
+    <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
+    <script type="application/ld+json">{{ project_schema | tojson }}</script>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            color: #111;
+            background: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        a { color: #0101ff; }
+        .page { width: min(100% - 40px, 1000px); margin: 0 auto; padding: 32px 0 80px; }
+        .top-nav { display: flex; justify-content: space-between; gap: 20px; margin-bottom: 64px; }
+        .top-nav a { font-weight: 700; text-decoration-thickness: 2px; text-underline-offset: 4px; }
+        .back-link { display: inline-block; margin-bottom: 24px; }
+        h1 { max-width: 800px; margin: 0; font-size: clamp(36px, 8vw, 76px); line-height: 1; letter-spacing: -.05em; }
+        .metadata { margin: 20px 0 36px; color: #555; }
+        .project-description { max-width: 720px; margin: 0 0 48px; font-size: 18px; line-height: 1.65; }
+        .project-description > :first-child { margin-top: 0; }
+        .project-description > :last-child { margin-bottom: 0; }
+        .project-description a { overflow-wrap: anywhere; }
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+        .gallery img, .gallery video { display: block; width: 100%; height: auto; }
+        .embeds { display: grid; gap: 28px; margin-top: 48px; }
+        .embed { margin: 0; }
+        .embed h2 { margin: 0 0 10px; font-size: 16px; }
+        .embed-frame { width: 100%; aspect-ratio: 16 / 9; border: 0; background: #f2f2f2; }
+        .embed-instagram .embed-frame { aspect-ratio: 4 / 5; }
+        .embed-vertical .embed-frame { width: min(100%, 460px); aspect-ratio: 9 / 16; }
+        .embed-webpage .embed-frame { aspect-ratio: 16 / 10; }
+        .external-link { display: inline-block; margin: 36px 0; font-weight: 700; }
+        .skip-link { position: absolute; top: -50px; left: 12px; padding: 10px; background: #0101ff; color: #fff; }
+        .skip-link:focus { top: 12px; }
+        a:focus-visible, video:focus-visible { outline: 3px solid #0101ff; outline-offset: 4px; }
+        @media (max-width: 640px) {
+            .page { width: min(100% - 32px, 1000px); padding-top: 20px; }
+            .top-nav { margin-bottom: 48px; }
+            .gallery { grid-template-columns: 1fr; }
+            .project-description { font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#project-content">Skip to project</a>
+    <main class="page" id="project-content">
+        <nav class="top-nav" aria-label="Main navigation">
+            <a href="{{ url_for('index') }}">Tim van Zanten</a>
+            <a href="{{ url_for('about') }}">About</a>
+        </nav>
+        <a class="back-link" href="{{ url_for('index') }}#projectIndexTitle">← All projects</a>
+        <article>
+            <header>
+                <h1>{{ project.title }}</h1>
+                <p class="metadata">
+                    {% if project.type %}{{ project.type }}{% endif %}
+                    {% if project.type and project.date %} · {% endif %}
+                    {% if project.date %}{{ project.date }}{% endif %}
+                    {% if project.extra %}{% if project.type or project.date %} · {% endif %}{{ project.extra }}{% endif %}
+                </p>
+            </header>
+            <div class="project-description">{{ description_html | safe }}</div>
+            {% if project.safe_link %}
+            <a class="external-link" href="{{ project.safe_link }}" target="_blank" rel="noopener noreferrer">Visit project ↗</a>
+            {% endif %}
+            {% if gallery %}
+            <section aria-labelledby="galleryTitle">
+            <h2 class="visually-hidden" id="galleryTitle">Project images and video</h2>
+            <div class="gallery">
+                {% for media in gallery %}
+                    {% if media.media_type == 'video' %}
+                    <video controls muted loop playsinline preload="none" aria-label="{{ project.title }} video {{ loop.index }}">
+                        <source src="{{ media.url }}">
+                    </video>
+                    {% else %}
+                    <img src="{{ media.url }}" alt="{{ project.title }}{% if loop.first %} cover image{% else %} gallery image {{ loop.index - 1 }}{% endif %}" decoding="async" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            </section>
+            {% endif %}
+            {% if embeds %}
+            <section class="embeds" aria-label="Embedded project content">
+                {% for embed in embeds %}
+                <figure class="embed embed-{{ embed.kind }}{% if embed.vertical %} embed-vertical{% endif %}">
+                    <figcaption><h2>{{ embed.title }}</h2></figcaption>
+                    <iframe
+                        class="embed-frame"
+                        src="{{ embed.src }}"
+                        title="{{ project.title }} — {{ embed.title }}"
+                        loading="lazy"
+                        referrerpolicy="strict-origin-when-cross-origin"
+                        sandbox="{{ embed.sandbox }}"
+                        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                        allowfullscreen
+                    ></iframe>
+                    <p><a href="{{ embed.url }}" target="_blank" rel="noopener noreferrer">Open on {{ embed.title.split(' ')[0] }} ↗</a></p>
+                </figure>
+                {% endfor %}
+            </section>
+            {% endif %}
+        </article>
+    </main>
+</body>
+</html>

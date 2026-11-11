@@ -1,6 +1,6 @@
-# Portfolio - Infinite Scroll Image Gallery
+# Tim van Zanten - Portfolio
 
-A beautiful, minimal single-page portfolio with infinite scroll image grid.
+A project portfolio for Tim van Zanten, built with Flask.
 
 ## Features
 
@@ -19,39 +19,11 @@ A beautiful, minimal single-page portfolio with infinite scroll image grid.
 pip install -r requirements.txt
 ```
 
-### 2. Add Images
+### 2. Add Projects
 
-Simply place image files in the `static/` folder:
+The easiest way to add and manage projects is through `/admin`. The editor can upload a cover image and gallery media, edit project details, and publish changes to GitHub. See [Manage Projects](#manage-projects) for the required environment variables.
 
-```
-static/
-  ├── photo1.jpg
-  ├── photo2.png
-  ├── photo3.jpg
-  └── ... any jpg, png, gif, webp
-```
-
-Supported formats: JPG, PNG, GIF, WEBP
-
-### 3. Reorder Images (Optional)
-
-Edit `image_order.json` to control the display order of images:
-
-```json
-{
-    "order": [
-        "my_first_photo.jpg",
-        "my_second_photo.png",
-        "ezgif.com-video-to-gif.gif"
-    ]
-}
-```
-
-Add image filenames in the order you want them to appear. Any images not listed will be added at the end in alphabetical order.
-
-### 4. Add Captions (Optional)
-
-Edit `captions.json` to add titles and descriptions to your images:
+Project data can also be edited directly in `captions.json`:
 
 ```json
 {
@@ -66,11 +38,11 @@ Edit `captions.json` to add titles and descriptions to your images:
 }
 ```
 
-**Click any image** to see its title and description in a modal!
+Projects are ordered by date, newest first. Each has a server-rendered detail page with its description and gallery.
 
 ### Manage Projects
 
-Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. Project descriptions support Markdown links, bold, italic, lists, and a live preview. The editor accepts up to eight gallery files per save: images are optimized to WebP, while MP4/WebM files remain videos and autoplay muted inline in the portfolio and carousel. Each selected image or video can have its own destination URL; leave it blank to use the project URL. Images are limited to 16 MB each, videos to 50 MB each, and a save to 60 MB total. Saving commits the data and media assets and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
+Open `/admin` to add, edit, group, or remove portfolio projects without editing JSON directly. Project descriptions support Markdown links, bold, italic, lists, and a live preview. Add Instagram, YouTube, or webpage embed URLs in the project's embedded-content field, one per line; arbitrary HTML is not accepted. YouTube videos attempt muted autoplay, but Instagram controls playback and browsers may require user interaction. Other sites must permit iframe embedding. The editor accepts up to eight gallery files per save: images are optimized to WebP, while MP4/WebM files remain videos and autoplay muted inline in the portfolio and carousel. Each selected image or video can have its own destination URL; leave it blank to use the project URL. Images are limited to 16 MB each, videos to 50 MB each, and a save to 60 MB total. Saving commits the data and media assets and pushes them to the configured branch. A Render service configured to deploy from that branch will then publish the update.
 
 Configure these environment variables on the server (for Render, use the service's Environment page):
 
@@ -82,7 +54,7 @@ Configure these environment variables on the server (for Render, use the service
 
 When `GITHUB_TOKEN` is set, the editor publishes atomic commits through the GitHub API, so the app does not need a local Git remote. The token needs Contents read/write permission and access to the target branch; failed publishing leaves project files untouched. For local use without a token, set `ADMIN_PASSWORD` and `SECRET_KEY` before starting Flask; local Git credential-manager authentication is used instead.
 
-### 4. Run the Server
+### 3. Run the Server
 
 ```bash
 python app.py
@@ -92,13 +64,13 @@ Then open: http://127.0.0.1:5005
 
 ## How It Works
 
-- **Image Optimization**: Images are automatically downscaled to max 600px width and optimized for web (JPEG quality 85)
-- **Smart Caching**: Processed images are cached, so they're only processed once
+- **Image Optimization**: Images are converted to WebP and downscaled to a maximum width of 500px on demand, when requested
+- **Smart Caching**: Processed images are cached in `static/.cache/`
 - **Infinite Scroll**: New images load automatically as you scroll down
-- **Responsive Grid**: 2 columns on desktop, 1 column on mobile
-- **Modal View**: Click any image to see its details with blurred background
-- **Easy Captions**: Just add entries to `captions.json` - no code needed!
-- **Custom Ordering**: Control image order with `image_order.json` - no code needed!
+- **Project Galleries**: Group images and videos under projects, with optional links per asset
+- **Searchable Project Pages**: Each published project has a server-rendered page linked from the homepage and sitemap
+- **Project Editor**: Manage project details and media at `/admin`
+- **About Page**: Read about Tim and access resume links at `/about`
 
 ## Tips
 
@@ -106,8 +78,7 @@ Then open: http://127.0.0.1:5005
 - Add images in any size - they'll be optimized automatically
 - No need to restart the server when adding new images
 - Cached versions are stored in `static/.cache/` (can be deleted to force reprocessing)
-- Images without entries in `captions.json` will just show their filename as the title
-- Images without entries in `image_order.json` will appear at the end in alphabetical order
+- Project media and captions are managed through the editor or the corresponding JSON files.
 
 ## File Structure
 
@@ -115,12 +86,12 @@ Then open: http://127.0.0.1:5005
 Portfolio/
 ├── app.py              # Flask backend
 ├── captions.json       # Image titles and descriptions
-├── image_order.json    # Control image display order
 ├── requirements.txt    # Python dependencies
 ├── static/             # Your images go here
 │   └── .cache/         # Auto-generated optimized images (ignore this)
 └── templates/
-    └── index.html      # Frontend
+    ├── index.html      # Portfolio homepage
+    └── project.html    # Searchable project detail page
 ```
 
 Enjoy your portfolio! 🎉

@@ -1,6 +1,6 @@
 #Runs from timvanzantenspam@gmail.com on render, on timvanzantenspa@gmail.com github
 #Passw in render: ADMIN_PASSWORD
-from flask import Flask, render_template, jsonify, request, redirect, url_for, session, send_file, send_from_directory
+from flask import Flask, abort, render_template, jsonify, request, redirect, url_for, session, send_file, send_from_directory
 from PIL import Image, ImageOps
 import markdown
 import nh3
@@ -17,10 +17,13 @@ import subprocess
 import threading
 import time
 import re
+import html
+import xml.etree.ElementTree as ET
 from functools import wraps
 from io import BytesIO
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlsplit
+from urllib.parse import parse_qs
 from urllib.request import Request, urlopen
 from werkzeug.utils import secure_filename
 from generate_jsonld import generate_all_schemas, load_resume_content, get_schema_script_tags, get_about_page_script_tags
@@ -37,7 +40,6 @@ app.config.update(
 STATIC_FOLDER = Path(__file__).parent / 'static'
 CACHE_FOLDER = Path(__file__).parent / 'static' / '.cache'
 CAPTIONS_FILE = Path(__file__).parent / 'captions.json'
-IMAGE_ORDER_FILE = Path(__file__).parent / 'image_order.json'
 CAROUSELS_FILE = Path(__file__).parent / 'carousels.json'
 PROJECT_GALLERIES_FILE = Path(__file__).parent / 'project_galleries.json'
 IMAGE_LINKS_FILE = Path(__file__).parent / 'image_links.json'
@@ -89,7 +91,8 @@ def load_captions():
         try:
             with open(CAPTIONS_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            app.logger.exception('Could not load captions from %s', CAPTIONS_FILE)
             return {}
     return {}
 
@@ -99,7 +102,8 @@ def load_carousels():
         try:
             with open(CAROUSELS_FILE, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except:
+        except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+            app.logger.exception('Could not load carousels from %s', CAROUSELS_FILE)
             return {}
     return {}
 
@@ -166,6 +170,83 @@ def normalize_optional_http_url(value):
         raise ValueError('Image links must be valid http:// or https:// URLs no longer than 2,048 characters.')
     return value
 
+def normalize_project_embeds(value):
+    if value is None:
+        return []
+    if isinstance(value, str):
+        urls = value.splitlines()
+    elif isinstance(value, list) and all(isinstance(item, str) for item in value):
+        urls = value
+    else:
+        raise ValueError('Embeds must be a list of URLs, one per line.')
+
+    normalized = []
+    for raw_url in urls:
+        url = raw_url.strip()
+        if not url:
+            continue
+        if len(url) > 2048:
+            raise ValueError('Embed URLs must be no longer than 2,048 characters.')
+        parsed = urlsplit(url)
+        if (
+            parsed.scheme != 'https'
+            or not parsed.hostname
+            or parsed.username
+            or parsed.password
+            or parsed.port not in (None, 443)
+        ):
+            raise ValueError('Embeds must be secure https:// URLs without credentials or custom ports.')
+        if len(normalized) >= 10:
+            raise ValueError('Add no more than ten embeds per project.')
+        describe_project_embed(url)
+        normalized.append(url)
+    return list(dict.fromkeys(normalized))
+
+def describe_project_embed(url):
+    parsed = urlsplit(url)
+    host = (parsed.hostname or '').lower()
+    path_parts = [part for part in parsed.path.split('/') if part]
+    if host in {'instagram.com', 'www.instagram.com'}:
+        if len(path_parts) < 2 or path_parts[0] not in {'p', 'reel', 'reels'}:
+            raise ValueError('Use an Instagram post or reel URL.')
+        shortcode = path_parts[1]
+        if not re.fullmatch(r'[A-Za-z0-9_-]+', shortcode):
+            raise ValueError('That Instagram post or reel URL is invalid.')
+        return {
+            'kind': 'instagram',
+            'title': 'Instagram post',
+            'src': f'https://www.instagram.com/p/{quote(shortcode, safe="")}/embed/',
+            'sandbox': 'allow-scripts allow-same-origin allow-presentation',
+            'autoplay': False,
+        }
+
+    if host in {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'}:
+        video_id = ''
+        if host == 'youtu.be':
+            video_id = path_parts[0] if path_parts else ''
+        elif parsed.path == '/watch':
+            video_id = parse_qs(parsed.query).get('v', [''])[0]
+        elif len(path_parts) >= 2 and path_parts[0] in {'embed', 'shorts', 'live'}:
+            video_id = path_parts[1]
+        if not re.fullmatch(r'[A-Za-z0-9_-]{11}', video_id):
+            raise ValueError('Use a valid YouTube video, Shorts, or youtu.be URL.')
+        return {
+            'kind': 'youtube',
+            'title': 'YouTube video',
+            'src': f'https://www.youtube-nocookie.com/embed/{video_id}?autoplay=1&mute=1&playsinline=1&rel=0',
+            'sandbox': 'allow-scripts allow-same-origin allow-presentation',
+            'autoplay': True,
+            'vertical': parsed.path.startswith('/shorts/'),
+        }
+
+    return {
+        'kind': 'webpage',
+        'title': f'Embedded webpage from {host}',
+        'src': url,
+        'sandbox': 'allow-scripts',
+        'autoplay': False,
+    }
+
 def normalize_image_link_updates(value):
     if not isinstance(value, dict) or not isinstance(value.get('gallery', []), list):
         raise ValueError('Per-image links must contain a cover URL and a gallery list.')
@@ -214,6 +295,18 @@ def render_markdown_description(description):
         url_schemes={'http', 'https', 'mailto'},
         link_rel='noopener noreferrer',
     )
+
+def plain_text_description(description):
+    rendered = markdown.markdown(
+        description if isinstance(description, str) else '',
+        extensions=DESCRIPTION_MARKDOWN_EXTENSIONS,
+        output_format='html5',
+    )
+    text = re.sub(r'<[^>]+>', ' ', rendered)
+    return re.sub(r'\s+', ' ', html.unescape(text)).strip()
+
+def media_url(filename):
+    return f'/media/{quote(filename, safe="")}'
 
 def get_static_path(filename):
     """Resolve a filename only when it stays inside the static directory."""
@@ -315,6 +408,65 @@ def get_image_files(include_unpublished=False):
         for image in gallery_images
     }
     return [image for image in sorted_images if image not in gallery_members]
+
+def slugify_project_title(value):
+    normalized = value.encode('ascii', 'ignore').decode('ascii').lower()
+    return re.sub(r'[^a-z0-9]+', '-', normalized).strip('-')
+
+def get_portfolio_projects():
+    captions = load_captions()
+    projects = []
+    used_slugs = set()
+    for filename in get_image_files():
+        caption = captions.get(filename, {})
+        if not isinstance(caption, dict):
+            caption = {}
+        title = str(caption.get('title') or Path(filename).stem)
+        base_slug = slugify_project_title(Path(filename).stem) or 'project'
+        slug = base_slug
+        suffix = 2
+        unique_slug = slug
+        while unique_slug in used_slugs:
+            unique_slug = f'{slug}-{suffix}'
+            suffix += 1
+        used_slugs.add(unique_slug)
+        projects.append({
+            'filename': filename,
+            'slug': unique_slug,
+            'title': title,
+            'date': str(caption.get('date', '')),
+            'type': str(caption.get('type', '')),
+            'extra': str(caption.get('extra', '')),
+            'description': str(caption.get('description', '')),
+            'link': str(caption.get('link', '')),
+            'embeds': caption.get('embeds', []),
+        })
+    return projects
+
+def get_project_list_schema(projects):
+    return {
+        '@context': 'https://schema.org',
+        '@type': 'ItemList',
+        'name': 'Selected projects by Tim van Zanten',
+        'itemListElement': [
+            {
+                '@type': 'ListItem',
+                'position': position,
+                'name': project['title'],
+                'url': f"https://timvanzanten.com/projects/{project['slug']}",
+            }
+            for position, project in enumerate(projects, 1)
+        ],
+    }
+
+def render_homepage():
+    projects = get_portfolio_projects()
+    return render_template(
+        'index.html',
+        jsonld_scripts=homepage_scripts,
+        projects=projects,
+        project_list_schema=get_project_list_schema(projects),
+    )
 
 def downscale_image(filename):
     """Return an optimized image URL or the original video URL."""
@@ -452,7 +604,67 @@ def downscale_image(filename):
 
 @app.route('/')
 def index():
-    return render_template('index.html', jsonld_scripts=homepage_scripts)
+    return render_homepage()
+
+@app.route('/projects/<slug>')
+def project_detail(slug):
+    project = next((item for item in get_portfolio_projects() if item['slug'] == slug), None)
+    if project is None:
+        abort(404)
+
+    gallery_filenames = [
+        filename for filename in [project['filename'], *load_project_galleries().get(project['filename'], [])]
+        if (path := get_static_path(filename)) is not None and path.is_file()
+    ]
+    gallery = [
+        {
+            'filename': filename,
+            'url': media_url(filename),
+            'media_type': 'video' if is_video_filename(filename) else 'image',
+        }
+        for filename in gallery_filenames
+    ]
+    embeds = [
+        {**describe_project_embed(url), 'url': url}
+        for url in normalize_project_embeds(project['embeds'])
+    ]
+    project_image = next((media['url'] for media in gallery if media['media_type'] == 'image'), None)
+    project_year, project_month = parse_date(project['date'])
+    project_schema = {
+        '@context': 'https://schema.org',
+        '@type': 'CreativeWork',
+        'name': project['title'],
+        'url': f"https://timvanzanten.com/projects/{project['slug']}",
+        'description': plain_text_description(project['description']),
+        'image': f"https://timvanzanten.com{project_image}" if project_image else None,
+        'dateCreated': f'{project_year:04d}-{project_month:02d}-01' if project_year else None,
+        'genre': project['type'] or None,
+        'creator': {
+            '@type': 'Person',
+            'name': 'Tim van Zanten',
+            'url': 'https://timvanzanten.com/about',
+        },
+    }
+    project_schema = {key: value for key, value in project_schema.items() if value is not None}
+    parsed_link = urlsplit(project['link'])
+    project['safe_link'] = (
+        project['link']
+        if parsed_link.scheme in {'http', 'https'} and parsed_link.netloc
+        else ''
+    )
+    return render_template(
+        'project.html',
+        project=project,
+        gallery=gallery,
+        embeds=embeds,
+        project_schema=project_schema,
+        description_html=render_markdown_description(project['description']),
+        meta_description=(
+            plain_text_description(project['description'])
+            or f"Explore {project['title']}, a project by Tim van Zanten."
+        )[:250],
+        canonical_url=f"https://timvanzanten.com/projects/{project['slug']}",
+    )
 
 @app.route('/about')
 def about():
@@ -483,6 +695,14 @@ def create_gif():
         return jsonify({'error': 'Choose at least two images.'}), 400
     if len(uploads) > 100:
         return jsonify({'error': 'A GIF can contain up to 100 images.'}), 400
+
+    raw_title = request.form.get('title', '')
+    if len(raw_title) > 80:
+        return jsonify({'error': 'The animation title must be 80 characters or fewer.'}), 400
+    title = re.sub(r'[<>:"/\\|?*\x00-\x1f]', ' ', raw_title)
+    title = re.sub(r'\s+', ' ', title).strip(' .')
+    if not title:
+        return jsonify({'error': 'Enter a title for the animation.'}), 400
 
     duration = request.form.get('duration', 200, type=int)
     if duration is None or not 50 <= duration <= 1000:
@@ -550,7 +770,7 @@ def create_gif():
         output,
         mimetype='image/gif',
         as_attachment=True,
-        download_name='frame-animation.gif',
+        download_name=f'{title}_frame-animation.gif',
         max_age=0,
     )
     response.headers['Cache-Control'] = 'no-store'
@@ -738,6 +958,7 @@ def admin_project_records():
             'extra': caption.get('extra', ''),
             'description': caption.get('description', ''),
             'link': caption.get('link', ''),
+            'embeds': '\n'.join(caption.get('embeds', [])) if isinstance(caption.get('embeds', []), list) else '',
             'published': caption.get('published') is not False,
             'images': images,
         })
@@ -1107,6 +1328,10 @@ def admin_projects():
         'description': str(data.get('description', '')).strip(),
         'link': str(data.get('link', '')).strip(),
     }
+    try:
+        fields['embeds'] = normalize_project_embeds(data.get('embeds', ''))
+    except ValueError as error:
+        return jsonify({'error': str(error)}), 400
     limits = {'title': 160, 'date': 80, 'type': 100, 'extra': 160, 'description': 12000, 'link': 2048}
     if not title:
         return jsonify({'error': 'Add a project title before saving.'}), 400
@@ -1357,8 +1582,15 @@ def robots():
 
 @app.route('/sitemap.xml')
 def sitemap():
-    with open(Path(__file__).parent / 'sitemap.xml', 'r') as f:
-        return f.read(), 200, {'Content-Type': 'application/xml'}
+    namespace = 'http://www.sitemaps.org/schemas/sitemap/0.9'
+    ET.register_namespace('', namespace)
+    urlset = ET.Element(f'{{{namespace}}}urlset')
+    paths = ['/', '/about', *(f"/projects/{project['slug']}" for project in get_portfolio_projects())]
+    for path in paths:
+        url = ET.SubElement(urlset, f'{{{namespace}}}url')
+        ET.SubElement(url, f'{{{namespace}}}loc').text = f'https://timvanzanten.com{path}'
+    xml = ET.tostring(urlset, encoding='utf-8', xml_declaration=True)
+    return xml, 200, {'Content-Type': 'application/xml; charset=utf-8'}
 
 @app.route('/ping')
 def ping():
@@ -1376,14 +1608,30 @@ def get_images():
     image_data = []
     
     for img in images:
-        cached_url = downscale_image(img)
         image_data.append({
             'filename': img,
-            'url': cached_url,
+            'url': media_url(img),
             'media_type': 'video' if is_video_filename(img) else 'image',
         })
     
     return jsonify(image_data)
+
+@app.route('/media/<path:filename>')
+def get_media(filename):
+    original_path = get_static_path(filename)
+    if original_path is None or not original_path.is_file():
+        abort(404)
+    if is_video_filename(filename) or filename.lower().endswith('.webp'):
+        return send_file(original_path, conditional=True)
+
+    optimized_url = downscale_image(filename)
+    optimized_name = Path(urlsplit(optimized_url).path).name
+    if optimized_url.startswith('/static/.cache/'):
+        response = send_from_directory(CACHE_FOLDER, optimized_name, conditional=True)
+    else:
+        response = send_file(original_path, conditional=True)
+    response.headers.setdefault('Cache-Control', 'public, max-age=86400')
+    return response
 
 @app.route('/api/captions')
 def get_captions():
@@ -1395,6 +1643,9 @@ def get_captions():
     for caption in captions.values():
         if isinstance(caption, dict):
             caption['description_html'] = render_markdown_description(caption.get('description', ''))
+    for project in get_portfolio_projects():
+        if project['filename'] in captions:
+            captions[project['filename']]['project_url'] = url_for('project_detail', slug=project['slug'])
     return jsonify(captions)
 
 @app.route('/api/carousel/<filename>')
@@ -1444,7 +1695,7 @@ def get_carousel(filename):
 @app.errorhandler(404)
 def not_found(error):
     """Render the homepage as a fallback while preserving the 404 status."""
-    return render_template('index.html', jsonld_scripts=homepage_scripts), 404
+    return render_homepage(), 404
 
 if __name__ == '__main__':
     import os

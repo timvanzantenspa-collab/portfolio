@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Selected projects by Tim van Zanten, a creative producer and researcher working in music, digital culture, and public space.">
+    <meta name="description" content="Tim van Zanten works across cultural production, education and digital projects. Based in Utrecht, working across festivals, public programmes and digital culture.">
     <meta name="theme-color" content="#0101FF">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Tim van Zanten - Creative Portfolio">
+    <meta property="og:title" content="Tim van Zanten - Cultural Production, Education & Digital Projects">
     <meta property="og:site_name" content="Tim van Zanten">
-    <meta property="og:description" content="Selected projects by Tim van Zanten, a creative producer and researcher working in music, digital culture, and public space.">
+    <meta property="og:description" content="Tim van Zanten works across cultural production, education and digital projects. Based in Utrecht, working across festivals, public programmes and digital culture.">
     <meta property="og:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
     <meta property="og:image:alt" content="Blue Liggen mark on a transparent background">
     <meta property="og:url" content="https://timvanzanten.com">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Tim van Zanten - Creative Portfolio">
-    <meta name="twitter:description" content="Selected projects by Tim van Zanten, a creative producer and researcher working in music, digital culture, and public space.">
+    <meta name="twitter:title" content="Tim van Zanten - Cultural Production, Education & Digital Projects">
+    <meta name="twitter:description" content="Tim van Zanten works across cultural production, education and digital projects. Based in Utrecht, working across festivals, public programmes and digital culture.">
     <meta name="twitter:image" content="https://timvanzanten.com/static/Favicon/android-chrome-512x512.png">
     <meta name="author" content="Tim van Zanten">
     <link rel="canonical" href="https://timvanzanten.com">
-    <title>Tim van Zanten - Creative Portfolio</title>
+    <title>Tim van Zanten - Cultural Production, Education & Digital Projects</title>
     <link rel="icon" type="image/x-icon" href="/static/Favicon/favicon.ico">
     <link rel="apple-touch-icon" href="/static/Favicon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/static/Favicon/favicon-32x32.png">
@@ -152,7 +152,7 @@
 
         .title-word.state-3 {
             background-color: #000000;
-            color: #0101FF;
+            color: #7777ff;
             font-weight: 700;
             text-decoration: underline;
             text-decoration-thickness: 3px;
@@ -173,7 +173,7 @@
 
         .title-word.state-6 {
             background-color: #cccccc;
-            color: #ffffff;
+            color: #000000;
             font-weight: 700;
         }
 
@@ -194,6 +194,19 @@
             letter-spacing: 0.5px;
             position: relative;
             padding-bottom: 4px;
+        }
+
+        button.nav-link {
+            padding: 0 0 4px;
+            border: 0;
+            background: transparent;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .nav-link:focus-visible {
+            outline: 2px solid #0101FF;
+            outline-offset: 5px;
         }
 
         .nav-link::after {
@@ -270,6 +283,67 @@
             padding: 80px 40px 60px 40px;
         }
 
+        .portfolio-intro {
+            max-width: 760px;
+            margin: 140px auto 100px;
+            text-align: center;
+        }
+
+        .portfolio-intro h2 {
+            font-size: clamp(24px, 4vw, 38px);
+            line-height: 1.15;
+            font-weight: 500;
+            letter-spacing: -0.04em;
+        }
+
+        .portfolio-intro p {
+            margin-top: 16px;
+            font-size: clamp(16px, 2vw, 20px);
+            line-height: 1.5;
+            color: #4f4e4e;
+        }
+
+        .project-index {
+            max-width: 900px;
+            margin: 100px auto 40px;
+        }
+
+        .project-index h2 {
+            margin-bottom: 24px;
+            font-size: 24px;
+            font-weight: 500;
+        }
+
+        .project-index-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 40px;
+            list-style: none;
+        }
+
+        .project-index-list li {
+            border-top: 1px solid #ddd;
+        }
+
+        .project-index-link {
+            display: block;
+            padding: 14px 0;
+            color: #111;
+            text-decoration: none;
+        }
+
+        .project-index-link:hover,
+        .project-index-link:focus-visible {
+            color: #0101ff;
+        }
+
+        .project-index-meta {
+            display: block;
+            margin-top: 4px;
+            color: #666;
+            font-size: 13px;
+        }
+
         .image-grid {
             display: grid;
             grid-template-columns: 280px 280px;
@@ -282,7 +356,13 @@
             position: relative;
             overflow: visible;
             background: transparent;
+            border: 0;
             border-radius: 0;
+            padding: 0;
+            width: 100%;
+            color: inherit;
+            font: inherit;
+            text-align: inherit;
             animation: fadeIn 0.3s ease-out;
             display: flex;
             justify-content: center;
@@ -670,7 +750,7 @@
 
         .search-title .title-word.state-3 {
             background-color: #000000;
-            color: #0101FF;
+            color: #7777ff;
             font-weight: 700;
             text-decoration: underline;
             text-decoration-thickness: 3px;
@@ -691,7 +771,7 @@
 
         .search-title .title-word.state-6 {
             background-color: #cccccc;
-            color: #ffffff;
+            color: #000000;
             font-weight: 700;
         }
 
@@ -717,7 +797,7 @@
         }
 
         .search-input::placeholder {
-            color: #aaa;
+            color: #767676;
         }
 
         .search-input:focus::placeholder {
@@ -774,12 +854,17 @@
         }
 
         .search-result-item {
+            display: block;
+            width: 100%;
+            border: 0;
             cursor: pointer;
             text-align: center;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             padding: 0;
             border-radius: 0;
             background: transparent;
+            color: inherit;
+            font: inherit;
         }
 
         .search-result-item:hover {
@@ -787,7 +872,7 @@
             background: transparent;
         }
 
-        .search-result-item:focus-within {
+        .search-result-item:focus-visible {
             outline: 2px solid #0101FF;
             outline-offset: 4px;
             border-radius: 4px;
@@ -1049,6 +1134,20 @@
             align-self: flex-start;
         }
 
+        .project-detail-link {
+            display: inline-block;
+            margin-top: 12px;
+            color: #0101FF;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .project-detail-link[hidden] {
+            display: none;
+        }
+
         .modal-link-button:hover:not(:disabled) {
             background-color: #0000cc;
         }
@@ -1253,6 +1352,14 @@
 
             .container {
                 padding: 80px 20px 40px 20px;
+            }
+
+            .portfolio-intro {
+                margin: 120px auto 70px;
+            }
+
+            .project-index-list {
+                grid-template-columns: 1fr;
             }
 
             .image-grid {
@@ -1495,6 +1602,7 @@
     </style>
     <!-- JSON-LD Structured Data for SEO and Search Engine Indexing -->
     {{ jsonld_scripts | safe }}
+    <script type="application/ld+json">{{ project_list_schema | tojson }}</script>
 </head>
 <body>
     <!-- Custom Stretching Cursor -->
@@ -1503,39 +1611,56 @@
     </div>
 
     <!-- Accessibility: Skip to content link -->
-    <a href="#main-content" class="skip-to-content">Skip to gallery</a>
+    <a href="#main-content" class="skip-to-content">Skip to portfolio</a>
 
     <!-- Hero Section -->
-    <div class="hero" id="hero">
+    <header class="hero" id="hero">
         <div class="hero-content">
             <h1 class="hero-title" id="heroTitle">
                 <span class="title-word" data-word="0">TIM</span>
                 <span class="title-word" data-word="1">VAN</span>
                 <span class="title-word" data-word="2">ZANTEN</span>
             </h1>
-            <div class="nav-links">
+            <nav class="nav-links" aria-label="Main navigation">
                 <a href="/" class="nav-link active" id="portfolioLink">PORTFOLIO</a>
                 <a href="/about" class="nav-link" id="aboutLink">ABOUT</a>
-                <a href="javascript:void(0);" class="nav-link" id="searchLink" onclick="openSearch()" style="cursor: pointer;">SEARCH</a>
-            </div>
+                <button type="button" class="nav-link" id="searchLink" onclick="openSearch()">SEARCH</button>
+            </nav>
         </div>
         <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen" style="height: 45px;">
-        <div class="hero-socials" id="heroSocials">
+        <nav class="hero-socials" id="heroSocials" aria-label="Social profiles">
             <a href="http://instagram.com/timzv" class="hero-social-link" target="_blank" title="Instagram">Instagram</a>
             <a href="https://www.linkedin.com/in/tim-van-zanten-602672182/" class="hero-social-link" target="_blank" title="LinkedIn">LinkedIn</a>
             <a href="mailto:timvanzanten6@gmail.com" class="hero-social-link" title="Email">Email</a>
             <a href="https://soundcloud.com/sound-patrol" class="hero-social-link" target="_blank" title="SoundCloud">SoundCloud</a>
             <a href="https://open.spotify.com/artist/7pENTqWqH9IpQzcNUc9VYV" class="hero-social-link" target="_blank" title="Spotify">Spotify</a>
-        </div>
-    </div>
+        </nav>
+    </header>
 
-    <div class="container" id="main-content">
+    <main class="container" id="main-content">
+        <section class="portfolio-intro" aria-labelledby="portfolioIntroTitle">
+            <h2 id="portfolioIntroTitle">Cultural production, education and digital projects.</h2>
+            <p>Based in Utrecht. Working across festivals, public programmes, digital culture and independent projects.</p>
+        </section>
         <div class="image-grid" id="imageGrid" role="region" aria-label="Portfolio gallery"></div>
         <div class="loading" id="loading" style="display: none;">
             <div class="loading-spinner"></div>
             <div class="loading-text">Loading!<span class="loading-dots">.</span></div>
         </div>
-    </div>
+        <nav class="project-index" aria-labelledby="projectIndexTitle">
+            <h2 id="projectIndexTitle">Selected projects</h2>
+            <ul class="project-index-list">
+                {% for project in projects %}
+                <li>
+                    <a class="project-index-link" href="{{ url_for('project_detail', slug=project.slug) }}">
+                        {{ project.title }}
+                        <span class="project-index-meta">{{ project.type }}{% if project.type and project.date %} · {% endif %}{{ project.date }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </nav>
+    </main>
 
     <!-- Modal for image details -->
     <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -1562,6 +1687,7 @@
                     <div id="modalDescription" class="modal-description"></div>
                 </div>
                 <button class="modal-link-button" id="modalLinkButton" onclick="openModalLink()">View project</button>
+                <a class="project-detail-link" id="projectDetailLink" hidden>Project details, images & embeds</a>
             </div>
         </div>
     </div>
@@ -1722,8 +1848,9 @@
             for (let i = currentIndex; i < endIndex; i++) {
                 const imageData = allImages[i];
                 const isVideo = isVideoMedia(imageData);
-                const itemDiv = document.createElement('div');
+                const itemDiv = document.createElement('button');
                 itemDiv.className = 'image-item';
+                itemDiv.type = 'button';
                 if (isVideo) itemDiv.classList.add('is-video');
                 const caption = imageCaptions[imageData.filename] || {};
                 const projectTitle = caption.title || imageData.filename;
@@ -1732,8 +1859,6 @@
                     itemDiv.addEventListener('pointermove', tiltVinylArtwork);
                     itemDiv.addEventListener('pointerleave', resetVinylArtworkTilt);
                 }
-                itemDiv.tabIndex = 0;
-                itemDiv.setAttribute('role', 'button');
                 itemDiv.setAttribute('aria-label', `Open ${projectTitle}`);
 
                 // Only apply random offset on desktop (>768px)
@@ -1761,14 +1886,14 @@
                     mediaElement.preload = 'none';
                     mediaElement.setAttribute('aria-label', projectTitle);
                 } else {
-                    mediaElement.alt = imageData.filename;
+                    mediaElement.alt = projectTitle;
                 }
 
                 if (itemDiv.classList.contains('is-record-art')) {
                     const vinylDisc = document.createElement('span');
                     vinylDisc.className = 'vinyl-disc';
                     vinylDisc.setAttribute('aria-hidden', 'true');
-                    vinylDisc.style.setProperty('--vinyl-label-image', `url("${imageData.url}")`);
+                    vinylDisc.dataset.labelImage = imageData.url;
                     const vinylFace = document.createElement('span');
                     vinylFace.className = 'vinyl-face';
                     const vinylLabel = document.createElement('span');
@@ -1790,12 +1915,6 @@
                 
                 // Add click handler to open modal
                 itemDiv.addEventListener('click', () => openModal(imageData.filename, imageData.url));
-                itemDiv.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                        event.preventDefault();
-                        openModal(imageData.filename, imageData.url);
-                    }
-                });
                 
                 grid.appendChild(itemDiv);
 
@@ -1804,6 +1923,16 @@
                     entries.forEach(entry => {
                         const media = entry.target.querySelector('img, video');
                         if (!media) return;
+                        if (entry.isIntersecting) {
+                            const vinylDisc = entry.target.querySelector('.vinyl-disc');
+                            if (vinylDisc?.dataset.labelImage) {
+                                vinylDisc.style.setProperty(
+                                    '--vinyl-label-image',
+                                    `url("${vinylDisc.dataset.labelImage}")`,
+                                );
+                                delete vinylDisc.dataset.labelImage;
+                            }
+                        }
                         if (media.tagName === 'VIDEO') {
                             if (!entry.isIntersecting) {
                                 if (media.hasAttribute('src')) media.pause();
@@ -1974,7 +2103,7 @@
                 video.hidden = true;
                 imageLinkElement.hidden = false;
                 img.src = imageUrl;
-                img.alt = filename;
+                img.alt = caption.title || filename;
                 img.classList.add('animate');
                 img.onerror = function() {
                     img.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23ddd%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2214%22%3EImage not found%3C/text%3E%3C/svg%3E';
@@ -2019,6 +2148,9 @@
             const imageLink = document.getElementById('modalImageLink');
             const titleLink = document.getElementById('modalTitleLink');
             const linkButton = document.getElementById('modalLinkButton');
+            const projectDetailLink = document.getElementById('projectDetailLink');
+            projectDetailLink.href = caption.project_url || '#';
+            projectDetailLink.hidden = !caption.project_url;
             
             if (linkUrl !== '#') {
                 imageLink.href = linkUrl;
@@ -2200,6 +2332,7 @@
             document.body.style.overflow = 'auto';
             document.getElementById('searchInput').value = '';
             document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('searchLink').focus();
         }
 
         function performSearch(query) {
@@ -2219,16 +2352,25 @@
             });
 
             // Render results
-            resultsContainer.innerHTML = filteredImages.map(img => {
+            resultsContainer.replaceChildren(...filteredImages.map(img => {
                 const caption = imageCaptions[img.filename] || {};
                 const title = caption.title || img.filename;
-                return `
-                    <div class="search-result-item" onclick="handleSearchResultClick('${img.filename}', '${img.url}')">
-<img src="${img.url}" alt="${title}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect fill=%22%23eee%22 width=%22200%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22 font-size=%2212%22%3E?%3C/text%3E%3C/svg%3E'">
-                        <div class="search-result-title">${title}</div>
-                    </div>
-                `;
-            }).join('');
+                const result = document.createElement('button');
+                result.type = 'button';
+                result.className = 'search-result-item';
+                result.setAttribute('aria-label', `Open ${title}`);
+                result.addEventListener('click', () => handleSearchResultClick(img.filename, img.url));
+
+                const image = document.createElement('img');
+                image.src = img.url;
+                image.alt = '';
+                image.loading = 'lazy';
+                const titleElement = document.createElement('span');
+                titleElement.className = 'search-result-title';
+                titleElement.textContent = title;
+                result.append(image, titleElement);
+                return result;
+            }));
 
             // Show or hide results based on whether there are any
             if (filteredImages.length > 0) {
