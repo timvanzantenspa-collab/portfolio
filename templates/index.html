@@ -203,6 +203,19 @@
             margin-right: -10px;
         }
 
+        .language-switch-floating {
+            position: fixed;
+            top: 20px;
+            right: 40px;
+            z-index: 2100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            pointer-events: auto;
+            zoom: 1.111111;
+        }
+
         .language-switch .nav-link {
             font-size: 13px;
         }
@@ -608,23 +621,31 @@
         .image-item:nth-child(n+6) { animation-delay: 250ms; }
 
         .loading {
-            text-align: center;
-            padding: 60px 40px;
-            min-height: 400px;
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            min-height: 220px;
+            padding: 32px 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr);
             align-items: center;
-            justify-content: center;
-            gap: 24px;
+            justify-items: center;
+            align-content: center;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .loading[hidden],
+        .loading-retry[hidden] {
+            display: none;
         }
 
         .loading-spinner {
+            display: block;
             width: 40px;
             height: 40px;
             border: 3px solid #f0f0f0;
             border-top: 3px solid #0101FF;
             border-radius: 50%;
-            animation: spin 1.2s linear infinite;
+            animation: spin 1s linear infinite;
         }
 
         .loading-text {
@@ -632,25 +653,25 @@
             font-weight: 500;
             color: #666;
             letter-spacing: 0.5px;
-            animation: fadeInOut 2s ease-in-out infinite;
+            line-height: 1.4;
+        }
+
+        .loading-retry {
+            padding: 8px 12px;
+            border: 1px solid #0101ff;
+            background: #fff;
+            color: #0101ff;
+            font: inherit;
+        }
+
+        .loading-retry:hover,
+        .loading-retry:focus-visible {
+            background: #0101ff;
+            color: #fff;
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        @keyframes fadeInOut {
-            0%, 100% {
-                opacity: 0.6;
-            }
-            50% {
-                opacity: 1;
-            }
+            to { transform: rotate(360deg); }
         }
 
         @keyframes pulse {
@@ -1362,6 +1383,13 @@
                 margin-right: 0;
             }
 
+            .language-switch-floating {
+                top: 20px;
+                right: 20px;
+                margin: 0;
+                zoom: 1;
+            }
+
             .language-switch .nav-link {
                 font-size: clamp(9px, 2vw, 11px);
                 white-space: nowrap;
@@ -1688,6 +1716,11 @@
         <div class="cursor-dot"></div>
     </div>
 
+    <nav class="language-switch language-switch-floating" aria-label="Choose language">
+        <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands"{% if language == 'nl' %} aria-current="page"{% endif %}>NL</a>
+        <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English"{% if language == 'en' %} aria-current="page"{% endif %}>EN</a>
+    </nav>
+
     <!-- Accessibility: Skip to content link -->
     <a href="#main-content" class="skip-to-content">Skip to portfolio</a>
 
@@ -1703,10 +1736,6 @@
                 <a href="/" class="nav-link active" id="portfolioLink">PORTFOLIO</a>
                 <a href="/about" class="nav-link" id="aboutLink">ABOUT</a>
                 <button type="button" class="nav-link" id="searchLink" onclick="openSearch()">SEARCH</button>
-                <span class="language-switch" aria-label="Choose language">
-                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='nl', next=request.path) }}" lang="nl" aria-label="Bekijk deze pagina in het Nederlands"{% if language == 'nl' %} aria-current="page"{% endif %}>NL</a>
-                    <a class="nav-link language-choice" href="{{ url_for('set_site_language', language='en', next=request.path) }}" lang="en" aria-label="View this page in English"{% if language == 'en' %} aria-current="page"{% endif %}>EN</a>
-                </span>
             </nav>
         </div>
         <img id="scrollLiggen" src="/static/Liggen.png" alt="Liggen">
@@ -1725,9 +1754,10 @@
             <p>Based in Utrecht. Working across festivals, public programmes, digital culture and independent projects.</p>
         </section>
         <div class="image-grid" id="imageGrid" role="region" aria-label="Portfolio gallery"></div>
-        <div class="loading" id="loading" style="display: none;">
-            <div class="loading-spinner"></div>
-            <div class="loading-text">Loading!<span class="loading-dots">.</span></div>
+        <div class="loading" id="loading" role="status" aria-live="polite" hidden>
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <div class="loading-text" id="loadingText">Loading projects</div>
+            <button type="button" class="loading-retry" id="loadingRetry" hidden>Try again</button>
         </div>
         <nav class="project-index" aria-labelledby="projectIndexTitle">
             <h2 id="projectIndexTitle">Selected projects</h2>
@@ -1792,6 +1822,7 @@
         </div>
     </div>
 
+    <script id="initialGalleryData" type="application/json">{{ {'images': initial_gallery, 'captions': initial_captions}|tojson }}</script>
     <script>
         let allImages = [];
         let imageCaptions = {};
@@ -1909,28 +1940,68 @@
         }
 
         async function loadImages() {
+            const loadingDiv = document.getElementById('loading');
+            const loadingText = document.getElementById('loadingText');
+            const retryButton = document.getElementById('loadingRetry');
+            const grid = document.getElementById('imageGrid');
+            const initialDataElement = document.getElementById('initialGalleryData');
+
             try {
-                // Show loading spinner while fetching
-                const loadingDiv = document.getElementById('loading');
-                loadingDiv.style.display = 'flex';
-                
-                const response = await fetch('/api/images');
-                allImages = await response.json();
-                
-                // Load captions
-                const captionsResponse = await fetch('/api/captions');
-                imageCaptions = await captionsResponse.json();
-                
-                // Hide loading spinner once data is loaded
-                loadingDiv.style.display = 'none';
+                const initialData = JSON.parse(initialDataElement.textContent);
+                if (!Array.isArray(initialData.images) || !initialData.captions || typeof initialData.captions !== 'object') {
+                    throw new Error('The initial portfolio data was invalid.');
+                }
+                allImages = initialData.images;
+                imageCaptions = initialData.captions;
                 displayImages();
+                return;
             } catch (error) {
-                console.error('Error loading images:', error);
-                // Hide loading spinner on error too
-                const loadingDiv = document.getElementById('loading');
-                loadingDiv.style.display = 'none';
+                console.error('Could not render the initial portfolio data; falling back to the API:', error);
+            }
+
+            let showLoadingTimer = window.setTimeout(() => {
+                loadingDiv.hidden = false;
+                retryButton.hidden = true;
+                loadingText.textContent = 'Loading projects';
+                grid.setAttribute('aria-busy', 'true');
+            }, 200);
+            loadingDiv.hidden = true;
+            retryButton.hidden = true;
+
+            try {
+                const [imagesResponse, captionsResponse] = await Promise.all([
+                    fetch('/api/images'),
+                    fetch('/api/captions'),
+                ]);
+                if (!imagesResponse.ok || !captionsResponse.ok) {
+                    throw new Error(`Portfolio data request failed (${imagesResponse.status}, ${captionsResponse.status}).`);
+                }
+                const [images, captions] = await Promise.all([
+                    imagesResponse.json(),
+                    captionsResponse.json(),
+                ]);
+                if (!Array.isArray(images) || !captions || typeof captions !== 'object') {
+                    throw new Error('The portfolio data response was invalid.');
+                }
+                allImages = images;
+                imageCaptions = captions;
+                currentIndex = 0;
+                grid.replaceChildren();
+                displayImages();
+                loadingDiv.hidden = true;
+                retryButton.hidden = true;
+            } catch (error) {
+                console.error('Error loading portfolio projects:', error);
+                loadingDiv.hidden = false;
+                loadingText.textContent = 'Could not load projects. Please try again.';
+                retryButton.hidden = false;
+            } finally {
+                window.clearTimeout(showLoadingTimer);
+                grid.removeAttribute('aria-busy');
             }
         }
+
+        document.getElementById('loadingRetry').addEventListener('click', loadImages);
 
         function isVideoMedia(media) {
             return media?.media_type === 'video' || /\.(mp4|webm)$/i.test(media?.filename || '');
@@ -2055,12 +2126,6 @@
 
             currentIndex = endIndex;
 
-            // Show loading message if there are more images
-            if (currentIndex < allImages.length) {
-                document.getElementById('loading').style.display = 'block';
-            } else {
-                document.getElementById('loading').style.display = 'none';
-            }
         }
 
         function tiltVinylArtwork(event) {

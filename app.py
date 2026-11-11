@@ -876,14 +876,44 @@ def get_project_list_schema(projects):
         ],
     }
 
+def get_public_captions(language, projects=None):
+    captions = {
+        filename: caption for filename, caption in load_captions().items()
+        if not isinstance(caption, dict) or caption.get('published') is not False
+    }
+    for caption in captions.values():
+        if isinstance(caption, dict):
+            description = (
+                caption.get('description_nl') or caption.get('description', '')
+                if language == 'nl'
+                else caption.get('description', '')
+            )
+            caption['description'] = description
+            caption['description_html'] = render_markdown_description(description)
+    for project in projects if projects is not None else get_portfolio_projects():
+        if project['filename'] in captions:
+            captions[project['filename']]['project_url'] = url_for('project_detail', slug=project['slug'])
+    return captions
+
 def render_homepage():
     projects = get_portfolio_projects()
+    language = preferred_site_language()
+    initial_gallery = [
+        {
+            'filename': project['filename'],
+            'url': media_url(project['filename']),
+            'media_type': 'video' if is_video_filename(project['filename']) else 'image',
+        }
+        for project in projects
+    ]
     return render_template(
         'index.html',
         jsonld_scripts=homepage_scripts,
         projects=projects,
         project_list_schema=get_project_list_schema(projects),
-        language=preferred_site_language(),
+        initial_gallery=initial_gallery,
+        initial_captions=get_public_captions(language, projects),
+        language=language,
     )
 
 def preferred_site_language():
@@ -2273,23 +2303,7 @@ def get_media(filename):
 @app.route('/api/captions')
 def get_captions():
     """API endpoint to get image captions"""
-    captions = {
-        filename: caption for filename, caption in load_captions().items()
-        if not isinstance(caption, dict) or caption.get('published') is not False
-    }
-    for caption in captions.values():
-        if isinstance(caption, dict):
-            description = (
-                caption.get('description_nl') or caption.get('description', '')
-                if preferred_site_language() == 'nl'
-                else caption.get('description', '')
-            )
-            caption['description'] = description
-            caption['description_html'] = render_markdown_description(description)
-    for project in get_portfolio_projects():
-        if project['filename'] in captions:
-            captions[project['filename']]['project_url'] = url_for('project_detail', slug=project['slug'])
-    response = jsonify(captions)
+    response = jsonify(get_public_captions(preferred_site_language()))
     response.headers['Cache-Control'] = 'no-store'
     response.vary.add('Cookie')
     return response

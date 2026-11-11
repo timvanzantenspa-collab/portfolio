@@ -23,6 +23,18 @@
         "en": "Selected projects",
         "nl": "Geselecteerde projecten"
     },
+    "Loading projects": {
+        "en": "Loading projects",
+        "nl": "Projecten laden"
+    },
+    "Could not load projects. Please try again.": {
+        "en": "Could not load projects. Please try again.",
+        "nl": "Projecten laden is niet gelukt. Probeer het opnieuw."
+    },
+    "Try again": {
+        "en": "Try again",
+        "nl": "Opnieuw proberen"
+    },
     "Skip to portfolio": {
         "en": "Skip to portfolio",
         "nl": "Ga naar het portfolio"
