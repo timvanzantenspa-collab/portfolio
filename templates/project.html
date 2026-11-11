@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="{{ meta_description }}" data-no-translate>
-    <meta name="theme-color" content="#0101FF">
+    <meta name="theme-color" content="#FFFFFF">
+    <meta name="color-scheme" content="light">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta property="og:type" content="article">
     <meta property="og:title" content="{{ project.title }} | Tim van Zanten" data-no-translate>
     <meta property="og:site_name" content="Tim van Zanten">
@@ -40,11 +42,13 @@
         }
         * { box-sizing: border-box; }
         html {
+            color-scheme: only light;
             width: 100%;
             max-width: 100%;
+            min-height: 100%;
             overflow-x: clip;
             overscroll-behavior: none;
-            background: #fff;
+            background-color: #fff;
             scrollbar-color: #0101FF transparent;
             scrollbar-width: thin;
         }
@@ -123,6 +127,8 @@
         }
         body {
             margin: 0;
+            min-height: 100vh;
+            min-height: 100dvh;
             width: 100%;
             max-width: 100%;
             overflow-x: clip;
