@@ -139,6 +139,30 @@
         "en": "Search portfolio",
         "nl": "Portfolio doorzoeken"
     },
+    "Search portfolio by title": {
+        "en": "Search portfolio by title",
+        "nl": "Zoek in het portfolio op titel"
+    },
+    "Choose language": {
+        "en": "Choose language",
+        "nl": "Kies een taal"
+    },
+    "I work in cultural production and education. I organize festivals and public programs, teach high school students about AI and digital culture, and do audience research. The goal is always the same: making things clearer, more inclusive, and more beautiful.": {
+        "en": "I work in cultural production and education. I organize festivals and public programs, teach high school students about AI and digital culture, and do audience research. The goal is always the same: making things clearer, more inclusive, and more beautiful.",
+        "nl": "Ik werk in de culturele productie en educatie. Ik organiseer festivals, geef middelbare scholieren les over AI en digitale cultuur, en doe publieksonderzoek. Het doel is altijd hetzelfde: dingen duidelijker, inclusiever en mooier maken."
+    },
+    "I've worked at": {
+        "en": "I've worked at",
+        "nl": "Ik heb gewerkt bij"
+    },
+    ", and others. If you have a project or idea you want to discuss,": {
+        "en": ", and others. If you have a project or idea you want to discuss,",
+        "nl": ", en anderen. Heb je een project of idee dat je wilt bespreken,"
+    },
+    "send me an email": {
+        "en": "send me an email",
+        "nl": "stuur me een e-mail"
+    },
     "Type to search...": {
         "en": "Type to search...",
         "nl": "Typ om te zoeken..."
